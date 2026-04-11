@@ -28,16 +28,26 @@ public class ApiMetierApplication {
 			ThresholdConfigRepository thresholds,
 			ReferenceCodeItemRepository codeItems,
 			UserAccountRepository users,
-			PasswordEncoder passwordEncoder) {
+			PasswordEncoder passwordEncoder,
+			com.example.api_metier.service.MeasurementService measurementService,
+			com.example.api_metier.repo.MeasurementRepository measurements) {
 		return args -> {
 			seedUserIfMissing(users, passwordEncoder, "admin", "admin", "ADMIN");
 			seedUserIfMissing(users, passwordEncoder, "tech", "tech", "TECH");
 			seedUserIfMissing(users, passwordEncoder, "operator", "operator", "OPERATOR");
 
 			if (points.count() == 0) {
-				points.save(new PointRefEntity("POINT-001", "KIOSK-01", "KIOSK", "Kiosque principal", true));
-				points.save(new PointRefEntity("POINT-002", "SCHOOL", "SCHOOL", "École / point critique", true));
-				points.save(new PointRefEntity("POINT-003", "TANK", "TANK", "Réservoir", true));
+				// Coordinates are demo WGS84 (lat/lon in decimal degrees) located in major cities.
+				points.save(new PointRefEntity("POINT-001", "KIOSK-01", "KIOSK", "Ouest", -72.34, 18.54, "Kiosque principal", true));
+				points.save(new PointRefEntity("POINT-002", "SCHOOL", "SCHOOL", "Nord", -72.20, 19.76, "École / point critique", true));
+				points.save(new PointRefEntity("POINT-003", "TANK", "TANK", "Sud-Est", -72.53, 18.23, "Réservoir", true));
+				points.save(new PointRefEntity("POINT-004", "SOURCE-NE", "SOURCE", "Nord-Est", -71.84, 19.66, "Source (démo)", true));
+				points.save(new PointRefEntity("POINT-005", "TANK-ART", "TANK", "Artibonite", -72.69, 19.45, "Réservoir (démo)", true));
+				points.save(new PointRefEntity("POINT-006", "KIOSK-CEN", "KIOSK", "Centre", -72.02, 19.15, "Kiosque (démo)", true));
+				points.save(new PointRefEntity("POINT-007", "SOURCE-NW", "SOURCE", "Nord-Ouest", -72.83, 19.94, "Source (démo)", true));
+				points.save(new PointRefEntity("POINT-008", "KIOSK-SUD", "KIOSK", "Sud", -73.75, 18.20, "Kiosque (démo)", true));
+				points.save(new PointRefEntity("POINT-009", "KIOSK-NIP", "KIOSK", "Nippes", -73.09, 18.44, "Kiosque (démo)", true));
+				points.save(new PointRefEntity("POINT-010", "KIOSK-GA", "KIOSK", "Grand'Anse", -74.12, 18.64, "Kiosque (démo)", true));
 			}
 
 			if (thresholds.count() == 0) {
@@ -65,6 +75,10 @@ public class ApiMetierApplication {
 					new ReferenceCodeItemEntity("MEASUREMENT_TYPE", "PRESSURE", "Pression", "Presyon", "Pressure", "#2563eb", 10, true),
 					new ReferenceCodeItemEntity("MEASUREMENT_TYPE", "LEVEL", "Niveau", "Nivo", "Level", "#2563eb", 20, true),
 					new ReferenceCodeItemEntity("MEASUREMENT_TYPE", "FLOW", "Débit", "Debi", "Flow", "#2563eb", 30, true)));
+
+			if (measurements.count() == 0) {
+				seedDemoMeasurements(measurementService);
+			}
 
 			seedCodeList(codeItems, "POINT_TYPE", List.of(
 					new ReferenceCodeItemEntity("POINT_TYPE", "KIOSK", "Kiosque", "Kiosk", "Kiosk", "#2563eb", 10, true),
@@ -95,6 +109,28 @@ public class ApiMetierApplication {
 				passwordEncoder.encode(rawPassword),
 				roles,
 				true));
+	}
+
+	private void seedDemoMeasurements(com.example.api_metier.service.MeasurementService measurementService) {
+		java.time.Instant now = java.time.Instant.now().minusSeconds(30);
+		java.util.List<com.example.api_metier.service.MeasurementService.IngestRequest> rows = java.util.List.of(
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-001", "S1", "PRESSURE", 2.6, "bar", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-002", "S1", "PRESSURE", 0.7, "bar", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-003", "S1", "LEVEL", 8.0, "cm", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-004", "S1", "FLOW", 12.0, "l/s", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-005", "S1", "PRESSURE", 1.6, "bar", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-006", "S1", "PRESSURE", 2.2, "bar", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-007", "S1", "FLOW", 6.0, "l/s", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-008", "S1", "PRESSURE", 2.1, "bar", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-009", "S1", "PRESSURE", 1.2, "bar", now),
+				new com.example.api_metier.service.MeasurementService.IngestRequest("POINT-010", "S1", "PRESSURE", 2.4, "bar", now));
+		for (var r : rows) {
+			try {
+				measurementService.ingest(r);
+			} catch (Exception ignored) {
+				// best-effort demo
+			}
+		}
 	}
 
 }

@@ -9,6 +9,9 @@ export type PointDefinition = {
   id: string;
   name: string;
   type: PointType;
+  territory?: string | null;
+  lon?: number | null;
+  lat?: number | null;
   description?: string | null;
   active: boolean;
 };

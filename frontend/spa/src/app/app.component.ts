@@ -70,6 +70,10 @@ export class AppComponent implements OnDestroy {
     return this.router.url === '/';
   }
 
+  get isPublicPage(): boolean {
+    return this.isLandingPage || this.isLoginPage;
+  }
+
   logout() {
     this.auth.logout();
     this.router.navigateByUrl('/login');
