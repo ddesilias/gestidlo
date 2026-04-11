@@ -24,6 +24,38 @@ Flux fonctionnel principal : ingestion de mesures (IoT) → alertes → tickets 
 - Maven 3.8+
 - Node.js 18+ et npm
 
+## Démarrage via Docker (recommandé pour Windows)
+
+Cette option reproduit le comportement de `start-all.sh` mais via `docker compose` (aucun JDK/Node/Maven requis côté machine).
+
+Depuis la racine du dépôt :
+
+```bash
+docker compose up --build
+```
+
+Pour arrêter :
+
+```bash
+docker compose down
+```
+
+### Secret JWT
+
+Par défaut, les conteneurs utilisent la valeur de dev. Pour la surcharger, créer un fichier `.env` à la racine :
+
+```env
+GESTIDLO_JWT_SECRET=change-me-please-change-me-please-change-me-32bytes
+```
+
+### Ports exposés
+
+- Camunda Engine : `http://localhost:9080`
+- Camunda API : `http://localhost:9081`
+- API Métier : `http://localhost:9082`
+- BFF : `http://localhost:9083`
+- SPA : `http://localhost:4200`
+
 ## Démarrage rapide (recommandé)
 
 ### 1) Installer les dépendances Angular
