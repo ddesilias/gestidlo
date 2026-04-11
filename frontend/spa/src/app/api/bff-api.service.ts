@@ -79,6 +79,9 @@ export class BffApiService {
     payload: {
       name?: string | null;
       type?: string | null;
+      territory?: string | null;
+      lon?: number | null;
+      lat?: number | null;
       description?: string | null;
       active?: boolean | null;
     }

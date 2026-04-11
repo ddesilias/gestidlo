@@ -19,6 +19,15 @@ public class PointRefEntity {
 	@Column(nullable = false)
 	private String type;
 
+	@Column(length = 120)
+	private String territory;
+
+	@Column
+	private Double lon;
+
+	@Column
+	private Double lat;
+
 	@Column
 	private String description;
 
@@ -28,10 +37,21 @@ public class PointRefEntity {
 	protected PointRefEntity() {
 	}
 
-	public PointRefEntity(String id, String name, String type, String description, boolean active) {
+	public PointRefEntity(
+			String id,
+			String name,
+			String type,
+			String territory,
+			Double lon,
+			Double lat,
+			String description,
+			boolean active) {
 		this.id = id;
 		this.name = name;
 		this.type = type;
+		this.territory = territory;
+		this.lon = lon;
+		this.lat = lat;
 		this.description = description;
 		this.active = active;
 	}
@@ -54,6 +74,30 @@ public class PointRefEntity {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getTerritory() {
+		return territory;
+	}
+
+	public void setTerritory(String territory) {
+		this.territory = territory;
+	}
+
+	public Double getLon() {
+		return lon;
+	}
+
+	public void setLon(Double lon) {
+		this.lon = lon;
+	}
+
+	public Double getLat() {
+		return lat;
+	}
+
+	public void setLat(Double lat) {
+		this.lat = lat;
 	}
 
 	public String getDescription() {

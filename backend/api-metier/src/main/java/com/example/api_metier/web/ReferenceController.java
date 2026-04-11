@@ -59,12 +59,60 @@ public class ReferenceController {
 				id,
 				"KIOSK",
 				null,
+				null,
+				null,
+				null,
 				true));
 
 		entity.setName(body.name() == null || body.name().isBlank() ? id : body.name());
 		String type = body.type() == null || body.type().isBlank() ? entity.getType() : body.type().trim().toUpperCase();
 		validatePointType(type);
 		entity.setType(type);
+		if (body.territory() != null) {
+			String territory = body.territory().isBlank() ? null : body.territory().trim();
+			entity.setTerritory(territory);
+		}
+		if (body.lon() != null) {
+			entity.setLon(body.lon());
+		}
+		if (body.lat() != null) {
+			entity.setLat(body.lat());
+		}
+
+		// Common mistake: swap lon/lat.
+		if (entity.getLon() != null && entity.getLat() != null) {
+			double lon = entity.getLon();
+			double lat = entity.getLat();
+
+			double minLon = -75.5;
+			double maxLon = -71.0;
+			double minLat = 17.5;
+			double maxLat = 20.5;
+
+			boolean inHaiti = lon >= minLon && lon <= maxLon && lat >= minLat && lat <= maxLat;
+			boolean swappedInHaiti = lat >= minLon && lat <= maxLon && lon >= minLat && lon <= maxLat;
+
+			if (!inHaiti && swappedInHaiti) {
+				entity.setLon(lat);
+				entity.setLat(lon);
+				lon = entity.getLon();
+				lat = entity.getLat();
+				inHaiti = lon >= minLon && lon <= maxLon && lat >= minLat && lat <= maxLat;
+			}
+
+			if (!inHaiti && lon > 0) {
+				double flipped = -lon;
+				if (flipped >= minLon && flipped <= maxLon && lat >= minLat && lat <= maxLat) {
+					entity.setLon(flipped);
+				}
+			}
+			if (!inHaiti && lat < 0) {
+				double flipped = -lat;
+				if (lon >= minLon && lon <= maxLon && flipped >= minLat && flipped <= maxLat) {
+					entity.setLat(flipped);
+				}
+			}
+		}
 		entity.setDescription(body.description());
 		entity.setActive(body.active() == null ? entity.isActive() : body.active());
 
@@ -163,12 +211,35 @@ public class ReferenceController {
 		codeItems.deleteById(id);
 	}
 
-	public record PointUpsertRequest(String name, String type, String description, Boolean active) {
+	public record PointUpsertRequest(
+			String name,
+			String type,
+			String territory,
+			Double lon,
+			Double lat,
+			String description,
+			Boolean active) {
 	}
 
-	public record PointDto(String id, String name, String type, String description, boolean active) {
+	public record PointDto(
+			String id,
+			String name,
+			String type,
+			String territory,
+			Double lon,
+			Double lat,
+			String description,
+			boolean active) {
 		public static PointDto from(PointRefEntity e) {
-			return new PointDto(e.getId(), e.getName(), e.getType(), e.getDescription(), e.isActive());
+			return new PointDto(
+				e.getId(),
+				e.getName(),
+				e.getType(),
+				e.getTerritory(),
+				e.getLon(),
+				e.getLat(),
+				e.getDescription(),
+				e.isActive());
 		}
 	}
 

@@ -1,3 +1,8 @@
+<ng-container *ngIf="!isPublicPage">
+  <router-outlet></router-outlet>
+</ng-container>
+
+<ng-container *ngIf="isPublicPage">
 <header class="topbar">
   <a class="brand" [routerLink]="isAuthenticated ? '/dashboard' : '/'" aria-label="GEstidlo">
     <svg class="brand-logo" viewBox="0 0 48 48" role="img" aria-hidden="true">
@@ -121,5 +126,7 @@
 <main class="container">
   <router-outlet></router-outlet>
 </main>
+
+</ng-container>
 
 <app-toast-container />
