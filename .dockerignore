@@ -1,0 +1,14 @@
+.git
+.github
+
+**/target
+**/node_modules
+**/dist
+**/.angular
+**/tmp
+
+**/*.log
+**/.DS_Store
+
+metier-db.mv.db
+metier-db.trace.db

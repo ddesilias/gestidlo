@@ -1,0 +1,94 @@
+services:
+  camunda-engine:
+    build:
+      context: .
+      dockerfile: backend/camunda-engine/Dockerfile
+    ports:
+      - "9080:9080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9080/actuator/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  camunda-api:
+    build:
+      context: .
+      dockerfile: backend/camunda-api/Dockerfile
+    ports:
+      - "9081:9081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      camunda-engine:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9081/actuator/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  api-metier:
+    build:
+      context: .
+      dockerfile: backend/api-metier/Dockerfile
+    ports:
+      - "9082:9082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      GESTIDLO_JWT_SECRET: ${GESTIDLO_JWT_SECRET:-change-me-please-change-me-please-change-me-32bytes}
+    depends_on:
+      camunda-api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9082/actuator/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  bff:
+    build:
+      context: .
+      dockerfile: frontend/bff/Dockerfile
+    ports:
+      - "9083:9083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      GESTIDLO_JWT_SECRET: ${GESTIDLO_JWT_SECRET:-change-me-please-change-me-please-change-me-32bytes}
+    depends_on:
+      api-metier:
+        condition: service_healthy
+      camunda-api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9083/actuator/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  spa:
+    build:
+      context: .
+      dockerfile: frontend/spa/Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      bff:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 10s

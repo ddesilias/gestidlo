@@ -1,0 +1,10 @@
+.env
+
+**/target/
+**/node_modules/
+**/dist/
+**/.angular/
+**/tmp/
+
+*.log
+.DS_Store
