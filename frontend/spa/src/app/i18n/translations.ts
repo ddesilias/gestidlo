@@ -132,6 +132,19 @@ export const translations: Record<Locale, Record<string, string>> = {
     'measurement.LEVEL': 'Niveau',
     'measurement.FLOW': 'Débit',
 
+    'severity.INFO': 'Info',
+    'severity.WARN': 'Avertissement',
+    'severity.CRIT': 'Critique',
+
+    'alertStatus.ACTIVE': 'Active',
+    'alertStatus.ACK': 'Acquittée',
+    'alertStatus.CLOSED': 'Clôturée',
+
+    'pointState.OK': 'OK',
+    'pointState.WARN': 'Avertissement',
+    'pointState.CRIT': 'Critique',
+    'pointState.OFFLINE': 'Hors ligne',
+
     'alerts.title': 'Alertes',
     'alerts.assignee': 'Technicien',
     'alerts.ack': 'Accuser réception',
@@ -310,6 +323,19 @@ export const translations: Record<Locale, Record<string, string>> = {
     'measurement.LEVEL': 'Nivo',
     'measurement.FLOW': 'Debi',
 
+    'severity.INFO': 'Info',
+    'severity.WARN': 'Avètisman',
+    'severity.CRIT': 'Kritik',
+
+    'alertStatus.ACTIVE': 'Aktif',
+    'alertStatus.ACK': 'Asepte',
+    'alertStatus.CLOSED': 'Fèmen',
+
+    'pointState.OK': 'OK',
+    'pointState.WARN': 'Avètisman',
+    'pointState.CRIT': 'Kritik',
+    'pointState.OFFLINE': 'Pa sou liy',
+
     'alerts.title': 'Alèt',
     'alerts.assignee': 'Teknisyen',
     'alerts.ack': 'Mwen resevwa',
@@ -487,6 +513,19 @@ export const translations: Record<Locale, Record<string, string>> = {
     'measurement.PRESSURE': 'Pressure',
     'measurement.LEVEL': 'Level',
     'measurement.FLOW': 'Flow',
+
+    'severity.INFO': 'Info',
+    'severity.WARN': 'Warning',
+    'severity.CRIT': 'Critical',
+
+    'alertStatus.ACTIVE': 'Active',
+    'alertStatus.ACK': 'Acknowledged',
+    'alertStatus.CLOSED': 'Closed',
+
+    'pointState.OK': 'OK',
+    'pointState.WARN': 'Warning',
+    'pointState.CRIT': 'Critical',
+    'pointState.OFFLINE': 'Offline',
 
     'alerts.title': 'Alerts',
     'alerts.assignee': 'Technician',

@@ -81,7 +81,7 @@ type DashboardDto = {
             <div class="muted"><code>{{ p.pointId }}</code></div>
           </div>
           <span class="badge" [class.badge--crit]="pointSeverity(p.pointId) === 'CRIT'" [class.badge--warn]="pointSeverity(p.pointId) === 'WARN'" [class.badge--ok]="pointSeverity(p.pointId) === 'OK'">
-            {{ pointSeverity(p.pointId) }}
+            {{ ('pointState.' + pointSeverity(p.pointId)) | t }}
           </span>
         </div>
 

@@ -174,7 +174,7 @@ type DashboardDto = {
                   [class.badge--crit]="a.severity === 'CRIT'"
                   [class.badge--warn]="a.severity === 'WARN'"
                   [class.badge--ok]="a.severity === 'INFO'"
-                  >{{ a.severity }}</span
+                  >{{ ('severity.' + a.severity) | t }}</span
                 >
               </div>
 
