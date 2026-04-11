@@ -53,10 +53,10 @@ import { MeasurementTypesService } from '../measurement-types.service';
               [class.badge--crit]="a.severity === 'CRIT'"
               [class.badge--warn]="a.severity === 'WARN'"
               [class.badge--ok]="a.severity === 'INFO'"
-              >{{ a.severity }}</span
+              >{{ ('severity.' + a.severity) | t }}</span
             >
           </td>
-          <td>{{ a.status }}</td>
+          <td>{{ ('alertStatus.' + a.status) | t }}</td>
           <td>{{ a.message }}</td>
           <td class="actions-cell">
             <div class="actions actions--table">
