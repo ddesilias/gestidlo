@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, NgZone, OnDestroy, Output, ViewChild } from '@angular/core';
 import { GeoJsonFeatureCollection } from '../territories.service';
 import { GeoMarker, TerritoryStatus } from './geojson-map.component';
 
@@ -43,6 +43,8 @@ export class LeafletMapComponent implements AfterViewInit, OnDestroy {
   private markerLayer?: any;
   private userInteracted = false;
   private fittedOnce = false;
+
+  constructor(private readonly ngZone: NgZone) {}
 
   ngAfterViewInit(): void {
     if (typeof L === 'undefined') {
@@ -174,7 +176,7 @@ export class LeafletMapComponent implements AfterViewInit, OnDestroy {
       onEachFeature: (feature: any, layer: any) => {
         const id = String(feature?.properties?.[this.idProperty] ?? '');
         layer.on('click', () => {
-          if (id) this.territorySelect.emit(id);
+          if (id) this.ngZone.run(() => this.territorySelect.emit(id));
         });
         if (id) {
           layer.bindTooltip(id, { sticky: true });
@@ -203,7 +205,7 @@ export class LeafletMapComponent implements AfterViewInit, OnDestroy {
         iconAnchor: [8, 8]
       });
       const marker = L.marker([m.lat, m.lon], { icon });
-      marker.on('click', () => this.markerSelect.emit(m.id));
+      marker.on('click', () => this.ngZone.run(() => this.markerSelect.emit(m.id)));
       marker.bindTooltip(m.label ?? m.id, { direction: 'top', offset: [0, -8] });
       marker.addTo(this.markerLayer);
     }

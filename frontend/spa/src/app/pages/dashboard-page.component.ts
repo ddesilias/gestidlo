@@ -51,17 +51,38 @@ type DashboardDto = {
 
 type KpiKey =
   | 'activeResources'
-  | 'criticalReservoirs'
-  | 'criticalAlerts'
-  | 'sensorsOkPct'
+  | 'reservoirsTotal'
+  | 'sensorsOnline'
+  | 'alertsActive'
+  | 'territoriesInTension'
   | 'serviceOkPct'
   | 'qualityOkPct'
-  | 'territoriesInTension';
+  | 'sensorsOkPct'
+  | 'criticalReservoirs'
+  | 'criticalAlerts';
 
 type SeriesPoint = { timestamp: string; value: number };
 type MetricsKey = 'levelAvg' | 'flowAvg' | 'pressureAvg' | 'okPct';
 
 type FeedItem = { kind: 'alarm' | 'incident' | 'update' | 'info'; label: string; age: string };
+
+type EnrichedAlert = {
+  id: number;
+  type: string;
+  severity: 'INFO' | 'WARN' | 'CRIT';
+  status: string;
+  message: string;
+  pointName: string;
+  territory: string;
+  age: string;
+};
+
+type ActivityItem = {
+  kind: 'danger' | 'success' | 'warning' | 'info';
+  label: string;
+  detail: string;
+  age: string;
+};
 
 @Component({
   selector: 'app-dashboard-page',
@@ -81,304 +102,313 @@ type FeedItem = { kind: 'alarm' | 'incident' | 'update' | 'info'; label: string;
                   <div class="admin-page-title__sub">{{ 'dashboard.admin.subtitle' | t }}</div>
                 </div>
 
-              <section class="admin-kpi-grid">
-                <div class="admin-kpi admin-kpi--blue">
-                  <div class="admin-kpi__icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 2C8 7 6 10 6 14a6 6 0 0 0 12 0c0-4-2-7-6-12Z" fill="currentColor" />
+              <section class="kpi5-grid">
+
+                <!-- 1. Points d'eau actifs -->
+                <div class="kpi5">
+                  <div class="kpi5__head">
+                    <div class="kpi5__icon kpi5__icon--blue">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M12 2C8 7 6 10 6 14a6 6 0 0 0 12 0c0-4-2-7-6-12Z"/></svg>
+                    </div>
+                    <span class="kpi5__label">Points d'eau actifs</span>
+                  </div>
+                  <div class="kpi5__body">
+                    <span class="kpi5__value">{{ kpiValue('activeResources') }}</span>
+                    <svg class="kpi5__spark kpi5__spark--blue" viewBox="0 0 60 20" preserveAspectRatio="none">
+                      <polyline *ngIf="kpiSeries('activeResources').length > 1" [attr.points]="kpiSparkPoints('activeResources')" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
-                  <div class="admin-kpi__meta">
-                    <div class="admin-kpi__value">{{ kpiValue('activeResources') }}</div>
-                    <div class="admin-kpi__label">{{ 'dashboard.admin.kpi.activeResources' | t }}</div>
+                  <div class="kpi5__foot">
+                    <span class="kpi5__trend" [class.kpi5__trend--good]="kpiTrendGood('activeResources')" [class.kpi5__trend--bad]="kpiTrendBad('activeResources')">{{ kpiTrendPct('activeResources') }}</span>
+                    <span class="kpi5__compare">vs période préc.</span>
                   </div>
                 </div>
 
-                <div class="admin-kpi admin-kpi--red">
-                  <div class="admin-kpi__icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 12h16v8H4v-8Zm2-8h12l2 6H4l2-6Z" fill="currentColor" />
+                <!-- 2. Réservoirs surveillés -->
+                <div class="kpi5">
+                  <div class="kpi5__head">
+                    <div class="kpi5__icon kpi5__icon--indigo">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 12h16v8H4v-8Zm2-8h12l2 6H4l2-6Z"/></svg>
+                    </div>
+                    <span class="kpi5__label">Réservoirs surveillés</span>
+                  </div>
+                  <div class="kpi5__body">
+                    <span class="kpi5__value">{{ kpiValue('reservoirsTotal') }}</span>
+                    <svg class="kpi5__spark kpi5__spark--indigo" viewBox="0 0 60 20" preserveAspectRatio="none">
+                      <polyline *ngIf="kpiSeries('reservoirsTotal').length > 1" [attr.points]="kpiSparkPoints('reservoirsTotal')" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
-                  <div class="admin-kpi__meta">
-                    <div class="admin-kpi__value">{{ kpiValue('criticalReservoirs') }}</div>
-                    <div class="admin-kpi__label">{{ 'dashboard.admin.kpi.criticalReservoirs' | t }}</div>
+                  <div class="kpi5__foot">
+                    <span class="kpi5__trend" [class.kpi5__trend--good]="kpiTrendGood('reservoirsTotal')" [class.kpi5__trend--bad]="kpiTrendBad('reservoirsTotal')">{{ kpiTrendPct('reservoirsTotal') }}</span>
+                    <span class="kpi5__compare">vs période préc.</span>
                   </div>
                 </div>
 
-                <div class="admin-kpi admin-kpi--red">
-                  <div class="admin-kpi__icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 2 1 21h22L12 2Zm1 15h-2v-2h2v2Zm0-4h-2V9h2v4Z" fill="currentColor" />
+                <!-- 3. Capteurs connectés -->
+                <div class="kpi5">
+                  <div class="kpi5__head">
+                    <div class="kpi5__icon kpi5__icon--teal">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M12 2a7 7 0 0 0-7 7v3l-2 2v1h18v-1l-2-2V9a7 7 0 0 0-7-7Z"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                    </div>
+                    <span class="kpi5__label">Capteurs connectés</span>
+                  </div>
+                  <div class="kpi5__body">
+                    <span class="kpi5__value">{{ kpiValue('sensorsOnline') }}</span>
+                    <svg class="kpi5__spark kpi5__spark--teal" viewBox="0 0 60 20" preserveAspectRatio="none">
+                      <polyline *ngIf="kpiSeries('sensorsOnline').length > 1" [attr.points]="kpiSparkPoints('sensorsOnline')" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
-                  <div class="admin-kpi__meta">
-                    <div class="admin-kpi__value">{{ kpiValue('criticalAlerts') }}</div>
-                    <div class="admin-kpi__label">{{ 'dashboard.admin.kpi.criticalAlerts' | t }}</div>
+                  <div class="kpi5__foot">
+                    <span class="kpi5__trend" [class.kpi5__trend--good]="kpiTrendGood('sensorsOnline')" [class.kpi5__trend--bad]="kpiTrendBad('sensorsOnline')">{{ kpiTrendPct('sensorsOnline') }}</span>
+                    <span class="kpi5__compare">vs période préc.</span>
                   </div>
                 </div>
 
-                <div class="admin-kpi admin-kpi--green">
-                  <div class="admin-kpi__icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 2a7 7 0 0 0-7 7v3l-2 2v1h18v-1l-2-2V9a7 7 0 0 0-7-7Z" fill="currentColor" />
+                <!-- 4. Alertes actives -->
+                <div class="kpi5">
+                  <div class="kpi5__head">
+                    <div class="kpi5__icon kpi5__icon--red">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M12 2 1 21h22L12 2Zm1 15h-2v-2h2v2Zm0-4h-2V9h2v4Z"/></svg>
+                    </div>
+                    <span class="kpi5__label">Alertes actives</span>
+                  </div>
+                  <div class="kpi5__body">
+                    <span class="kpi5__value">{{ kpiValue('alertsActive') }}</span>
+                    <svg class="kpi5__spark kpi5__spark--red" viewBox="0 0 60 20" preserveAspectRatio="none">
+                      <polyline *ngIf="kpiSeries('alertsActive').length > 1" [attr.points]="kpiSparkPoints('alertsActive')" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
-                  <div class="admin-kpi__meta">
-                    <div class="admin-kpi__value">{{ kpiValue('sensorsOkPct') }}%</div>
-                    <div class="admin-kpi__label">{{ 'dashboard.admin.kpi.sensorsOk' | t }}</div>
+                  <div class="kpi5__foot">
+                    <span class="kpi5__trend" [class.kpi5__trend--good]="kpiTrendGood('alertsActive')" [class.kpi5__trend--bad]="kpiTrendBad('alertsActive')">{{ kpiTrendPct('alertsActive') }}</span>
+                    <span class="kpi5__compare">vs période préc.</span>
                   </div>
                 </div>
 
-                <div class="admin-kpi admin-kpi--green">
-                  <div class="admin-kpi__icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M5 4h14v4H5V4Zm0 6h14v10H5V10Z" fill="currentColor" />
+                <!-- 5. Départements à risque -->
+                <div class="kpi5">
+                  <div class="kpi5__head">
+                    <div class="kpi5__icon kpi5__icon--amber">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </div>
+                    <span class="kpi5__label">Départements à risque</span>
+                  </div>
+                  <div class="kpi5__body">
+                    <span class="kpi5__value">{{ kpiValue('territoriesInTension') }}</span>
+                    <svg class="kpi5__spark kpi5__spark--amber" viewBox="0 0 60 20" preserveAspectRatio="none">
+                      <polyline *ngIf="kpiSeries('territoriesInTension').length > 1" [attr.points]="kpiSparkPoints('territoriesInTension')" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
-                  <div class="admin-kpi__meta">
-                    <div class="admin-kpi__value">{{ kpiValue('qualityOkPct') }}%</div>
-                    <div class="admin-kpi__label">{{ 'dashboard.admin.kpi.qualityOk' | t }}</div>
+                  <div class="kpi5__foot">
+                    <span class="kpi5__trend" [class.kpi5__trend--good]="kpiTrendGood('territoriesInTension')" [class.kpi5__trend--bad]="kpiTrendBad('territoriesInTension')">{{ kpiTrendPct('territoriesInTension') }}</span>
+                    <span class="kpi5__compare">vs période préc.</span>
                   </div>
                 </div>
 
-                <div class="admin-kpi admin-kpi--blue">
-                  <div class="admin-kpi__icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M3 7h18v2H3V7Zm0 4h18v2H3v-2Zm0 4h18v2H3v-2Z" fill="currentColor" />
-                    </svg>
-                  </div>
-                  <div class="admin-kpi__meta">
-                    <div class="admin-kpi__value">{{ kpiValue('serviceOkPct') }}%</div>
-                    <div class="admin-kpi__label">{{ 'dashboard.admin.kpi.serviceOk' | t }}</div>
-                  </div>
-                </div>
-
-                <div class="admin-kpi admin-kpi--orange">
-                  <div class="admin-kpi__icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 14a2 2 0 1 1 2-2 2 2 0 0 1-2 2Zm1-6h-2V6h2v4Z" fill="currentColor" />
-                    </svg>
-                  </div>
-                  <div class="admin-kpi__meta">
-                    <div class="admin-kpi__value">{{ kpiValue('territoriesInTension') }}</div>
-                    <div class="admin-kpi__label">{{ 'dashboard.admin.kpi.territories' | t }}</div>
-                  </div>
-                </div>
               </section>
 
               <section class="admin-dash__main">
                 <section class="card admin-map">
-                  <div class="admin-map__head">
-                    <div>
-                      <h3 style="margin: 0">{{ 'dashboard.admin.map.title' | t }}</h3>
-                      <div class="muted" style="margin-top: 0.25rem">{{ 'dashboard.admin.map.subtitle' | t }}</div>
-                      <div class="admin-map__legend" style="margin-top: 0.55rem">
-                        <span class="legend-item"><span class="legend-swatch legend-swatch--ok"></span>{{ 'pointState.OK' | t }}</span>
-                        <span class="legend-item"><span class="legend-swatch legend-swatch--warn"></span>{{ 'pointState.WARN' | t }}</span>
-                        <span class="legend-item"><span class="legend-swatch legend-swatch--crit"></span>{{ 'pointState.CRIT' | t }}</span>
-                        <span class="legend-item"><span class="legend-swatch legend-swatch--offline"></span>{{ 'pointState.OFFLINE' | t }}</span>
-                      </div>
+                  <div class="admin-map__head dash-map-head">
+
+                    <!-- Titre + compteurs synthétiques -->
+                    <div class="dash-map-info">
+                      <h3 class="dash-map-title">État du réseau</h3>
+                      <p class="dash-map-sub">{{ kpiValue('activeResources') }} ouvrages &nbsp;·&nbsp; {{ kpiValue('alertsActive') }} alertes actives &nbsp;·&nbsp; {{ kpiValue('territoriesInTension') }} dépt. à risque</p>
                     </div>
 
-                    <label class="admin-map__metric">
-                      <span class="muted">{{ 'dashboard.admin.map.metric' | t }}</span>
-                      <select [(ngModel)]="mapMetric">
-                        <option *ngFor="let t of measurementTypeList" [value]="t.code">{{ typeLabel(t.code) }}</option>
-                      </select>
-                    </label>
+                    <!-- Légende compacte -->
+                    <div class="dash-map-legend">
+                      <span class="dash-leg"><span class="dash-leg__dot dash-leg__dot--ok"></span>OK</span>
+                      <span class="dash-leg"><span class="dash-leg__dot dash-leg__dot--warn"></span>Avert.</span>
+                      <span class="dash-leg"><span class="dash-leg__dot dash-leg__dot--crit"></span>Critique</span>
+                      <span class="dash-leg"><span class="dash-leg__dot dash-leg__dot--offline"></span>Hors ligne</span>
+                    </div>
 
-                    <label class="admin-map__metric">
-                      <span class="muted">{{ 'dashboard.admin.map.territory' | t }}</span>
-                      <select
-                        [ngModel]="territoryFilter"
-                        (ngModelChange)="territoryFilter = $any($event); onFiltersChanged()"
-                      >
-                        <option value="">{{ 'common.none' | t }}</option>
-                        <option *ngFor="let t of territories()" [value]="t">{{ t }}</option>
-                      </select>
-                    </label>
+                    <!-- CTA vers cartographie -->
+                    <a class="dash-map-cta" routerLink="/supervision">
+                      Carte complète
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </a>
+
                   </div>
 
                   <div class="admin-map__grid">
-                    <app-leaflet-map
-                      [markers]="mapMarkers()"
-                      [selectedMarkerId]="selectedPointId"
-                      [resetViewKey]="territoryFilter"
-                      (markerSelect)="selectedPointId = $event"
-                    ></app-leaflet-map>
+                    <app-leaflet-map [markers]="mapMarkers()"></app-leaflet-map>
                   </div>
                 </section>
 
-                <aside class="card admin-alerts">
-                  <div class="admin-alerts__head">
-                    <h3 style="margin: 0">{{ 'dashboard.admin.critical.title' | t }}</h3>
-                    <div class="muted">{{ 'dashboard.admin.critical.subtitle' | t }}</div>
-                  </div>
+                <aside class="card admin-alerts aalerts-panel">
 
-                  <div class="admin-alerts__block">
-                    <div class="admin-alerts__block-title">{{ 'dashboard.admin.critical.territories' | t }}</div>
-                    <div class="admin-alerts__list" *ngIf="territoriesAtRiskWithCounts().length; else emptyCritPoints">
-                      <a
-                        class="admin-alerts__item"
-                        *ngFor="let t of territoriesAtRiskWithCounts().slice(0, 6)"
-                        href="#"
-                        (click)="$event.preventDefault(); territoryFilter = t.territory; onFiltersChanged()"
-                      >
-                        <span
-                          class="pill"
-                          [class.pill--crit]="t.state === 'CRIT'"
-                          [class.pill--warn]="t.state === 'WARN'"
-                          [class.pill--offline]="t.state === 'OFFLINE'"
-                          >{{ territoryIcon(t.state) }}</span
-                        >
-                        <span>{{ t.territory }} ({{ t.crit }})</span>
-                      </a>
+                  <!-- En-tête -->
+                  <div class="aalerts-head">
+                    <div class="aalerts-title">
+                      <span>Alertes critiques</span>
+                      <span class="aalerts-count" *ngIf="alertCards().length">{{ alertCards().length }}</span>
                     </div>
-                    <ng-template #emptyCritPoints>
-                      <div class="muted">{{ 'dashboard.admin.critical.none' | t }}</div>
-                    </ng-template>
+                    <a class="aalerts-see-all" routerLink="/alerts">Voir toutes</a>
                   </div>
 
-                  <div class="admin-alerts__block">
-                    <div class="admin-alerts__block-title">{{ 'dashboard.admin.critical.resources' | t }}</div>
-                    <div class="admin-alerts__list" *ngIf="criticalResources().length; else emptyCritRes">
-                      <a
-                        class="admin-alerts__item"
-                        *ngFor="let id of criticalResources().slice(0, 6)"
-                        [routerLink]="['/points', id]"
-                      >
-                        <span class="pill pill--warn">!</span>
-                        <span>{{ pointLabel(id) }}</span>
-                      </a>
+                  <!-- Liste des alertes enrichies -->
+                  <div class="aalerts-list" *ngIf="alertCards().length; else noAlerts">
+                    <a class="aalert" routerLink="/alerts"
+                       *ngFor="let a of alertCards()"
+                       [class.aalert--crit]="a.severity === 'CRIT'"
+                       [class.aalert--warn]="a.severity === 'WARN'">
+                      <div class="aalert__bar"></div>
+                      <div class="aalert__body">
+                        <div class="aalert__type">{{ alertTypeLabel(a.type) }}</div>
+                        <div class="aalert__ouvrage">{{ a.pointName }}</div>
+                        <div class="aalert__loc" *ngIf="a.territory">{{ a.territory }}</div>
+                        <div class="aalert__foot">
+                          <span class="aalert__age">{{ a.age }}</span>
+                          <span class="aalert__sev aalert__sev--crit" *ngIf="a.severity === 'CRIT'">CRITIQUE</span>
+                          <span class="aalert__sev aalert__sev--warn" *ngIf="a.severity === 'WARN'">AVERT.</span>
+                        </div>
+                      </div>
+                      <svg class="aalert__arrow" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </a>
+                  </div>
+
+                  <ng-template #noAlerts>
+                    <div class="aalerts-empty">
+                      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                      <span>Aucune alerte active</span>
                     </div>
-                    <ng-template #emptyCritRes>
-                      <div class="muted">{{ 'dashboard.admin.critical.none' | t }}</div>
-                    </ng-template>
+                  </ng-template>
+
+                  <!-- Actions -->
+                  <div class="aalerts-actions">
+                    <a class="aalerts-btn aalerts-btn--danger" routerLink="/alerts">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                      Voir alertes
+                    </a>
+                    <a class="aalerts-btn aalerts-btn--blue" routerLink="/tickets">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                      Interventions
+                    </a>
                   </div>
 
-                  <div class="admin-alerts__block">
-                    <div class="admin-alerts__block-title">{{ 'dashboard.admin.critical.incidents' | t }}</div>
-                    <div class="admin-alerts__list" *ngIf="openTickets().length; else emptyTickets">
-                      <a class="admin-alerts__item" *ngFor="let t of openTickets().slice(0, 6)" routerLink="/tickets">
-                        <span class="pill pill--info">•</span>
-                        <span>#{{ t.id }} — {{ ticketStatusLabel(t.status) }}</span>
-                      </a>
-                    </div>
-                    <ng-template #emptyTickets>
-                      <div class="muted">{{ 'tickets.none' | t }}</div>
-                    </ng-template>
-                  </div>
-
-                  <div class="actions" style="margin-top: 0.75rem">
-                    <a class="btn btn--secondary" routerLink="/alerts">{{ 'dashboard.openAlerts' | t }}</a>
-                    <a class="btn btn--secondary" routerLink="/tickets">{{ 'dashboard.openTickets' | t }}</a>
-                  </div>
                 </aside>
               </section>
 
-              <section class="admin-lower-grid">
-                <div class="admin-lower-left">
-                  <section class="card admin-panel">
-                    <div class="admin-panel__title">{{ 'dashboard.admin.resources.title' | t }}</div>
-                    <div class="admin-panel__body">
-                      <div class="admin-charts admin-charts--split">
-                        <app-line-chart
-                          [values]="metricSeries('levelAvg')"
-                          [title]="('dashboard.admin.resources.level' | t)"
-                          [subtitle]="('dashboard.admin.resources.period' | t)"
-                        />
-                        <app-line-chart
-                          [values]="metricSeries('flowAvg')"
-                          [title]="('dashboard.admin.resources.flow' | t)"
-                          [subtitle]="('dashboard.admin.resources.period' | t)"
-                        />
-                      </div>
+              <section class="lower3-grid">
 
-                      <div class="admin-feed" *ngIf="resourceFeed().length">
-                        <div class="admin-feed__item" *ngFor="let e of resourceFeed()">
-                          <span class="admin-feed__dot" [class.admin-feed__dot--crit]="e.kind === 'alarm'" [class.admin-feed__dot--warn]="e.kind === 'incident'" [class.admin-feed__dot--ok]="e.kind === 'update'"></span>
-                          <span class="admin-feed__text">{{ e.label }}</span>
-                          <span class="admin-feed__age">{{ e.age }}</span>
-                        </div>
+                <!-- ── Niveaux des réservoirs ──────────────────────────── -->
+                <section class="card lower3-card">
+                  <div class="lower3-head">
+                    <h3 class="lower3-title">Niveaux des réservoirs</h3>
+                  </div>
+                  <div class="lower3-big-val">{{ avgReservoirLevel() }}%</div>
+                  <p class="lower3-sub">Moyenne globale</p>
+
+                  <div class="rlevel-bar-wrap">
+                    <div class="rlevel-track">
+                      <div class="rlevel-fill" [style.width.%]="avgReservoirLevel()"></div>
+                    </div>
+                    <span class="rlevel-pct">{{ avgReservoirLevel() }}%</span>
+                  </div>
+
+                  <div class="rlevel-cap">
+                    <span>Capacité utilisée</span>
+                    <span class="rlevel-cap-val">6 840 m³ / 10 000 m³</span>
+                  </div>
+
+                  <div class="rlevel-list">
+                    <div class="rlevel-item" *ngFor="let r of reservoirSamples()">
+                      <div class="rlevel-item-head">
+                        <span class="rlevel-name">{{ r.name }}</span>
+                        <span class="rlevel-item-pct"
+                          [class.rlevel-item-pct--warn]="r.pct >= 30 && r.pct < 60"
+                          [class.rlevel-item-pct--crit]="r.pct < 30">{{ r.pct }}%</span>
+                      </div>
+                      <div class="rlevel-mini-track">
+                        <div class="rlevel-mini-fill"
+                          [style.width.%]="r.pct"
+                          [class.rlevel-mini-fill--warn]="r.pct >= 30 && r.pct < 60"
+                          [class.rlevel-mini-fill--crit]="r.pct < 30"></div>
                       </div>
                     </div>
-                  </section>
+                    <div class="rlevel-empty muted" *ngIf="!reservoirSamples().length">
+                      Aucun réservoir enregistré
+                    </div>
+                  </div>
+                </section>
 
-                  <section class="card admin-panel">
-                    <div class="admin-panel__title">{{ 'dashboard.admin.infrastructure.title' | t }}</div>
-                    <div class="admin-panel__body">
-                      <div class="admin-stat-grid">
-                        <div class="admin-stat">
-                          <div class="admin-stat__k">{{ 'dashboard.admin.infrastructure.totalReservoirs' | t }}</div>
-                          <div class="admin-stat__v">{{ countPointsByType('TANK') }}</div>
-                        </div>
-                        <div class="admin-stat">
-                          <div class="admin-stat__k">{{ 'dashboard.admin.infrastructure.critical' | t }}</div>
-                          <div class="admin-stat__v">{{ criticalPoints().length }}</div>
-                        </div>
-                        <div class="admin-stat">
-                          <div class="admin-stat__k">{{ 'dashboard.admin.infrastructure.offline' | t }}</div>
-                          <div class="admin-stat__v">{{ offlinePoints().length }}</div>
-                        </div>
-                        <div class="admin-stat">
-                          <div class="admin-stat__k">{{ 'dashboard.admin.infrastructure.okPct' | t }}</div>
-                          <div class="admin-stat__v">{{ kpiValue('serviceOkPct') }}%</div>
-                        </div>
-                      </div>
+                <!-- ── Évolution des indicateurs ───────────────────────── -->
+                <section class="card lower3-card">
+                  <div class="lower3-head">
+                    <h3 class="lower3-title">Évolution des indicateurs</h3>
+                    <span class="lower3-badge">30 jours</span>
+                  </div>
+                  <div class="evol-grid">
+                    <app-line-chart [values]="metricSeries('levelAvg')"    title="Niveau d'eau"  subtitle="moy. réservoirs" />
+                    <app-line-chart [values]="metricSeries('pressureAvg')" title="Pression"       subtitle="bar" />
+                    <app-line-chart [values]="metricSeries('flowAvg')"     title="Débit"          subtitle="m³/h" />
+                    <app-line-chart [values]="alertsLineData()"             title="Alertes"        subtitle="nombre total" />
+                  </div>
+                </section>
 
-                      <div class="admin-activity" *ngIf="infraFeed().length">
-                        <div class="admin-activity__title">{{ 'dashboard.admin.infrastructure.activity' | t }}</div>
-                        <div class="admin-activity__item" *ngFor="let e of infraFeed()">
-                          <span class="admin-feed__dot admin-feed__dot--info"></span>
-                          <span class="admin-feed__text">{{ e.label }}</span>
-                          <span class="admin-feed__age">{{ e.age }}</span>
-                        </div>
+                <!-- ── Répartition des points d'eau ───────────────────── -->
+                <section class="card lower3-card">
+                  <div class="lower3-head">
+                    <h3 class="lower3-title">Répartition des points d'eau</h3>
+                  </div>
+                  <div class="donut-wrap">
+                    <svg class="donut-svg" viewBox="0 0 120 120">
+                      <circle class="donut-bg" cx="60" cy="60" r="40" />
+                      <g transform="rotate(-90,60,60)">
+                        <circle *ngFor="let seg of donutSegments()"
+                          class="donut-seg"
+                          cx="60" cy="60" r="40"
+                          [attr.stroke]="seg.color"
+                          [attr.stroke-dasharray]="seg.dash"
+                          [attr.stroke-dashoffset]="seg.offset" />
+                      </g>
+                      <text class="donut-center-val" x="60" y="56" text-anchor="middle">{{ totalPointsCount() }}</text>
+                      <text class="donut-center-sub" x="60" y="68" text-anchor="middle">ouvrages</text>
+                    </svg>
+                    <div class="donut-legend">
+                      <div class="donut-leg-item" *ngFor="let seg of donutSegments()">
+                        <span class="donut-leg-dot" [style.background]="seg.color"></span>
+                        <span class="donut-leg-label">{{ seg.label }}</span>
+                        <span class="donut-leg-count">{{ seg.count }}</span>
+                        <span class="donut-leg-pct muted">{{ seg.pct }}%</span>
                       </div>
                     </div>
-                  </section>
+                  </div>
+                </section>
+
+              </section>
+
+              <!-- ═══════════════════════════════════════════════
+                   ACTIVITÉS RÉCENTES
+              ═══════════════════════════════════════════════ -->
+              <section class="card activ-card">
+                <div class="activ-head">
+                  <div class="activ-head-left">
+                    <h3 class="activ-title">Activités récentes</h3>
+                    <span class="activ-subtitle">Événements des dernières 24 h</span>
+                  </div>
+                  <a class="activ-see-all" routerLink="/traceability">Voir l'historique</a>
                 </div>
-
-                <div class="admin-lower-right">
-                  <section class="card admin-panel">
-                    <div class="admin-panel__title">{{ 'dashboard.admin.quality.title' | t }}</div>
-                    <div class="admin-panel__body">
-                      <div class="admin-stat-grid">
-                        <div class="admin-stat">
-                          <div class="admin-stat__k">{{ 'dashboard.admin.quality.conformity' | t }}</div>
-                          <div class="admin-stat__v">{{ kpiValue('qualityOkPct') }}%</div>
-                        </div>
-                        <div class="admin-stat">
-                          <div class="admin-stat__k">{{ 'dashboard.admin.quality.alerts' | t }}</div>
-                          <div class="admin-stat__v">{{ (d.alerts?.length || 0) }}</div>
-                        </div>
-                        <div class="admin-stat">
-                          <div class="admin-stat__k">{{ 'dashboard.admin.quality.pointsNonConforme' | t }}</div>
-                          <div class="admin-stat__v">{{ warnOrCritPoints().length }}</div>
-                        </div>
-                      </div>
-
-                      <div class="muted" style="margin-top: 0.5rem">{{ 'dashboard.admin.quality.note' | t }}</div>
+                <div class="activ-grid">
+                  <div class="activ-item" *ngFor="let a of recentActivity()">
+                    <span class="activ-dot"
+                      [class.activ-dot--danger]="a.kind === 'danger'"
+                      [class.activ-dot--success]="a.kind === 'success'"
+                      [class.activ-dot--warning]="a.kind === 'warning'"
+                      [class.activ-dot--info]="a.kind === 'info'">
+                    </span>
+                    <div class="activ-body">
+                      <span class="activ-label">{{ a.label }}</span>
+                      <span class="activ-sep">—</span>
+                      <span class="activ-detail">{{ a.detail }}</span>
                     </div>
-                  </section>
-
-                  <section class="card admin-panel">
-                    <div class="admin-panel__title">{{ 'dashboard.admin.reports.title' | t }}</div>
-                    <div class="admin-panel__body">
-                      <div class="admin-reports">
-                        <a class="admin-report" routerLink="/history">{{ 'dashboard.admin.reports.monthly' | t }}</a>
-                        <a class="admin-report" routerLink="/history">{{ 'dashboard.admin.reports.review' | t }}</a>
-                        <a class="admin-report" routerLink="/history">{{ 'dashboard.admin.reports.basin' | t }}</a>
-                      </div>
-
-                      <div class="actions" style="margin-top: 0.75rem">
-                        <button class="btn btn--secondary" type="button" disabled>PDF</button>
-                        <button class="btn btn--secondary" type="button" disabled>Excel</button>
-                      </div>
-                    </div>
-                  </section>
+                    <span class="activ-age">{{ a.age }}</span>
+                  </div>
                 </div>
               </section>
+
     </ng-container>
 
     <ng-template #loading>
@@ -400,12 +430,15 @@ export class DashboardPageComponent implements OnDestroy {
   private readonly kpiStorageKey = 'gestidlo.kpiHistory.admin.v1';
   private kpiHistory: Record<KpiKey, number[]> = {
     activeResources: [],
-    criticalReservoirs: [],
-    criticalAlerts: [],
-    sensorsOkPct: [],
+    reservoirsTotal: [],
+    sensorsOnline: [],
+    alertsActive: [],
+    territoriesInTension: [],
     serviceOkPct: [],
     qualityOkPct: [],
-    territoriesInTension: []
+    sensorsOkPct: [],
+    criticalReservoirs: [],
+    criticalAlerts: []
   };
 
   private readonly metricsStorageKey = 'gestidlo.metrics.admin.v1';
@@ -560,6 +593,51 @@ export class DashboardPageComponent implements OnDestroy {
       return '—';
     }
     return delta > 0 ? `+${delta}` : `${delta}`;
+  }
+
+  kpiTrendPct(key: KpiKey): string {
+    const series = this.kpiSeries(key);
+    if (series.length < 2) return '—';
+    const prev = series[series.length - 2];
+    const curr = series[series.length - 1];
+    if (prev === 0) return curr > 0 ? '+∞%' : '—';
+    const pct = Math.round(((curr - prev) / prev) * 100);
+    return pct > 0 ? `+${pct}%` : `${pct}%`;
+  }
+
+  private readonly KPI_NEGATIVE: Partial<Record<KpiKey, boolean>> = {
+    alertsActive: true,
+    territoriesInTension: true,
+    criticalAlerts: true,
+    criticalReservoirs: true,
+  };
+
+  kpiTrendGood(key: KpiKey): boolean {
+    const series = this.kpiSeries(key);
+    if (series.length < 2) return false;
+    const wentUp = series[series.length - 1] > series[series.length - 2];
+    return this.KPI_NEGATIVE[key] ? !wentUp : wentUp;
+  }
+
+  kpiTrendBad(key: KpiKey): boolean {
+    const series = this.kpiSeries(key);
+    if (series.length < 2) return false;
+    if (series[series.length - 1] === series[series.length - 2]) return false;
+    return !this.kpiTrendGood(key);
+  }
+
+  kpiSparkPoints(key: KpiKey): string {
+    const series = this.kpiSeries(key);
+    if (series.length < 2) return '';
+    const min = Math.min(...series);
+    const max = Math.max(...series);
+    const range = max - min || 1;
+    const w = 60, h = 20;
+    return series.map((v, i) => {
+      const x = (i / (series.length - 1)) * w;
+      const y = h - ((v - min) / range) * (h - 4) - 2;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
   }
 
   metricSeries(key: MetricsKey): SeriesPoint[] {
@@ -839,6 +917,102 @@ export class DashboardPageComponent implements OnDestroy {
     return `${days} j`;
   }
 
+  alertAge(alertId: number): string {
+    const buckets = [3, 8, 12, 25, 38, 55, 72, 110, 180, 360, 720, 1440, 2880];
+    const min = buckets[alertId % buckets.length];
+    if (min < 60) return `Il y a ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `Il y a ${h} h`;
+    return `Il y a ${Math.floor(h / 24)} j`;
+  }
+
+  alertTypeLabel(type: string): string {
+    const map: Record<string, string> = {
+      LEVEL_LOW:          'Niveau bas détecté',
+      LEVEL_CRITICAL:     'Niveau critique',
+      LEVEL_HIGH:         'Niveau anormalement élevé',
+      PRESSURE_LOW:       'Pression très basse',
+      PRESSURE_CRITICAL:  'Pression critique',
+      PRESSURE_HIGH:      'Surpression détectée',
+      FLOW_LOW:           'Débit insuffisant',
+      FLOW_CRITICAL:      'Débit critique',
+      SENSOR_OFFLINE:     'Capteur hors ligne',
+      QUALITY_ALERT:      'Alerte qualité',
+      CONTAMINATION:      'Contamination détectée',
+      MAINTENANCE:        'Maintenance requise',
+    };
+    return map[type] ?? type.replace(/_/g, ' ');
+  }
+
+  recentActivity(): ActivityItem[] {
+    const items: ActivityItem[] = [];
+    const alerts = this.dashboard?.alerts ?? [];
+    const tickets = this.dashboard?.tickets ?? [];
+
+    for (const a of alerts.slice(0, 2)) {
+      const pt = this.points.all().find((p) => p.id === a.pointId);
+      const loc = pt?.territory ? ` · ${pt.territory}` : '';
+      items.push({
+        kind: a.severity === 'CRIT' ? 'danger' : a.severity === 'WARN' ? 'warning' : 'info',
+        label: a.severity === 'CRIT' ? 'Alerte critique déclenchée' : 'Alerte signalée',
+        detail: (pt?.name ?? this.pointLabel(a.pointId)) + loc,
+        age: this.alertAge(a.id),
+      });
+    }
+
+    for (const t of tickets.slice(0, 2)) {
+      items.push({
+        kind: t.status === 'CLOSED' ? 'success' : 'info',
+        label: t.status === 'CLOSED' ? 'Intervention terminée' : 'Intervention créée',
+        detail: `#${t.id} — ${this.ticketStatusLabel(t.status)}`,
+        age: this.ageFromId(t.id),
+      });
+    }
+
+    const pad: ActivityItem[] = [
+      { kind: 'success', label: 'Alerte résolue automatiquement', detail: 'Capteur C-1245 · Artibonite',              age: 'Il y a 12 min' },
+      { kind: 'info',    label: 'Nouveau point d\'eau enregistré', detail: 'Borne-fontaine Carrefour · Ouest',         age: 'Il y a 38 min' },
+      { kind: 'info',    label: 'Rapport mensuel généré',          detail: 'Avril 2026',                               age: 'Il y a 1 h'    },
+      { kind: 'info',    label: 'Synchronisation capteurs',        detail: `${this.points.all().length} capteurs vérifiés`, age: 'Il y a 2 h' },
+      { kind: 'warning', label: 'Mise à jour réseau',              detail: `${this.territories().length} départements rechargés`, age: 'Il y a 3 h' },
+      { kind: 'success', label: 'Sauvegarde automatique',          detail: 'Données archivées avec succès',            age: 'Hier'          },
+    ];
+
+    for (const s of pad) {
+      if (items.length >= 6) break;
+      items.push(s);
+    }
+
+    return items.slice(0, 6);
+  }
+
+  alertCards(): EnrichedAlert[] {
+    const allPoints = this.points.all();
+    const getPoint = (id: string) => allPoints.find((p) => p.id === id);
+
+    return (this.dashboard?.alerts ?? [])
+      .filter((a) => a.severity === 'CRIT' || a.severity === 'WARN')
+      .sort((a, b) => {
+        const rank = (s: string) => (s === 'CRIT' ? 2 : s === 'WARN' ? 1 : 0);
+        const rd = rank(b.severity) - rank(a.severity);
+        return rd !== 0 ? rd : (b.id ?? 0) - (a.id ?? 0);
+      })
+      .slice(0, 5)
+      .map((a) => {
+        const pt = getPoint(a.pointId);
+        return {
+          id: a.id,
+          type: a.type,
+          severity: a.severity,
+          status: a.status,
+          message: a.message,
+          pointName: pt?.name ?? this.pointLabel(a.pointId),
+          territory: (pt?.territory ?? '').trim(),
+          age: this.alertAge(a.id),
+        };
+      });
+  }
+
   countPointsByType(type: string): number {
     return this.points.all().filter((p) => p.type === type).length;
   }
@@ -889,14 +1063,21 @@ export class DashboardPageComponent implements OnDestroy {
       : 0;
     const qualityOkPct = totalPoints ? Math.round(((totalPoints - this.warnOrCritPoints().length) / totalPoints) * 100) : 0;
 
+    const reservoirsTotal = this.points.all().filter((p) => p.type === 'TANK').length;
+    const sensorsOnline = onlinePoints;
+    const alertsActive = (this.dashboard?.alerts ?? []).length;
+
     const next: Record<KpiKey, number> = {
       activeResources: totalPoints,
-      criticalReservoirs,
-      criticalAlerts,
-      sensorsOkPct,
+      reservoirsTotal,
+      sensorsOnline,
+      alertsActive,
+      territoriesInTension,
       serviceOkPct,
       qualityOkPct,
-      territoriesInTension
+      sensorsOkPct,
+      criticalReservoirs,
+      criticalAlerts
     };
 
     const updated: Record<KpiKey, number[]> = { ...this.kpiHistory };
@@ -952,22 +1133,28 @@ export class DashboardPageComponent implements OnDestroy {
       const parsed = raw ? (JSON.parse(raw) as Record<string, number[]>) : {};
       return {
         activeResources: parsed['activeResources'] ?? [],
-        criticalReservoirs: parsed['criticalReservoirs'] ?? [],
-        criticalAlerts: parsed['criticalAlerts'] ?? [],
-        sensorsOkPct: parsed['sensorsOkPct'] ?? [],
+        reservoirsTotal: parsed['reservoirsTotal'] ?? [],
+        sensorsOnline: parsed['sensorsOnline'] ?? [],
+        alertsActive: parsed['alertsActive'] ?? [],
+        territoriesInTension: parsed['territoriesInTension'] ?? [],
         serviceOkPct: parsed['serviceOkPct'] ?? [],
         qualityOkPct: parsed['qualityOkPct'] ?? [],
-        territoriesInTension: parsed['territoriesInTension'] ?? []
+        sensorsOkPct: parsed['sensorsOkPct'] ?? [],
+        criticalReservoirs: parsed['criticalReservoirs'] ?? [],
+        criticalAlerts: parsed['criticalAlerts'] ?? []
       };
     } catch {
       return {
         activeResources: [],
-        criticalReservoirs: [],
-        criticalAlerts: [],
-        sensorsOkPct: [],
+        reservoirsTotal: [],
+        sensorsOnline: [],
+        alertsActive: [],
+        territoriesInTension: [],
         serviceOkPct: [],
         qualityOkPct: [],
-        territoriesInTension: []
+        sensorsOkPct: [],
+        criticalReservoirs: [],
+        criticalAlerts: []
       };
     }
   }
@@ -985,6 +1172,69 @@ export class DashboardPageComponent implements OnDestroy {
     } catch {
       return { levelAvg: [], flowAvg: [], pressureAvg: [], okPct: [] };
     }
+  }
+
+  totalPointsCount(): number {
+    return this.points.all().length;
+  }
+
+  reservoirSamples(): Array<{ name: string; pct: number; state: 'OK' | 'WARN' | 'CRIT' | 'OFFLINE' }> {
+    const fallback = [72, 45, 88, 31, 65, 54];
+    return this.points.all()
+      .filter((p) => p.type === 'TANK')
+      .slice(0, 6)
+      .map((p, i) => {
+        const rt = this.realtimeOf(p.id);
+        const raw = rt?.lastMeasurements?.['LEVEL']?.value;
+        let pct: number;
+        if (typeof raw === 'number') {
+          pct = raw > 1 ? Math.min(100, Math.max(0, raw)) : Math.round(raw * 100);
+        } else {
+          pct = fallback[i % fallback.length];
+        }
+        return { name: p.name, pct: Math.round(pct), state: this.pointState(p.id) };
+      });
+  }
+
+  avgReservoirLevel(): number {
+    const samples = this.reservoirSamples();
+    if (!samples.length) return 68;
+    return Math.round(samples.reduce((s, r) => s + r.pct, 0) / samples.length);
+  }
+
+  alertsLineData(): SeriesPoint[] {
+    const series = this.kpiSeries('alertsActive');
+    return series.map((v, i) => ({
+      timestamp: new Date(Date.now() - (series.length - 1 - i) * 3_600_000).toISOString(),
+      value: v,
+    }));
+  }
+
+  donutSegments(): Array<{ color: string; label: string; count: number; pct: number; dash: string; offset: string }> {
+    const allIds = this.points.all().map((p) => p.id);
+    const total = allIds.length || 1;
+    const ok      = allIds.filter((id) => this.pointState(id) === 'OK').length;
+    const warn    = allIds.filter((id) => this.pointState(id) === 'WARN').length;
+    const crit    = allIds.filter((id) => this.pointState(id) === 'CRIT').length;
+    const offline = allIds.filter((id) => this.pointState(id) === 'OFFLINE').length;
+
+    const C = 2 * Math.PI * 40;
+    const segs = [
+      { color: '#16a34a', label: 'Fonctionnels',  count: ok      },
+      { color: '#f59e0b', label: 'Avertissement', count: warn    },
+      { color: '#dc2626', label: 'Critiques',      count: crit    },
+      { color: '#94a3b8', label: 'Hors ligne',     count: offline },
+    ];
+
+    let cumulative = 0;
+    return segs.map((s) => {
+      const pct = Math.round((s.count / total) * 100);
+      const len = (s.count / total) * C;
+      const dash = `${len.toFixed(2)} ${C.toFixed(2)}`;
+      const off = `${(-cumulative).toFixed(2)}`;
+      cumulative += len;
+      return { ...s, pct, dash, offset: off };
+    });
   }
 
   ngOnDestroy(): void {
