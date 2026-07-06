@@ -1,0 +1,131 @@
+<!-- Overlay -->
+<div class="ifd-overlay" (click)="state.fermerFiltres()"></div>
+
+<!-- Drawer panel -->
+<div class="ifd-panel">
+
+  <div class="ifd-head">
+    <div class="ifd-head__left">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      <span>Filtres</span>
+      <span class="ifd-badge" *ngIf="state.nombreFiltresActifs() > 0">{{ state.nombreFiltresActifs() }}</span>
+    </div>
+    <div class="ifd-head__right">
+      <button class="ifd-reset" type="button"
+        *ngIf="state.nombreFiltresActifs() > 0"
+        (click)="onReset()">
+        Effacer tout
+      </button>
+      <button class="ifd-close" type="button" (click)="state.fermerFiltres()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="ifd-body">
+
+    <!-- Recherche -->
+    <div class="ifd-group">
+      <p class="ifd-label">Recherche</p>
+      <div class="ifd-search">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="ifd-search__input" type="text"
+          [value]="state.filtres().recherche"
+          (input)="state.modifierRecherche($any($event.target).value)"
+          placeholder="Titre, technicien…">
+        <button class="ifd-search__clear" type="button"
+          *ngIf="state.filtres().recherche"
+          (click)="state.modifierRecherche('')">×</button>
+      </div>
+    </div>
+
+    <!-- Statut -->
+    <div class="ifd-group">
+      <p class="ifd-label">Statut</p>
+      <div class="ifd-checks">
+        <label *ngFor="let s of STATUTS" class="ifd-check-item">
+          <input type="checkbox" class="ifd-check"
+            [checked]="state.filtres().statuts.includes(s)"
+            (change)="state.toggleStatut(s)">
+          <span class="ifd-dot" [style.background]="statutDot(s)"></span>
+          <span>{{ statutLabels[s] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Type -->
+    <div class="ifd-group">
+      <p class="ifd-label">Type</p>
+      <div class="ifd-checks">
+        <label *ngFor="let t of TYPES" class="ifd-check-item">
+          <input type="checkbox" class="ifd-check"
+            [checked]="state.filtres().types.includes(t)"
+            (change)="state.toggleType(t)">
+          <span>{{ typeLabels[t] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Priorité -->
+    <div class="ifd-group">
+      <p class="ifd-label">Priorité</p>
+      <div class="ifd-checks">
+        <label *ngFor="let p of PRIORITES" class="ifd-check-item">
+          <input type="checkbox" class="ifd-check"
+            [checked]="state.filtres().priorites.includes(p)"
+            (change)="state.togglePriorite(p)">
+          <span class="ifd-dot" [style.background]="prioriteDot(p)"></span>
+          <span>{{ prioriteLabels[p] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Département -->
+    <div class="ifd-group">
+      <p class="ifd-label">Département</p>
+      <select class="ifd-select" [(ngModel)]="filterDept">
+        <option value="">Tous</option>
+        <option *ngFor="let d of state.departementsDisponibles()" [value]="d">{{ d }}</option>
+      </select>
+    </div>
+
+    <!-- Commune (cascade) -->
+    <div class="ifd-group" *ngIf="filterDept">
+      <p class="ifd-label">Commune</p>
+      <select class="ifd-select" [ngModel]="filterCommune" (ngModelChange)="onCommuneChange($event)">
+        <option value="">Toutes</option>
+        <option *ngFor="let c of communeOptions" [value]="c">{{ c }}</option>
+      </select>
+    </div>
+
+    <!-- Institution -->
+    <div class="ifd-group" *ngIf="state.institutionsDisponibles().length > 1">
+      <p class="ifd-label">Institution</p>
+      <select class="ifd-select"
+        [ngModel]="state.filtres().institutions[0] || ''"
+        (ngModelChange)="state.modifierFiltre('institutions', $event ? [$event] : [])">
+        <option value="">Toutes</option>
+        <option *ngFor="let inst of state.institutionsDisponibles()" [value]="inst">{{ inst }}</option>
+      </select>
+    </div>
+
+    <div class="ifd-count">
+      {{ state.interventionsFiltrees().length }} / {{ state.kpis().total }} intervention(s)
+    </div>
+
+  </div><!-- /ifd-body -->
+
+  <div class="ifd-foot">
+    <button class="ifd-btn ifd-btn--ghost" type="button" (click)="state.fermerFiltres()">Fermer</button>
+    <button class="ifd-btn ifd-btn--primary" type="button" (click)="state.fermerFiltres()">
+      Appliquer ({{ state.interventionsFiltrees().length }})
+    </button>
+  </div>
+
+</div>

@@ -1,0 +1,534 @@
+<div class="rpt-shell" [class.rpt-shell--embedded]="!!scope">
+
+  <!-- Scoped header (embedded in URD detail) -->
+  <div *ngIf="scope" class="rpt-scope-header">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#A5A4DC" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <span>Rapports · département {{ scope.dept }}</span>
+    <span class="rpt-scope-count">{{ effKpis().total }} rapport{{ effKpis().total !== 1 ? 's' : '' }}</span>
+    <button class="rpt-btn rpt-btn--primary" style="margin-left:auto" type="button" (click)="ouvrirCreateEff()">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Créer un rapport
+    </button>
+  </div>
+
+  <!-- File de validation (scoped mode: transmis en attente de signature URD) -->
+  <div *ngIf="scope && aValider().length > 0" class="rpt-vf-section">
+    <div class="rpt-vf-header">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      File de validation
+      <span class="rpt-vf-badge">{{ aValider().length }}</span>
+      <span class="rpt-vf-hint">Rapports transmis · en attente de votre signature</span>
+    </div>
+    <div *ngFor="let r of aValider()" class="rpt-vf-row">
+      <div class="rpt-vf-row__type" [style.background]="state.typeBg(r.type)" [style.color]="state.typeColor(r.type)">{{ state.typeLabelShort(r.type) }}</div>
+      <div class="rpt-vf-row__title">{{ r.title }}</div>
+      <div class="rpt-vf-row__meta">{{ r.author }} · {{ r.zone }} · {{ r.createdAt }}</div>
+      <div class="rpt-vf-row__actions">
+        <button class="rpt-vf-btn rpt-vf-btn--renvoyer" type="button" (click)="state.renvoyerRapport(r.id)">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+          Renvoyer
+        </button>
+        <button class="rpt-vf-btn rpt-vf-btn--valider" type="button" (click)="state.validerRapport(r.id)">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Valider
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ HEADER (standalone page only) ══════════════════════════════════════ -->
+  <div class="rpt-header" *ngIf="!scope">
+    <div class="rpt-header__left">
+      <h1 class="rpt-header__title">Rapports</h1>
+      <p class="rpt-header__sub">Générer, consulter et exporter les rapports techniques et opérationnels du réseau AEP.</p>
+    </div>
+    <div class="rpt-header__actions">
+      <button class="rpt-btn rpt-btn--ghost" type="button" (click)="ouvrirFiltresEff()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        Filtres
+        <span class="rpt-filter-badge" *ngIf="effNbFiltres() > 0">{{ effNbFiltres() }}</span>
+      </button>
+      <button class="rpt-btn rpt-btn--outline" type="button" (click)="state.ouvrirTemplates()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+        </svg>
+        Modèles
+      </button>
+      <button class="rpt-btn rpt-btn--ghost" type="button" (click)="notifyExportList()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exporter
+      </button>
+      <button class="rpt-btn rpt-btn--primary" type="button" (click)="ouvrirCreateEff()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Créer un rapport
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ KPI BAR ══════════════════════════════════════════════════════════════ -->
+  <div class="rpt-kpi-bar">
+    <div class="rpt-kpi">
+      <div class="rpt-kpi__icon rpt-kpi__icon--blue"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      <div class="rpt-kpi__body"><span class="rpt-kpi__val">{{ effKpis().total }}</span><span class="rpt-kpi__lbl">Total rapports</span></div>
+    </div>
+    <div class="rpt-kpi-sep"></div>
+    <div class="rpt-kpi">
+      <div class="rpt-kpi__icon rpt-kpi__icon--teal"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="rpt-kpi__body"><span class="rpt-kpi__val rpt-kpi__val--teal">{{ effKpis().generesMois }}</span><span class="rpt-kpi__lbl">Générés</span></div>
+    </div>
+    <div class="rpt-kpi-sep"></div>
+    <div class="rpt-kpi">
+      <div class="rpt-kpi__icon rpt-kpi__icon--orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="rpt-kpi__body"><span class="rpt-kpi__val rpt-kpi__val--orange">{{ effKpis().enAttente }}</span><span class="rpt-kpi__lbl">En brouillon</span></div>
+    </div>
+    <div class="rpt-kpi-sep"></div>
+    <div class="rpt-kpi">
+      <div class="rpt-kpi__icon rpt-kpi__icon--purple"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+      <div class="rpt-kpi__body"><span class="rpt-kpi__val rpt-kpi__val--purple">{{ effKpis().transmis }}</span><span class="rpt-kpi__lbl">Transmis</span></div>
+    </div>
+    <div class="rpt-kpi-sep"></div>
+    <div class="rpt-kpi">
+      <div class="rpt-kpi__icon rpt-kpi__icon--green"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <div class="rpt-kpi__body"><span class="rpt-kpi__val rpt-kpi__val--green">{{ effKpis().valides }}</span><span class="rpt-kpi__lbl">Validés</span></div>
+    </div>
+    <div class="rpt-kpi-sep"></div>
+    <div class="rpt-kpi">
+      <div class="rpt-kpi__icon rpt-kpi__icon--gray"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+      <div class="rpt-kpi__body"><span class="rpt-kpi__val">{{ effKpis().archives }}</span><span class="rpt-kpi__lbl">Archivés</span></div>
+    </div>
+  </div>
+
+  <!-- ══ BODY ══════════════════════════════════════════════════════════════════ -->
+  <div class="rpt-body">
+
+    <!-- ── MAIN ──────────────────────────────────────────────────────────────── -->
+    <div class="rpt-main">
+
+      <!-- Search bar -->
+      <div class="rpt-search-bar">
+        <div class="rpt-search">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="rpt-search__icon">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="rpt-search__input"
+            [value]="effFiltres().recherche"
+            (input)="modifierRechercheEff($any($event.target).value)"
+            placeholder="Rechercher un rapport…">
+        </div>
+        <span class="rpt-total">{{ effRapports().length }} rapport(s)</span>
+      </div>
+
+      <!-- Table -->
+      <div class="rpt-table-scroll">
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>RAPPORT</th>
+              <th>TYPE</th>
+              <th>PÉRIODE</th>
+              <th>ZONE</th>
+              <th>AUTEUR</th>
+              <th>STATUT</th>
+              <th>FORMAT</th>
+              <th>CRÉÉ LE</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="pagedReports().length === 0">
+              <td colspan="9" class="rpt-empty">Aucun rapport ne correspond aux filtres.</td>
+            </tr>
+            <tr *ngFor="let r of pagedReports()"
+              class="rpt-row"
+              [class.rpt-row--selected]="state.selection()?.id === r.id"
+              (click)="state.selectionner(r)">
+
+              <td class="rpt-cell-name">
+                <div class="rpt-type-icon" [style.background]="state.typeBg(r.type)" [style.color]="state.typeColor(r.type)">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                </div>
+                <div class="rpt-name-block">
+                  <span class="rpt-name">{{ r.title }}</span>
+                  <span class="rpt-sub">{{ r.subtitle }}</span>
+                </div>
+              </td>
+              <td><span class="rpt-type-badge" [style.background]="state.typeBg(r.type)" [style.color]="state.typeColor(r.type)">{{ state.typeLabelShort(r.type) }}</span></td>
+              <td class="rpt-cell-small">{{ r.periodLabel }}</td>
+              <td class="rpt-cell-small">{{ r.zone }}</td>
+              <td class="rpt-cell-small">{{ r.author }}</td>
+              <td>
+                <span class="rpt-status"
+                  [style.background]="state.statusBg(r.status)"
+                  [style.color]="state.statusDot(r.status)">
+                  {{ state.statusLabel(r.status) }}
+                </span>
+              </td>
+              <td><span class="rpt-fmt rpt-fmt--{{ r.format }}">{{ r.format.toUpperCase() }}</span></td>
+              <td class="rpt-cell-small">{{ r.createdAt }}</td>
+              <td class="rpt-cell-actions" (click)="$event.stopPropagation()">
+                <button class="rpt-row-btn" title="Aperçu" type="button"
+                  (click)="state.selectionner(r); ouvrirPreviewEff()">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+                <button class="rpt-row-btn" title="Voir détail" type="button"
+                  (click)="state.selectionner(r)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                    <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="rpt-pagination">
+        <span class="rpt-pag-info">
+          {{ pagedReports().length }} sur {{ effRapports().length }} rapports
+        </span>
+        <div class="rpt-pages">
+          <button class="rpt-page-btn" [disabled]="currentPage() === 1" (click)="currentPage.set(currentPage() - 1)" type="button">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button *ngFor="let p of [].constructor(totalPages()); let i = index"
+            class="rpt-page-num" [class.rpt-page-num--active]="currentPage() === i + 1"
+            (click)="currentPage.set(i + 1)" type="button">{{ i + 1 }}</button>
+          <button class="rpt-page-btn" [disabled]="currentPage() === totalPages()" (click)="currentPage.set(currentPage() + 1)" type="button">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div><!-- /rpt-main -->
+
+    <!-- ── DETAIL PANEL ────────────────────────────────────────────────────── -->
+    <div class="rpt-detail" *ngIf="state.selection() as r">
+
+      <div class="rpt-detail__head">
+        <div>
+          <div class="rpt-detail__title">{{ r.title }}</div>
+          <div class="rpt-detail__module">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            {{ r.module }}
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:.4rem;flex-shrink:0">
+          <span class="rpt-status" [style.background]="state.statusBg(r.status)" [style.color]="state.statusDot(r.status)">{{ state.statusLabel(r.status) }}</span>
+          <button class="rpt-detail__close" type="button" (click)="state.selectionner(null)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="rpt-detail__meta">
+        <div class="rpt-drow"><span class="rpt-drow__k">Période</span><span class="rpt-drow__v">{{ r.periodLabel }}</span></div>
+        <div class="rpt-drow"><span class="rpt-drow__k">Zone</span><span class="rpt-drow__v">{{ r.zone }}</span></div>
+        <div class="rpt-drow"><span class="rpt-drow__k">Auteur</span><span class="rpt-drow__v">{{ r.author }}</span></div>
+        <div class="rpt-drow"><span class="rpt-drow__k">Institution</span><span class="rpt-drow__v">{{ r.institution }}</span></div>
+        <div class="rpt-drow"><span class="rpt-drow__k">Format</span><span class="rpt-drow__v">{{ r.format.toUpperCase() }} {{ r.fileSize !== '—' ? '(' + r.fileSize + ')' : '' }}</span></div>
+      </div>
+
+      <!-- Thumbnail preview -->
+      <div class="rpt-thumb-wrap">
+        <div class="rpt-thumb" [style.border-color]="state.typeColor(r.type)">
+          <div class="rpt-thumb__bar" [style.background]="state.typeColor(r.type)">
+            <span class="rpt-thumb__logo">DINEPA</span>
+          </div>
+          <div class="rpt-thumb__content">
+            <div class="rpt-thumb__type" [style.color]="state.typeColor(r.type)">{{ r.module.toUpperCase() }}</div>
+            <div class="rpt-thumb__period">{{ r.periodLabel }}</div>
+            <div class="rpt-thumb__zone">{{ r.zone }}</div>
+          </div>
+          <div class="rpt-thumb__footer"></div>
+        </div>
+        <button class="rpt-preview-btn" type="button" (click)="ouvrirPreviewEff()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          Aperçu A4
+        </button>
+        <span class="rpt-thumb__version">Version {{ r.version }}</span>
+      </div>
+
+      <!-- Sections -->
+      <div class="rpt-detail__section">
+        <div class="rpt-detail__sec-title">CONTENU</div>
+        <div class="rpt-section-list">
+          <div class="rpt-section-item" *ngFor="let s of r.sections">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ s }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="rpt-detail__section">
+        <div class="rpt-detail__sec-title">ACTIONS</div>
+        <div class="rpt-dl-row">
+          <button class="rpt-dl-btn rpt-dl-btn--pdf" type="button" (click)="notifyDownloadPDF()">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF
+          </button>
+          <button class="rpt-dl-btn rpt-dl-btn--word" type="button" (click)="notifyDownloadWord()">Word</button>
+          <button class="rpt-dl-btn rpt-dl-btn--excel" type="button" (click)="notifyDownloadExcel()">Excel</button>
+        </div>
+        <div class="rpt-other-actions">
+          <button class="rpt-action-btn" type="button" (click)="notifyEmail()">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Envoyer par email
+          </button>
+          <button class="rpt-action-btn" type="button" (click)="notifyDuplicate()">Dupliquer</button>
+          <button class="rpt-action-btn" type="button" (click)="notifyArchive()">Archiver</button>
+        </div>
+      </div>
+
+      <!-- Versions -->
+      <div class="rpt-detail__section" *ngIf="r.versions.length > 0">
+        <div class="rpt-detail__sec-title">VERSIONS</div>
+        <div class="rpt-version-list">
+          <div class="rpt-ver-item" *ngFor="let v of r.versions">
+            <div class="rpt-ver-dot"></div>
+            <div class="rpt-ver-body">
+              <span class="rpt-ver-label">{{ v.version }} — {{ v.changes }}</span>
+              <span class="rpt-ver-date">{{ v.createdBy }} · {{ v.createdAt }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /rpt-detail -->
+
+  </div><!-- /rpt-body -->
+</div><!-- /rpt-shell -->
+
+<!-- ══ OVERLAYS ══════════════════════════════════════════════════════════════ -->
+
+<!-- Filters Drawer -->
+<app-rapports-filters-drawer *ngIf="state.filtresDrawerOuvert()"></app-rapports-filters-drawer>
+
+<!-- Preview Modal -->
+<app-rapport-preview
+  *ngIf="effPreviewOuvert() && state.selection() as r"
+  [rapport]="r"
+  (fermer)="fermerPreviewEff()">
+</app-rapport-preview>
+
+<!-- Create Drawer overlay -->
+<div class="rpt-overlay" *ngIf="effCreateOuvert() || state.templatesOuvert()"
+  (click)="effCreateOuvert() ? fermerCreateEff() : state.fermerTemplates()"></div>
+
+<!-- ══ CRÉER UN RAPPORT DRAWER ════════════════════════════════════════════════ -->
+<div class="rpt-drawer" [class.rpt-drawer--open]="effCreateOuvert()">
+  <div class="rpt-drawer__head">
+    <div>
+      <h2 class="rpt-drawer__title">Créer un rapport</h2>
+      <p class="rpt-drawer__sub">
+        Étape {{ state.createStep() }} sur 6
+        <span class="rpt-source-badge" *ngIf="createForm.sourceInterventionId">
+          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Depuis intervention {{ createForm.sourceInterventionId }}
+        </span>
+      </p>
+    </div>
+    <button class="rpt-drawer__close" type="button" (click)="fermerCreateEff()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- Stepper -->
+  <div class="rpt-stepper">
+    <ng-container *ngFor="let step of ['Type','Zone','Période','Contenu','Format','Générer']; let i = index">
+      <div class="rpt-step"
+        [class.rpt-step--active]="state.createStep() === i + 1"
+        [class.rpt-step--done]="state.createStep() > i + 1">
+        <div class="rpt-step__num">
+          <svg *ngIf="state.createStep() > i + 1" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span *ngIf="state.createStep() <= i + 1">{{ i + 1 }}</span>
+        </div>
+        <span class="rpt-step__lbl">{{ step }}</span>
+      </div>
+      <div *ngIf="i < 5" class="rpt-step-line" [class.rpt-step-line--done]="state.createStep() > i + 1"></div>
+    </ng-container>
+  </div>
+
+  <div class="rpt-drawer__body">
+
+    <!-- STEP 1 — Type -->
+    <div *ngIf="state.createStep() === 1">
+      <div class="rpt-d-sec-title">Choisissez le type de rapport</div>
+      <div class="rpt-type-grid">
+        <button *ngFor="let t of TYPES"
+          class="rpt-type-card" [class.rpt-type-card--sel]="createForm.type === t"
+          (click)="createForm.type = t" type="button">
+          <div class="rpt-type-icon-lg" [style.background]="state.typeBg(t)" [style.color]="state.typeColor(t)">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <span class="rpt-type-card__lbl">{{ TYPE_LABELS[t] }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — Zone -->
+    <div *ngIf="state.createStep() === 2">
+      <div class="rpt-d-sec-title">Portée géographique</div>
+      <div class="rpt-scope-grid">
+        <button *ngFor="let scope of ['national','departement','commune','section','infrastructure','point']"
+          class="rpt-scope-btn" [class.rpt-scope-btn--sel]="createForm.scopeType === scope"
+          (click)="createForm.scopeType = $any(scope)" type="button">
+          {{ scope === 'national' ? 'National' : scope === 'departement' ? 'Département' : scope === 'commune' ? 'Commune' : scope === 'section' ? 'Section' : scope === 'infrastructure' ? 'Infrastructure' : "Point d'eau" }}
+        </button>
+      </div>
+      <div class="rpt-d-form-group" *ngIf="createForm.scopeType !== 'national'">
+        <label class="rpt-d-label">Zone</label>
+        <select class="rpt-d-select" [(ngModel)]="createForm.zone">
+          <option value="Léogâne">Léogâne</option>
+          <option value="Petit-Goâve">Petit-Goâve</option>
+          <option value="Ouest">Département Ouest</option>
+          <option value="Dessources">Section Dessources</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- STEP 3 — Période -->
+    <div *ngIf="state.createStep() === 3">
+      <div class="rpt-d-sec-title">Période couverte</div>
+      <div class="rpt-preset-grid">
+        <button *ngFor="let p of PERIOD_PRESETS"
+          class="rpt-preset-btn" [class.rpt-preset-btn--sel]="createForm.periodPreset === p.v"
+          (click)="createForm.periodPreset = $any(p.v)" type="button">{{ p.l }}</button>
+      </div>
+      <div class="rpt-d-form-row" *ngIf="createForm.periodPreset === 'custom'">
+        <div class="rpt-d-form-group">
+          <label class="rpt-d-label">Du</label>
+          <input type="date" class="rpt-d-input" [(ngModel)]="createForm.dateFrom">
+        </div>
+        <div class="rpt-d-form-group">
+          <label class="rpt-d-label">Au</label>
+          <input type="date" class="rpt-d-input" [(ngModel)]="createForm.dateTo">
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 — Contenu -->
+    <div *ngIf="state.createStep() === 4">
+      <div class="rpt-d-sec-title">Contenu à inclure</div>
+      <div class="rpt-check-grid">
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclResume"><span>Résumé exécutif</span></label>
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclCarte"><span>Cartes</span></label>
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclTableaux"><span>Tableaux de données</span></label>
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclGraphiques"><span>Graphiques</span></label>
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclAlertes"><span>Alertes</span></label>
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclInterventions"><span>Interventions</span></label>
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclPhotos"><span>Photos terrain</span></label>
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclIoT"><span>Données IoT</span></label>
+        <label class="rpt-check-item"><input type="checkbox" [(ngModel)]="createForm.inclSignatures"><span>Signatures</span></label>
+      </div>
+    </div>
+
+    <!-- STEP 5 — Format -->
+    <div *ngIf="state.createStep() === 5">
+      <div class="rpt-d-sec-title">Format de sortie</div>
+      <div class="rpt-format-cards">
+        <button class="rpt-format-card" [class.rpt-format-card--sel]="createForm.format === 'pdf'" (click)="createForm.format = 'pdf'" type="button">
+          <div class="rpt-format-card__icon" style="background:#fef2f2;color:#dc2626">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <span class="rpt-format-card__lbl">PDF</span>
+          <span class="rpt-format-card__desc">Document figé, partage officiel</span>
+        </button>
+        <button class="rpt-format-card" [class.rpt-format-card--sel]="createForm.format === 'docx'" (click)="createForm.format = 'docx'" type="button">
+          <div class="rpt-format-card__icon" style="background:#eff6ff;color:#2563eb">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <span class="rpt-format-card__lbl">Word (DOCX)</span>
+          <span class="rpt-format-card__desc">Modifiable, annotations</span>
+        </button>
+        <button class="rpt-format-card" [class.rpt-format-card--sel]="createForm.format === 'xlsx'" (click)="createForm.format = 'xlsx'" type="button">
+          <div class="rpt-format-card__icon" style="background:#f0fdf4;color:#16a34a">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          </div>
+          <span class="rpt-format-card__lbl">Excel (XLSX)</span>
+          <span class="rpt-format-card__desc">Données tabulaires</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 6 — Récapitulatif -->
+    <div *ngIf="state.createStep() === 6">
+      <div class="rpt-d-sec-title">Récapitulatif</div>
+      <div class="rpt-recap">
+        <div class="rpt-recap-row"><span class="rpt-recap-k">Type</span><span class="rpt-recap-v">{{ createTypeLabel() }}</span></div>
+        <div class="rpt-recap-row"><span class="rpt-recap-k">Portée</span><span class="rpt-recap-v">{{ createForm.scopeType === 'national' ? 'National' : createForm.zone }}</span></div>
+        <div class="rpt-recap-row"><span class="rpt-recap-k">Période</span><span class="rpt-recap-v">{{ periodLabel() }}</span></div>
+        <div class="rpt-recap-row"><span class="rpt-recap-k">Format</span><span class="rpt-recap-v">{{ createForm.format.toUpperCase() }}</span></div>
+        <div class="rpt-recap-row" *ngIf="createForm.sourceInterventionId"><span class="rpt-recap-k">Intervention</span><span class="rpt-recap-v rpt-recap-v--code">{{ createForm.sourceInterventionId }}</span></div>
+      </div>
+      <div class="rpt-recap-generate">
+        <button class="rpt-btn rpt-btn--primary rpt-btn--lg" type="button" (click)="submitCreate()">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="13 2 13 9 20 9"/><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
+          Générer le rapport
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /rpt-drawer__body -->
+
+  <div class="rpt-drawer__foot">
+    <button class="rpt-btn rpt-btn--ghost" type="button" (click)="fermerCreateEff()">Annuler</button>
+    <div style="display:flex;gap:.5rem">
+      <button class="rpt-btn rpt-btn--outline" type="button" *ngIf="state.createStep() > 1" (click)="prevStep()">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Précédent
+      </button>
+      <button class="rpt-btn rpt-btn--primary" type="button" *ngIf="state.createStep() < 6" (click)="nextStep()">
+        Suivant
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODÈLES DRAWER ════════════════════════════════════════════════════════ -->
+<div class="rpt-drawer rpt-drawer--wide" [class.rpt-drawer--open]="state.templatesOuvert()">
+  <div class="rpt-drawer__head">
+    <div>
+      <h2 class="rpt-drawer__title">Modèles de rapport</h2>
+      <p class="rpt-drawer__sub">Démarrez depuis un modèle institutionnel</p>
+    </div>
+    <button class="rpt-drawer__close" type="button" (click)="state.fermerTemplates()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="rpt-drawer__body">
+    <div class="rpt-tpl-grid">
+      <div class="rpt-tpl-card" *ngFor="let tpl of templates">
+        <div class="rpt-tpl-icon" [style.background]="tpl.bg" [style.color]="tpl.color">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="rpt-tpl-body">
+          <div class="rpt-tpl-name">{{ tpl.name }}</div>
+          <div class="rpt-tpl-desc">{{ tpl.desc }}</div>
+        </div>
+        <button class="rpt-tpl-use" type="button" (click)="useTemplate(tpl.name)">Utiliser</button>
+      </div>
+    </div>
+  </div>
+  <div class="rpt-drawer__foot">
+    <button class="rpt-btn rpt-btn--ghost" type="button" (click)="state.fermerTemplates()">Fermer</button>
+  </div>
+</div>

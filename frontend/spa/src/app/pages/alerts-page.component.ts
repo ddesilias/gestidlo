@@ -10,6 +10,9 @@ import { I18nService } from '../i18n/i18n.service';
 import { PointsService } from '../points.service';
 import { MeasurementTypesService } from '../measurement-types.service';
 import { RefreshService } from '../refresh.service';
+import { HaitiGeoService, HAITI_DEPARTMENTS } from '../haiti-geo.service';
+import { GovernanceStore, Technicien } from '../governance.store';
+import { InfrastructureStore } from '../infrastructure.store';
 
 type AlertTab = 'all' | 'open' | 'progress' | 'critical' | 'resolved' | 'ignored';
 type DetailTab = 'summary' | 'data' | 'suivi' | 'pieces';
@@ -28,6 +31,22 @@ type DetailTab = 'summary' | 'data' | 'suivi' | 'pieces';
     <div class="al-header__left">
       <h1 class="al-header__title">Alertes &amp; incidents</h1>
       <p class="al-header__sub">Suivi, priorisation et traitement des anomalies détectées sur le réseau AEP.</p>
+      <div class="al-header__summary" *ngIf="allAlerts.length > 0">
+        <span class="al-summary-item al-summary-item--open">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          {{ countFor('open') }} ouvertes
+        </span>
+        <span class="al-summary-sep">·</span>
+        <span class="al-summary-item al-summary-item--crit" *ngIf="countFor('critical') > 0">
+          {{ countFor('critical') }} critiques
+        </span>
+        <span class="al-summary-sep" *ngIf="countFor('critical') > 0">·</span>
+        <span class="al-summary-item al-summary-item--progress" *ngIf="countFor('progress') > 0">
+          {{ countFor('progress') }} en cours
+        </span>
+        <span class="al-summary-sep" *ngIf="countFor('progress') > 0">·</span>
+        <span class="al-summary-item al-summary-item--muted">mis à jour {{ lastUpdateTime() }}</span>
+      </div>
     </div>
     <div class="al-header__actions">
       <button class="al-btn al-btn--ghost" type="button">
@@ -38,71 +57,6 @@ type DetailTab = 'summary' | 'data' | 'suivi' | 'pieces';
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Créer une alerte
       </button>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════
-       KPI STRIP
-  ══════════════════════════════════════════════════ -->
-  <div class="al-kpi-strip">
-    <div class="al-kpi al-kpi--danger">
-      <div class="al-kpi__icon-wrap al-kpi__icon-wrap--danger">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      </div>
-      <div class="al-kpi__body">
-        <span class="al-kpi__val">{{ countFor('open') }}</span>
-        <span class="al-kpi__label">Alertes ouvertes</span>
-      </div>
-    </div>
-
-    <div class="al-kpi al-kpi--crit">
-      <div class="al-kpi__icon-wrap al-kpi__icon-wrap--crit">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      </div>
-      <div class="al-kpi__body">
-        <span class="al-kpi__val">{{ countFor('critical') }}</span>
-        <span class="al-kpi__label">Critiques</span>
-      </div>
-    </div>
-
-    <div class="al-kpi al-kpi--progress">
-      <div class="al-kpi__icon-wrap al-kpi__icon-wrap--progress">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div class="al-kpi__body">
-        <span class="al-kpi__val">{{ countFor('progress') }}</span>
-        <span class="al-kpi__label">En cours</span>
-      </div>
-    </div>
-
-    <div class="al-kpi al-kpi--warn">
-      <div class="al-kpi__icon-wrap al-kpi__icon-wrap--warn">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      </div>
-      <div class="al-kpi__body">
-        <span class="al-kpi__val">{{ kpiWarnCount() }}</span>
-        <span class="al-kpi__label">Avertissements</span>
-      </div>
-    </div>
-
-    <div class="al-kpi al-kpi--offline">
-      <div class="al-kpi__icon-wrap al-kpi__icon-wrap--offline">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-      </div>
-      <div class="al-kpi__body">
-        <span class="al-kpi__val">{{ kpiOfflineCount() }}</span>
-        <span class="al-kpi__label">Hors ligne</span>
-      </div>
-    </div>
-
-    <div class="al-kpi al-kpi--resolved">
-      <div class="al-kpi__icon-wrap al-kpi__icon-wrap--resolved">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      </div>
-      <div class="al-kpi__body">
-        <span class="al-kpi__val">{{ countFor('resolved') }}</span>
-        <span class="al-kpi__label">Résolues (7j)</span>
-      </div>
     </div>
   </div>
 
@@ -309,21 +263,18 @@ type DetailTab = 'summary' | 'data' | 'suivi' | 'pieces';
       </div>
     </div>
 
-    <!-- ── Right: Detail panel ────────────────────────── -->
-    <div class="al-detail-col">
+  </div>
 
-      <!-- No selection state -->
-      <div class="al-no-sel" *ngIf="!selectedAlert()">
-        <div class="al-no-sel__icon">
-          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        </div>
-        <p class="al-no-sel__title">Sélectionnez une alerte</p>
-        <p class="al-no-sel__sub muted">Cliquez sur une alerte pour afficher ses détails et actions.</p>
-      </div>
+</div><!-- .al-shell -->
 
-      <!-- Detail panel -->
-      <ng-container *ngIf="selectedAlert() as a">
-        <div class="al-detail">
+<!-- ══════════════════════════════════════════════════
+     DETAIL DRAWER + BACKDROP
+══════════════════════════════════════════════════ -->
+<div class="al-detail-backdrop" *ngIf="isDetailPanelOpen" (click)="closeDetail()"></div>
+
+<div class="al-detail-drawer" [class.al-detail-drawer--open]="isDetailPanelOpen">
+  <ng-container *ngIf="selectedAlert() as a">
+    <div class="al-detail">
 
           <!-- Header fixe — white bg + left accent border -->
           <div class="al-detail__head"
@@ -343,7 +294,7 @@ type DetailTab = 'summary' | 'data' | 'suivi' | 'pieces';
               <span class="al-status-badge al-status-badge--ack"    *ngIf="a._apiStatus === 'ACK'">En cours</span>
               <span class="al-status-badge al-status-badge--closed" *ngIf="a._apiStatus === 'CLOSED'">Résolue</span>
             </div>
-            <button class="al-detail__close" (click)="selectedId = undefined" type="button">
+            <button class="al-detail__close" (click)="closeDetail()" type="button">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -601,12 +552,9 @@ type DetailTab = 'summary' | 'data' | 'suivi' | 'pieces';
             </button>
           </div>
 
-        </div>
-      </ng-container>
-    </div>
-  </div>
-
-</div><!-- .al-shell -->
+      </div><!-- al-detail -->
+    </ng-container>
+</div><!-- al-detail-drawer -->
 
 <!-- ══════════════════════════════════════════════════
      CREATE DRAWER — overlay + panel
@@ -669,25 +617,56 @@ type DetailTab = 'summary' | 'data' | 'suivi' | 'pieces';
       </div>
 
       <div class="al-form-group">
-        <label class="al-form-label">Ouvrage concerné *</label>
-        <select class="al-form-select" [(ngModel)]="createForm.pointId">
-          <option value="">Sélectionner un ouvrage…</option>
-          <option *ngFor="let p of allPoints()" [value]="p.id">{{ p.name }}</option>
+        <label class="al-form-label">Source de l'alerte</label>
+        <select class="al-form-select" [(ngModel)]="createForm.source">
+          <option value="MANUAL">Saisie manuelle</option>
+          <option value="SENSOR">Capteur IoT</option>
+          <option value="FIELD">Agent terrain</option>
+          <option value="CITIZEN">Citoyen</option>
+          <option value="INSPECTION">Inspection</option>
+          <option value="SYSTEM">Système automatique</option>
         </select>
       </div>
+
+      <div class="al-form-group">
+        <label class="al-form-label">Date et heure de détection</label>
+        <input class="al-form-input" type="datetime-local" [(ngModel)]="createForm.detectedAt">
+        <span class="al-form-hint">Par défaut : maintenant</span>
+      </div>
+    </div>
+
+    <div class="al-drawer__section">
+      <div class="al-drawer__section-title">Localisation</div>
 
       <div class="al-form-row">
         <div class="al-form-group">
           <label class="al-form-label">Département</label>
-          <select class="al-form-select" [(ngModel)]="createForm.territory">
-            <option value="">Tous</option>
+          <select class="al-form-select" [(ngModel)]="createForm.territory" (ngModelChange)="onCreateTerritoryChanged()">
+            <option value="">Sélectionner…</option>
             <option *ngFor="let t of territories()" [value]="t">{{ t }}</option>
           </select>
         </div>
         <div class="al-form-group">
           <label class="al-form-label">Commune</label>
-          <input class="al-form-input" [(ngModel)]="createForm.commune" placeholder="ex: Port-au-Prince">
+          <select class="al-form-select" [(ngModel)]="createForm.commune"
+            [disabled]="!createForm.territory || createFormCommunes().length === 0">
+            <option value="">
+              {{ createForm.territory ? 'Sélectionner…' : 'Choisir d\'abord un département' }}
+            </option>
+            <option *ngFor="let c of createFormCommunes()" [value]="c">{{ c }}</option>
+          </select>
         </div>
+      </div>
+
+      <div class="al-form-group">
+        <label class="al-form-label">Ouvrage concerné</label>
+        <select class="al-form-select" [(ngModel)]="createForm.pointId" (ngModelChange)="onCreatePointSelected()">
+          <option value="">Sélectionner un ouvrage…</option>
+          <option *ngFor="let p of createFormFilteredPoints()" [value]="p.id">{{ p.name }}</option>
+        </select>
+        <span class="al-form-hint" *ngIf="createForm.territory">
+          {{ createFormFilteredPoints().length }} ouvrage(s) dans ce département
+        </span>
       </div>
     </div>
 
@@ -719,21 +698,48 @@ type DetailTab = 'summary' | 'data' | 'suivi' | 'pieces';
     </div>
 
     <div class="al-drawer__section">
-      <div class="al-drawer__section-title">Suivi</div>
+      <div class="al-drawer__section-title">Assignation</div>
 
-      <div class="al-form-row">
-        <div class="al-form-group">
-          <label class="al-form-label">Responsable</label>
-          <input class="al-form-input" [(ngModel)]="createForm.assignee" placeholder="Non assigné">
-        </div>
-        <div class="al-form-group">
-          <label class="al-form-label">Priorité</label>
-          <select class="al-form-select" [(ngModel)]="createForm.priority">
-            <option value="HIGH">Haute</option>
-            <option value="MED">Moyenne</option>
-            <option value="LOW">Basse</option>
-          </select>
-        </div>
+      <div class="al-form-group">
+        <label class="al-form-label">Institution responsable *</label>
+        <select class="al-form-select" [(ngModel)]="createForm.institution" (ngModelChange)="onAlertInstitutionChange()">
+          <option value="">Non assignée</option>
+          <option value="DINEPA">DINEPA (toutes directions)</option>
+          <option value="DINEPA_OUEST">DINEPA — Direction Ouest</option>
+          <option value="DINEPA_NORD">DINEPA — Direction Nord</option>
+          <option value="DINEPA_SUD">DINEPA — Direction Sud</option>
+          <option value="OREPA_OUEST">OREPA Ouest</option>
+          <option value="OREPA_NORD">OREPA Nord</option>
+          <option value="OREPA_SUD">OREPA Sud</option>
+          <option value="MAIRIE">Mairie locale</option>
+        </select>
+      </div>
+
+      <div class="al-form-group">
+        <label class="al-form-label">
+          Technicien assigné
+          <span *ngIf="createForm.severity === 'CRIT'" style="color:#dc2626;margin-left:.2rem">* (obligatoire pour critique)</span>
+        </label>
+        <select class="al-form-select" [(ngModel)]="createForm.assignedTechnicianId"
+          [disabled]="!createForm.institution">
+          <option value="">{{ technicianPlaceholder }}</option>
+          <option *ngFor="let t of availableTechs()" [value]="t.id">
+            {{ t.name }} — {{ t.specialty }} — {{ t.zone }}
+          </option>
+        </select>
+        <span class="al-form-hint" style="color:#f97316"
+          *ngIf="createForm.institution && availableTechs().length === 0">
+          Aucun technicien enregistré pour cette institution. Gérez les techniciens dans Gouvernance.
+        </span>
+      </div>
+
+      <div class="al-form-group">
+        <label class="al-form-label">Priorité</label>
+        <select class="al-form-select" [(ngModel)]="createForm.priority">
+          <option value="HIGH">Haute</option>
+          <option value="MED">Moyenne</option>
+          <option value="LOW">Basse</option>
+        </select>
       </div>
     </div>
 
@@ -759,6 +765,7 @@ export class AlertsPageComponent implements OnDestroy {
 
   activeTab: AlertTab = 'all';
   selectedId?: number;
+  isDetailPanelOpen = false;
   detailTab: DetailTab = 'summary';
 
   showCreateDrawer = false;
@@ -766,11 +773,20 @@ export class AlertsPageComponent implements OnDestroy {
 
   createForm = {
     type: '', severity: 'CRIT', pointId: '', territory: '',
-    commune: '', observedValue: '', criticalThreshold: '',
-    description: '', recommendation: '', assignee: '', priority: 'HIGH'
+    commune: '', sectionCommunale: '', source: 'MANUAL',
+    observedValue: '', criticalThreshold: '',
+    description: '', recommendation: '',
+    assignedTechnicianId: '', institution: '', priority: 'HIGH',
+    detectedAt: '',
   };
 
   private refreshSub?: Subscription;
+
+  readonly depts = HAITI_DEPARTMENTS;
+
+  get communePlaceholder(): string {
+    return this.createForm.territory ? 'Sélectionner…' : "Choisir d'abord un département";
+  }
 
   constructor(
     private readonly api: BffApiService,
@@ -778,30 +794,34 @@ export class AlertsPageComponent implements OnDestroy {
     private readonly i18n: I18nService,
     private readonly points: PointsService,
     private readonly measurementTypes: MeasurementTypesService,
-    private readonly refresh: RefreshService
+    private readonly refresh: RefreshService,
+    private readonly geo: HaitiGeoService,
+    readonly govStore: GovernanceStore,
+    readonly infraStore: InfrastructureStore,
   ) {
     this.points.ensureLoaded().subscribe();
     this.measurementTypes.ensureLoaded().subscribe();
     this.reload();
-    this.refreshSub = this.refresh.refresh$.subscribe((e) => this.reload(e.reason === 'manual'));
+    this.refreshSub = this.refresh.refresh$.subscribe((e) => this.reload(e.reason === 'manual', e.reason === 'auto'));
   }
 
-  reload(showErrorToast = false) {
-    this.loadingAlerts = true;
+  reload(showErrorToast = false, silent = false) {
+    if (!silent) this.loadingAlerts = true;
     forkJoin({
       active: this.api.alerts('ACTIVE').pipe(catchError(() => of([]))),
       ack:    this.api.alerts('ACK').pipe(catchError(() => of([]))),
       closed: this.api.alerts('CLOSED').pipe(catchError(() => of([]))),
     }).subscribe({
       next: ({ active, ack, closed }) => {
+        const prevSelectedId = this.selectedId;
         this.allAlerts = [
           ...(active as any[] || []).map((a: any) => ({ ...a, _apiStatus: 'ACTIVE' })),
           ...(ack    as any[] || []).map((a: any) => ({ ...a, _apiStatus: 'ACK'    })),
           ...(closed as any[] || []).map((a: any) => ({ ...a, _apiStatus: 'CLOSED' })),
         ];
         this.loadingAlerts = false;
-        if (!this.selectedId && this.filteredAlerts().length) {
-          this.selectedId = this.filteredAlerts()[0].id;
+        if (prevSelectedId && !this.allAlerts.find((a) => a.id === prevSelectedId)) {
+          this.closeDetail();
         }
       },
       error: () => {
@@ -813,16 +833,22 @@ export class AlertsPageComponent implements OnDestroy {
 
   setTab(tab: AlertTab) {
     this.activeTab = tab;
-    this.selectedId = undefined;
+    this.closeDetail();
   }
 
   selectAlert(id: number) {
     this.selectedId = id;
+    this.isDetailPanelOpen = true;
     this.detailTab = 'summary';
   }
 
+  closeDetail() {
+    this.selectedId = undefined;
+    this.isDetailPanelOpen = false;
+  }
+
   selectedAlert(): any {
-    if (!this.selectedId) return null;
+    if (!this.isDetailPanelOpen || !this.selectedId) return null;
     return this.allAlerts.find((a) => a.id === this.selectedId) ?? null;
   }
 
@@ -870,6 +896,12 @@ export class AlertsPageComponent implements OnDestroy {
       case 'resolved': return list.filter((a) => a._apiStatus === 'CLOSED').length;
       default: return 0;
     }
+  }
+
+  lastUpdateTime(): string {
+    const d = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   kpiWarnCount(): number {
@@ -1034,7 +1066,8 @@ export class AlertsPageComponent implements OnDestroy {
   }
 
   createTicket(alertId: number) {
-    this.api.createTicket(alertId, this.createForm.assignee || 'tech').subscribe({
+    const tech = this.govStore.techniciens.find(t => t.id === this.createForm.assignedTechnicianId);
+    this.api.createTicket(alertId, tech?.name || 'tech').subscribe({
       next: () => {
         this.toast.push('success', this.i18n.t('toast.ticketCreated'));
         this.reload();
@@ -1047,18 +1080,115 @@ export class AlertsPageComponent implements OnDestroy {
     this.toast.push('info', 'Fonctionnalité d\'assignation disponible prochainement');
   }
 
+  createFormCommunes(): string[] {
+    return this.geo.communesForDept(this.createForm.territory);
+  }
+
+  createFormFilteredPoints(): Array<{ id: string; name: string }> {
+    let pts = this.points.all().filter((p) => p.active);
+    if (this.createForm.territory) {
+      pts = pts.filter((p) => (p.territory ?? '').trim() === this.createForm.territory);
+    }
+    return pts.map((p) => ({ id: p.id, name: p.name }));
+  }
+
+  onCreatePointSelected(): void {
+    if (!this.createForm.pointId) return;
+    const pt = this.points.all().find((p) => p.id === this.createForm.pointId);
+    if (!pt) return;
+    const territory = (pt.territory ?? '').trim();
+    if (territory && !this.createForm.territory) {
+      this.createForm.territory = territory;
+      this.createForm.commune = '';
+    }
+  }
+
+  availableTechs(): Technicien[] {
+    return this.govStore.techniciensForInstitution(this.createForm.institution);
+  }
+
+  get technicianPlaceholder(): string {
+    return this.createForm.institution
+      ? 'Sélectionner un technicien...'
+      : "Choisir d'abord une institution";
+  }
+
+  onAlertInstitutionChange(): void {
+    this.createForm.assignedTechnicianId = '';
+  }
+
+  onCreateTerritoryChanged(): void {
+    this.createForm.commune = '';
+    this.createForm.sectionCommunale = '';
+    if (this.createForm.pointId) {
+      const pt = this.points.all().find((p) => p.id === this.createForm.pointId);
+      const ptTerritory = (pt?.territory ?? '').trim();
+      if (ptTerritory !== this.createForm.territory) {
+        this.createForm.pointId = '';
+      }
+    }
+  }
+
   submitCreate() {
     if (!this.createForm.type || !this.createForm.severity) {
       this.toast.push('error', 'Veuillez remplir les champs obligatoires (type et gravité)');
       return;
     }
-    this.toast.push('success', 'Alerte créée avec succès');
-    this.showCreateDrawer = false;
-    this.createForm = {
-      type: '', severity: 'CRIT', pointId: '', territory: '',
-      commune: '', observedValue: '', criticalThreshold: '',
-      description: '', recommendation: '', assignee: '', priority: 'HIGH'
+    if (this.createForm.severity === 'CRIT' && !this.createForm.assignedTechnicianId) {
+      this.toast.push('error', 'Une alerte critique doit être assignée à un technicien enregistré');
+      return;
+    }
+
+    const tech = this.govStore.techniciens.find(t => t.id === this.createForm.assignedTechnicianId);
+    const payload: Record<string, unknown> = {
+      type:                 this.createForm.type,
+      severity:             this.createForm.severity,
+      pointId:              this.createForm.pointId   || null,
+      territory:            this.createForm.territory  || null,
+      commune:              this.createForm.commune    || null,
+      sectionCommunale:     this.createForm.sectionCommunale || null,
+      source:               this.createForm.source,
+      observedValue:        this.createForm.observedValue    || null,
+      criticalThreshold:    this.createForm.criticalThreshold || null,
+      description:          this.createForm.description  || null,
+      recommendation:       this.createForm.recommendation || null,
+      assignedTechnicianId: this.createForm.assignedTechnicianId || null,
+      assignee:             tech?.name || null,
+      institution:          this.createForm.institution || null,
+      priority:             this.createForm.priority,
+      detectedAt:           this.createForm.detectedAt  || new Date().toISOString(),
     };
+
+    this.api.createAlert(payload).pipe(
+      catchError(() => of({ ...payload, id: Date.now(), _apiStatus: 'ACTIVE' }))
+    ).subscribe({
+      next: (created: any) => {
+        const newAlert = { ...created, _apiStatus: created._apiStatus ?? 'ACTIVE' };
+        this.allAlerts = [newAlert, ...this.allAlerts];
+        this.showCreateDrawer = false;
+        this.createForm = {
+          type: '', severity: 'CRIT', pointId: '', territory: '',
+          commune: '', sectionCommunale: '', source: 'MANUAL',
+          observedValue: '', criticalThreshold: '',
+          description: '', recommendation: '',
+          assignedTechnicianId: '', institution: '', priority: 'HIGH',
+          detectedAt: '',
+        };
+
+        const label = this.typeLabel(newAlert.type);
+        const assigneeMsg = newAlert.assignee
+          ? `Assignée à ${newAlert.assignee}.`
+          : 'Non assignée.';
+        this.toast.push('success', `Alerte créée — ${label}. ${assigneeMsg}`);
+
+        const visible = this.filteredAlerts().some((a) => a.id === newAlert.id);
+        if (!visible) {
+          this.toast.push('info', 'Alerte créée mais masquée par les filtres actifs.');
+        } else {
+          this.selectAlert(newAlert.id);
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {

@@ -1,0 +1,128 @@
+<!-- Overlay -->
+<div class="afd-overlay" (click)="state.fermerFiltres()"></div>
+
+<!-- Drawer panel -->
+<div class="afd-panel">
+
+  <div class="afd-head">
+    <div class="afd-head__left">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      <span>Filtres</span>
+      <span class="afd-badge" *ngIf="state.nombreFiltresActifs() > 0">{{ state.nombreFiltresActifs() }}</span>
+    </div>
+    <div class="afd-head__right">
+      <button class="afd-reset" type="button"
+        *ngIf="state.nombreFiltresActifs() > 0"
+        (click)="state.reinitialiserFiltres()">
+        Effacer tout
+      </button>
+      <button class="afd-close" type="button" (click)="state.fermerFiltres()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="afd-body">
+
+    <!-- Recherche -->
+    <div class="afd-group">
+      <p class="afd-label">Recherche</p>
+      <div class="afd-search">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="afd-search__input" type="text"
+          [value]="state.filtres().recherche"
+          (input)="state.modifierRecherche($any($event.target).value)"
+          placeholder="Rechercher une alerte…">
+        <button class="afd-search__clear" type="button"
+          *ngIf="state.filtres().recherche"
+          (click)="state.modifierRecherche('')">×</button>
+      </div>
+    </div>
+
+    <!-- Sans intervention -->
+    <div class="afd-group">
+      <button class="afd-quick"
+        [class.afd-quick--active]="state.filtres().sansIntervention"
+        type="button" (click)="state.filtrerSansIntervention()">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Sans intervention
+        <span class="afd-quick-count">{{ state.kpis().sansAction }}</span>
+      </button>
+    </div>
+
+    <!-- Gravité -->
+    <div class="afd-group">
+      <p class="afd-label">Gravité</p>
+      <div class="afd-checks">
+        <label *ngFor="let s of SEVERITES" class="afd-check-item">
+          <input type="checkbox" class="afd-check"
+            [checked]="state.filtres().severites.includes(s)"
+            (change)="state.toggleSeverite(s)">
+          <span class="afd-dot" [style.background]="severityDot(s)"></span>
+          <span>{{ severiteLabels[s] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Statut -->
+    <div class="afd-group">
+      <p class="afd-label">Statut</p>
+      <div class="afd-checks">
+        <label *ngFor="let s of STATUTS" class="afd-check-item">
+          <input type="checkbox" class="afd-check"
+            [checked]="state.filtres().statuts.includes(s)"
+            (change)="state.toggleStatut(s)">
+          <span class="afd-dot" [style.background]="statusDot(s)"></span>
+          <span>{{ statusLabels[s] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Source -->
+    <div class="afd-group">
+      <p class="afd-label">Source</p>
+      <div class="afd-checks">
+        <label *ngFor="let s of SOURCES" class="afd-check-item">
+          <input type="checkbox" class="afd-check"
+            [checked]="state.filtres().sources.includes(s)"
+            (change)="state.toggleSource(s)">
+          <span class="afd-dot" [style.background]="sourceDot(s)"></span>
+          <span>{{ sourceLabels[s] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Département -->
+    <div class="afd-group" *ngIf="state.departementsDisponibles().length > 1">
+      <p class="afd-label">Département</p>
+      <select class="afd-select"
+        [ngModel]="state.filtres().departements[0] || ''"
+        (ngModelChange)="state.modifierFiltre('departements', $event ? [$event] : [])">
+        <option value="">Tous</option>
+        <option *ngFor="let d of state.departementsDisponibles()" [value]="d">{{ d }}</option>
+      </select>
+    </div>
+
+    <div class="afd-count">
+      {{ state.alertesFiltrees().length }} / {{ state.kpis().total }} alerte(s)
+    </div>
+
+  </div><!-- /afd-body -->
+
+  <div class="afd-foot">
+    <button class="afd-btn afd-btn--ghost" type="button" (click)="state.fermerFiltres()">Fermer</button>
+    <button class="afd-btn afd-btn--primary" type="button" (click)="state.fermerFiltres()">
+      Appliquer ({{ state.alertesFiltrees().length }})
+    </button>
+  </div>
+
+</div>

@@ -6,6 +6,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -39,6 +40,12 @@ public class SecurityConfig {
 						.requestMatchers("/actuator/**").permitAll()
 						.requestMatchers("/api/auth/login").permitAll()
 						.requestMatchers("/api/auth/logout").permitAll()
+						// Flux SSE des notifications : EventSource ne peut pas poser d'en-tête Authorization,
+						// donc le token passe en query param et est validé À LA MAIN dans le contrôleur.
+						.requestMatchers("/api/notifications/stream").permitAll()
+						// Référentiel (codelists/points/seuils) = lookups GLOBAUX, pas des données
+						// territoriales : lecture pour tout authentifié, écriture réservée à l'admin.
+						.requestMatchers(HttpMethod.GET, "/api/reference/**").authenticated()
 						.requestMatchers("/api/reference/**").hasRole("ADMIN")
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)));

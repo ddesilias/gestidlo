@@ -1,0 +1,200 @@
+<div *ngIf="visible" class="drw-overlay" (click)="fermer.emit()">
+  <div class="drw-panel" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="drw-head">
+      <div class="drw-head__icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      </div>
+      <div>
+        <h3 class="drw-head__h3">Ajouter un utilisateur</h3>
+        <p class="drw-head__sub">Création de compte · affectation rôle · invitation par email</p>
+      </div>
+      <button class="drw-close" (click)="fermer.emit()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Stepper -->
+    <div class="drw-stepper">
+      <div class="drw-step" [class.drw-step--active]="activeStep()===1" [class.drw-step--done]="activeStep()>1">
+        <div class="drw-step__dot">{{ activeStep()>1 ? '✓' : '1' }}</div>
+        <span>Identité</span>
+      </div>
+      <div class="drw-step__line"></div>
+      <div class="drw-step" [class.drw-step--active]="activeStep()===2" [class.drw-step--done]="activeStep()>2">
+        <div class="drw-step__dot">{{ activeStep()>2 ? '✓' : '2' }}</div>
+        <span>Rôle</span>
+      </div>
+      <div class="drw-step__line"></div>
+      <div class="drw-step" [class.drw-step--active]="activeStep()===3" [class.drw-step--done]="activeStep()>3">
+        <div class="drw-step__dot">{{ activeStep()>3 ? '✓' : '3' }}</div>
+        <span>Périmètre</span>
+      </div>
+      <div class="drw-step__line"></div>
+      <div class="drw-step" [class.drw-step--active]="activeStep()===4">
+        <div class="drw-step__dot">4</div>
+        <span>Sécurité</span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="drw-body">
+
+      <!-- Step 1: Identité -->
+      <div *ngIf="activeStep()===1" class="drw-step-content">
+        <div class="drw-photo-row">
+          <div class="drw-photo-zone">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div>
+            <div class="drw-photo-lbl">Photo de profil (optionnelle)</div>
+            <div class="drw-photo-sub">JPG, PNG · max 2 Mo · ratio 1:1 recommandé</div>
+            <div class="drw-photo-btns">
+              <button class="drw-ghost-btn">Téléverser</button>
+              <button class="drw-ghost-btn">Prendre photo</button>
+            </div>
+          </div>
+        </div>
+        <div class="drw-row2">
+          <div class="drw-field">
+            <label class="drw-lbl">Prénom <span class="drw-req">*</span></label>
+            <input class="drw-input" type="text" placeholder="Ex: Marie" [(ngModel)]="prenom"/>
+          </div>
+          <div class="drw-field">
+            <label class="drw-lbl">Nom <span class="drw-req">*</span></label>
+            <input class="drw-input" type="text" placeholder="Ex: Joseph" [(ngModel)]="nom"/>
+          </div>
+        </div>
+        <div class="drw-field">
+          <label class="drw-lbl">Email professionnel <span class="drw-req">*</span></label>
+          <div class="drw-input-wrap">
+            <input class="drw-input drw-input--email" type="email" placeholder="prenom.nom@dinepa.gouv.ht" [(ngModel)]="email"/>
+            <span class="drw-email-ok">✓ disponible</span>
+          </div>
+          <p class="drw-hint">L'invitation sera envoyée à cette adresse · le mot de passe est défini par l'utilisateur</p>
+        </div>
+        <div class="drw-row-phone">
+          <div class="drw-field">
+            <label class="drw-lbl">Indicatif</label>
+            <select class="drw-input"><option>+509</option></select>
+          </div>
+          <div class="drw-field drw-field--flex">
+            <label class="drw-lbl">Téléphone <span class="drw-req">*</span></label>
+            <input class="drw-input" type="tel" placeholder="38 12 4567" [(ngModel)]="phone"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Rôle -->
+      <div *ngIf="activeStep()===2" class="drw-step-content">
+        <div class="drw-field-lbl">Sélectionner le rôle <span class="drw-req">*</span></div>
+        <div class="drw-roles-grid">
+          <div *ngFor="let r of ROLES" class="drw-role-card" [class.drw-role-card--active]="selectedRole()===r.id" (click)="selectRole(r.id)">
+            <div class="drw-role-card__check" *ngIf="selectedRole()===r.id">✓</div>
+            <div class="drw-role-ico" [ngClass]="r.iconCls">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="drw-role-card__lbl">{{ r.label }}</div>
+            <div class="drw-role-card__sous">{{ r.sous }}</div>
+          </div>
+        </div>
+        <div *ngIf="selectedRole()==='technicien'" class="drw-skills">
+          <div class="drw-skills__head">Compétences techniques (rôle Technicien)</div>
+          <div class="drw-skills__tags">
+            <span *ngFor="let s of ALL_SKILLS" class="drw-skill-tag" [class.drw-skill-tag--on]="hasSkill(s)" (click)="toggleSkill(s)">
+              <span *ngIf="hasSkill(s)">✓ </span>{{ s }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Périmètre -->
+      <div *ngIf="activeStep()===3" class="drw-step-content">
+        <div class="drw-field-lbl">Périmètre d'intervention <span class="drw-req">*</span></div>
+        <div class="drw-row3">
+          <select class="drw-input"><option>Département : Ouest</option></select>
+          <select class="drw-input"><option>Commune : Léogâne</option></select>
+          <select class="drw-input"><option>Section : Dessources</option></select>
+        </div>
+        <div class="drw-field">
+          <label class="drw-lbl">Institution de rattachement</label>
+          <select class="drw-input drw-input--violet"><option>DINEPA Ouest · OREPA Ouest · Léogâne</option></select>
+        </div>
+      </div>
+
+      <!-- Step 4: Sécurité -->
+      <div *ngIf="activeStep()===4" class="drw-step-content">
+        <div class="drw-field-lbl">Sécurité du compte</div>
+        <div class="drw-sec-row">
+          <div class="drw-sec-icon drw-sec-icon--green">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="drw-sec-body">
+            <div class="drw-sec-lbl">Authentification à deux facteurs</div>
+            <div class="drw-sec-sub">Obligatoire selon politique POL-SEC-002</div>
+          </div>
+          <label class="drw-toggle">
+            <input type="checkbox" [checked]="mfa()" (change)="mfa.set(!mfa())"/>
+            <span class="drw-toggle__slider"></span>
+          </label>
+        </div>
+        <div class="drw-sec-row">
+          <div class="drw-sec-icon drw-sec-icon--blue">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="drw-sec-body">
+            <div class="drw-sec-lbl">Envoyer l'invitation par email</div>
+            <div class="drw-sec-sub">L'utilisateur reçoit un lien pour activer son compte</div>
+          </div>
+          <label class="drw-toggle">
+            <input type="checkbox" [checked]="sendEmail()" (change)="sendEmail.set(!sendEmail())"/>
+            <span class="drw-toggle__slider"></span>
+          </label>
+        </div>
+        <div class="drw-sec-row">
+          <div class="drw-sec-icon drw-sec-icon--amber">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          </div>
+          <div class="drw-sec-body">
+            <div class="drw-sec-lbl">Notifier également par SMS</div>
+            <div class="drw-sec-sub">Recommandé pour les techniciens terrain</div>
+          </div>
+          <label class="drw-toggle">
+            <input type="checkbox" [checked]="sendSms()" (change)="sendSms.set(!sendSms())"/>
+            <span class="drw-toggle__slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Account preview (always shown) -->
+      <div class="drw-preview">
+        <div class="drw-preview__head">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Aperçu du compte qui sera créé
+        </div>
+        <div class="drw-preview__card">
+          <div class="drw-preview__avatar">{{ initiales }}</div>
+          <div class="drw-preview__info">
+            <div class="drw-preview__nom">{{ nomComplet }}</div>
+            <div class="drw-preview__email">{{ emailDisplay }}</div>
+          </div>
+          <span class="drw-preview__role">{{ roleLabel }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="drw-foot">
+      <span class="drw-foot__step">Étape {{ activeStep() }} / 4</span>
+      <div class="drw-foot__actions">
+        <button class="drw-foot__btn" (click)="fermer.emit()">Annuler</button>
+        <button *ngIf="activeStep()>1" class="drw-foot__btn" (click)="prev()">Retour</button>
+        <button *ngIf="activeStep()<4" class="drw-foot__btn drw-foot__btn--blue" (click)="next()">Continuer</button>
+        <button *ngIf="activeStep()===4" class="drw-foot__btn drw-foot__btn--blue">Créer le compte</button>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -53,7 +53,10 @@ public class TicketService {
 				alert.getSensorId(),
 				request.assignee(),
 				now,
-				now);
+				now,
+				alert.getCommune());   // commune héritée de l'alerte (dénormalisée, périmètre TEPAC)
+		ticket.setTitre(alert.getMessage());   // libellé de l'intervention = message de l'alerte
+		ticket.setRessourceId(alert.getRessourceId());   // hérite le lien dur vers la ressource d'origine
 		ticket = tickets.saveAndFlush(ticket);
 
 		Map<String, Object> variables = new LinkedHashMap<>();
@@ -61,13 +64,20 @@ public class TicketService {
 		variables.put("alertId", alert.getId());
 		variables.put("assignee", request.assignee() != null ? request.assignee() : "tech");
 
-		JsonNode started = camundaApi.post()
-				.uri("/api/process-instances/{key}/start", "gestidlo_intervention")
-				.body(variables)
-				.retrieve()
-				.body(JsonNode.class);
-
-		String processInstanceId = started != null && started.hasNonNull("id") ? started.get("id").asText() : null;
+		// Démarrage du process best-effort (comme advance/assign) : si Camunda est indisponible,
+		// l'intervention est tout de même créée et l'alerte reste ACK — pas de rollback complet
+		// qui ferait échouer « Créer l'intervention » à cause du seul moteur de workflow.
+		String processInstanceId = null;
+		try {
+			JsonNode started = camundaApi.post()
+					.uri("/api/process-instances/{key}/start", "gestidlo_intervention")
+					.body(variables)
+					.retrieve()
+					.body(JsonNode.class);
+			processInstanceId = started != null && started.hasNonNull("id") ? started.get("id").asText() : null;
+		} catch (Exception ignored) {
+			// Camunda indisponible — l'intervention persiste sans process associé.
+		}
 		ticket.setCamundaProcessInstanceId(processInstanceId);
 		ticket.setUpdatedAt(Instant.now());
 		return tickets.save(ticket);

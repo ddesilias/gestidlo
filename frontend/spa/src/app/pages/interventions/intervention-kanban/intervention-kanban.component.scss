@@ -1,0 +1,111 @@
+:host { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+.ik-board {
+  display: flex; gap: 10px;
+  padding: 0 16px 16px; width: 100%;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent;
+  &::-webkit-scrollbar { height: 5px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+}
+
+// ── Column ────────────────────────────────────────────────────────────────────
+.ik-column {
+  flex: 0 0 232px; display: flex; flex-direction: column;
+  background: rgba(255,255,255,.025); border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.ik-col-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 11px 8px; border-top: 3px solid transparent;
+  border-bottom: 1px solid rgba(255,255,255,.06); flex-shrink: 0;
+}
+.ik-col-label {
+  font-size: .73rem; font-weight: 600; color: #94a3b8; text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.ik-col-count {
+  font-size: .68rem; font-weight: 700; color: #475569;
+  background: rgba(255,255,255,.05); padding: 1px 6px; border-radius: 8px;
+  &--active { color: #93c5fd; background: rgba(59,130,246,.18); }
+}
+
+.ik-col-body {
+  flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.07) transparent;
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 4px; }
+}
+.ik-empty {
+  text-align: center; padding: 16px 8px; font-size: .72rem; color: #2d3748;
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────────
+.ik-card {
+  background: rgba(255,255,255,.04); border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-left: 3px solid transparent;
+  padding: 9px 10px 8px;
+  cursor: pointer; transition: background .15s, border-color .12s, transform .1s;
+  &:hover { background: rgba(255,255,255,.08); }
+  &--selected {
+    background: rgba(59,130,246,.1);
+    border-color: rgba(59,130,246,.4);
+    box-shadow: 0 0 0 1px rgba(59,130,246,.25);
+  }
+  &--critique { animation: ik-pulse 2.5s ease-in-out infinite; }
+}
+
+@keyframes ik-pulse {
+  0%, 100% { box-shadow: none; }
+  50%       { box-shadow: 0 0 0 2px rgba(239,68,68,.3); }
+}
+
+.ik-card__top {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;
+}
+.ik-card__code {
+  font-size: .64rem; font-weight: 700; color: #475569;
+  font-family: 'Courier New', monospace; letter-spacing: .03em;
+}
+.ik-card__prio { font-size: .64rem; font-weight: 600; }
+
+.ik-card__title {
+  margin: 0 0 6px; font-size: .77rem; font-weight: 500; color: #cbd5e1;
+  line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.ik-card__infra {
+  display: flex; align-items: center; gap: 4px;
+  font-size: .66rem; color: #475569; margin-bottom: 6px;
+  svg { flex-shrink: 0; }
+}
+
+// ── Task progress ─────────────────────────────────────────────────────────────
+.ik-card__progress {
+  display: flex; align-items: center; gap: 5px; margin-bottom: 7px;
+  &-bar  { flex: 1; height: 3px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+  &-fill { height: 100%; background: #22c55e; border-radius: 3px; transition: width .3s; }
+  &-lbl  { font-size: .62rem; color: #475569; white-space: nowrap; }
+}
+
+// ── Card footer ───────────────────────────────────────────────────────────────
+.ik-card__foot {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ik-card__person { display: flex; align-items: center; gap: 5px; }
+.ik-avatar {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(59,130,246,.25); color: #93c5fd;
+  font-size: .58rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.ik-card__tech  { font-size: .68rem; color: #64748b; }
+.ik-card__actions { display: flex; gap: 3px; }
+
+.ik-move-btn {
+  background: none; border: 1px solid rgba(255,255,255,.1); border-radius: 5px;
+  color: #64748b; font-size: .7rem; padding: 1px 5px; cursor: pointer; line-height: 1;
+  transition: all .15s;
+  &--fwd:hover { background: rgba(34,197,94,.2); color: #4ade80; border-color: rgba(34,197,94,.35); }
+}

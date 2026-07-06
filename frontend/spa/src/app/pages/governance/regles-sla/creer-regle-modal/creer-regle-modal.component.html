@@ -1,0 +1,223 @@
+<div *ngIf="visible" class="crs-overlay" (click)="fermer.emit()">
+  <div class="crs-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="crs-head">
+      <div class="crs-head__icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div>
+        <h3 class="crs-head__h3">Nouvelle règle SLA</h3>
+        <p class="crs-head__sub">Configurer un délai de résolution + déclencheurs + escalades</p>
+      </div>
+      <div class="crs-head__btns">
+        <button class="crs-ghost-btn">Modèles</button>
+        <button class="crs-close" (click)="fermer.emit()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body: form + sidebar -->
+    <div class="crs-body">
+
+      <!-- Left: form -->
+      <div class="crs-form">
+
+        <div class="crs-field">
+          <label class="crs-lbl">Nom de la règle <span class="crs-req">*</span></label>
+          <input class="crs-input" type="text" [(ngModel)]="nomRegle"/>
+        </div>
+        <div class="crs-row2">
+          <div class="crs-field">
+            <label class="crs-lbl">Code (auto-généré)</label>
+            <input class="crs-input crs-input--mono" type="text" [(ngModel)]="codeRegle" readonly/>
+          </div>
+          <div class="crs-field">
+            <label class="crs-lbl">Catégorie</label>
+            <select class="crs-input"><option>Pression réseau</option><option>Qualité eau</option><option>Capteur IoT</option></select>
+          </div>
+        </div>
+
+        <!-- Section 1: Quand -->
+        <div class="crs-section crs-section--blue">
+          <div class="crs-section__head">
+            <span class="crs-num crs-num--blue">1</span>
+            <span class="crs-section__titre">Quand cette règle s'applique</span>
+          </div>
+          <div class="crs-row3">
+            <div class="crs-field">
+              <label class="crs-lbl">Type d'incident</label>
+              <select class="crs-input crs-input--sm"><option>Pression faible</option><option>Coupure totale</option><option>Qualité dégradée</option></select>
+            </div>
+            <div class="crs-field">
+              <label class="crs-lbl">Condition</label>
+              <select class="crs-input crs-input--sm"><option>inférieur à</option><option>supérieur à</option><option>égal à</option></select>
+            </div>
+            <div class="crs-field">
+              <label class="crs-lbl">Seuil</label>
+              <div class="crs-row-inline">
+                <input class="crs-input crs-input--sm" type="text" value="1.0" style="width:60px"/>
+                <select class="crs-input crs-input--sm"><option>bar</option><option>NTU</option><option>mg/L</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="crs-row2">
+            <div class="crs-field">
+              <label class="crs-lbl">Durée minimale</label>
+              <div class="crs-row-inline">
+                <input class="crs-input crs-input--sm" type="text" value="2" style="width:60px"/>
+                <select class="crs-input crs-input--sm"><option>minutes</option><option>heures</option></select>
+              </div>
+            </div>
+            <div class="crs-field">
+              <label class="crs-lbl">Gravité initiale</label>
+              <select class="crs-input crs-input--sm crs-input--red"><option>Critique</option><option>Haute</option><option>Moyenne</option></select>
+            </div>
+          </div>
+          <div class="crs-field">
+            <label class="crs-lbl">Périmètre territorial</label>
+            <div class="crs-zones">
+              <span *ngFor="let z of zones()" class="crs-zone-tag">{{ z }} <span class="crs-zone-x" (click)="removeZone(z)">✕</span></span>
+              <span class="crs-zone-add">+ ajouter section</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Délai -->
+        <div class="crs-section crs-section--amber">
+          <div class="crs-section__head">
+            <span class="crs-num crs-num--amber">2</span>
+            <span class="crs-section__titre">Délai de résolution attendu</span>
+          </div>
+          <div class="crs-sla-grid">
+            <div class="crs-sla-cell crs-sla-cell--rouge">
+              <label class="crs-sla-lbl crs-sla-lbl--rouge">Critique</label>
+              <input class="crs-sla-input crs-sla-input--rouge" [(ngModel)]="slaC"/>
+            </div>
+            <div class="crs-sla-cell">
+              <label class="crs-sla-lbl crs-sla-lbl--amber">Haute</label>
+              <input class="crs-sla-input crs-sla-input--amber" [(ngModel)]="slaH"/>
+            </div>
+            <div class="crs-sla-cell">
+              <label class="crs-sla-lbl crs-sla-lbl--blue">Moyenne</label>
+              <input class="crs-sla-input crs-sla-input--blue" [(ngModel)]="slaM"/>
+            </div>
+            <div class="crs-sla-cell">
+              <label class="crs-sla-lbl crs-sla-lbl--gray">Basse</label>
+              <input class="crs-sla-input crs-sla-input--gray" [(ngModel)]="slaB"/>
+            </div>
+          </div>
+          <div class="crs-hint">Le délai démarre à la création de l'alerte. Format accepté : <span class="crs-mono">2h · 30min · 1j 4h · 7j</span></div>
+        </div>
+
+        <!-- Section 3: Escalades -->
+        <div class="crs-section crs-section--rouge">
+          <div class="crs-section__head">
+            <span class="crs-num crs-num--rouge">3</span>
+            <span class="crs-section__titre">Escalades automatiques</span>
+          </div>
+          <div *ngFor="let e of escalades; let i=index" class="crs-esc-row">
+            <span class="crs-esc-lbl">{{ i===0 ? 'Si non prise en charge dans' : 'Puis dans' }}</span>
+            <input class="crs-input crs-input--sm crs-input--num" [(ngModel)]="e.delai"/>
+            <select class="crs-input crs-input--sm"><option>min</option><option>h</option></select>
+            <span class="crs-esc-lbl">→ notifier</span>
+            <select class="crs-input crs-input--sm crs-input--blue">
+              <option>{{ e.notifier }}</option>
+              <option>Dispatcher</option><option>Chef de centre</option><option>Admin OREPA</option>
+            </select>
+            <span *ngIf="e.canal" class="crs-esc-lbl">+ {{ e.canal }}</span>
+            <button class="crs-esc-del" (click)="removeEscalade(i)">✕</button>
+          </div>
+          <button class="crs-add-esc" (click)="addEscalade()">+ Ajouter une escalade</button>
+        </div>
+
+        <!-- Section 4: Actions -->
+        <div class="crs-section crs-section--green">
+          <div class="crs-section__head">
+            <span class="crs-num crs-num--green">4</span>
+            <span class="crs-section__titre">Actions automatiques au déclenchement</span>
+          </div>
+          <label class="crs-action" [class.crs-action--on]="actionIntervention()">
+            <input type="checkbox" [checked]="actionIntervention()" (change)="actionIntervention.set(!actionIntervention())"/>
+            <span class="crs-action__ico crs-action__ico--green">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </span>
+            <span class="crs-action__lbl">Créer automatiquement une intervention</span>
+            <span class="crs-action__tag">recommandé</span>
+          </label>
+          <label class="crs-action" [class.crs-action--on]="actionSms()">
+            <input type="checkbox" [checked]="actionSms()" (change)="actionSms.set(!actionSms())"/>
+            <span class="crs-action__ico crs-action__ico--blue">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <span class="crs-action__lbl">Envoyer SMS aux usagers (template Bulletin)</span>
+          </label>
+          <label class="crs-action">
+            <input type="checkbox" [checked]="actionDeclaration()" (change)="actionDeclaration.set(!actionDeclaration())"/>
+            <span class="crs-action__ico crs-action__ico--purple">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            </span>
+            <span class="crs-action__lbl">Générer déclaration incident 24h DINEPA</span>
+          </label>
+          <label class="crs-action">
+            <input type="checkbox" [checked]="actionCapteurs()" (change)="actionCapteurs.set(!actionCapteurs())"/>
+            <span class="crs-action__ico crs-action__ico--amber">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 6l11-5 11 5v12l-11 5L1 18z"/></svg>
+            </span>
+            <span class="crs-action__lbl">Augmenter fréquence capteurs voisins (30s → 10s)</span>
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Right: Simulator sidebar -->
+      <div class="crs-sidebar">
+
+        <div class="crs-sim-panel">
+          <div class="crs-sim-panel__head crs-sim-panel__head--blue">Simulateur</div>
+          <div class="crs-sim-box">
+            <div class="crs-sim-sub">Si cette règle existait il y a 30 jours :</div>
+            <div class="crs-sim-stat"><span class="crs-sim-val crs-sim-val--amber">18</span><span class="crs-sim-lbl">alertes auraient été déclenchées</span></div>
+            <div class="crs-sim-stat"><span class="crs-sim-val crs-sim-val--green">~14</span><span class="crs-sim-lbl">SLA respectés (78%)</span></div>
+            <div class="crs-sim-stat"><span class="crs-sim-val crs-sim-val--rouge">~4</span><span class="crs-sim-lbl">dépassements estimés</span></div>
+            <button class="crs-sim-link">Voir détails simulation →</button>
+          </div>
+        </div>
+
+        <div class="crs-sim-panel">
+          <div class="crs-sim-panel__head crs-sim-panel__head--amber">Aperçu règle</div>
+          <div class="crs-sim-box">
+            <div class="crs-preview-lbl">Quand</div>
+            <div class="crs-preview-txt">pression &lt; 1.0 bar pendant 2 min sur {{ zones().join(' ou ') }}</div>
+            <div class="crs-preview-lbl">Alors</div>
+            <div class="crs-preview-txt">alerte critique · SLA {{ slaC }} · escalade à 15 min puis 30 min · intervention auto · SMS aux usagers</div>
+          </div>
+        </div>
+
+        <div class="crs-impact">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <div>
+            <div class="crs-impact__title">Impact à l'activation</div>
+            <div class="crs-impact__txt">2 alertes en cours seront recatégorisées · 4 capteurs concernés · notification à 6 utilisateurs</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="crs-foot">
+      <label class="crs-foot__toggle">
+        <input type="checkbox" [checked]="activerImmediatement()" (change)="activerImmediatement.set(!activerImmediatement())"/>
+        <span>Activer immédiatement après création</span>
+      </label>
+      <div class="crs-foot__actions">
+        <button class="crs-foot__btn" (click)="fermer.emit()">Annuler</button>
+        <button class="crs-foot__btn">Enregistrer brouillon</button>
+        <button class="crs-foot__btn crs-foot__btn--amber">Créer la règle</button>
+      </div>
+    </div>
+
+  </div>
+</div>

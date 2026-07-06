@@ -1,0 +1,181 @@
+<app-gov-shell title="Utilisateurs & Rôles" [moduleNum]="3">
+
+  <!-- Header -->
+  <div class="usr-header">
+    <div class="usr-header__left">
+      <div class="usr-header__icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div>
+        <h2 class="usr-header__h2">Utilisateurs & Rôles</h2>
+        <p class="usr-header__sub">Comptes · rôles · permissions granulaires · compétences techniques</p>
+      </div>
+    </div>
+    <div class="usr-header__actions">
+      <button class="usr-btn usr-btn--ghost">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Matrice permissions
+      </button>
+      <button class="usr-btn usr-btn--ghost">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        Importer CSV
+      </button>
+      <button class="usr-btn usr-btn--violet" (click)="showCreerSuperviseur.set(true)">
+        <i class="ti ti-shield-plus"></i>
+        Superviseur OREPA
+      </button>
+      <button class="usr-btn usr-btn--green" (click)="showCreerSuperviseurUrd.set(true)">
+        <i class="ti ti-shield-plus"></i>
+        Superviseur URD
+      </button>
+      <button class="usr-btn usr-btn--primary" (click)="showAjouterDrawer.set(true)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Ajouter utilisateur
+      </button>
+    </div>
+  </div>
+
+  <!-- Role sidebar + user table -->
+  <div class="usr-grid">
+
+    <!-- Role sidebar -->
+    <div class="usr-roles">
+      <div class="usr-roles__title">Rôles · 7</div>
+      <div *ngFor="let r of ROLES" class="usr-role-item" [class.usr-role-item--active]="selectedRole()===r.id" (click)="selectedRole.set(r.id)">
+        <span class="usr-role-dot" [class]="'usr-dot--' + r.cls"></span>
+        <span class="usr-role-item__label">{{ r.label }}</span>
+        <span class="usr-role-item__count" [class]="'usr-count--' + r.cls">{{ r.count }}</span>
+      </div>
+      <div class="usr-roles__add">
+        <button class="usr-btn usr-btn--full">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau rôle
+        </button>
+      </div>
+    </div>
+
+    <!-- User table -->
+    <div class="usr-table-wrap">
+      <div class="usr-table-head">
+        <div class="usr-search">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Rechercher nom, email, téléphone..." [value]="recherche()" (input)="recherche.set($any($event.target).value)"/>
+        </div>
+        <button class="usr-btn usr-btn--ghost usr-btn--sm">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtres
+        </button>
+      </div>
+
+      <table class="usr-table">
+        <thead>
+          <tr>
+            <th>Utilisateur</th><th>Rôle</th><th>Zone</th><th>Institution</th><th>Statut</th><th class="usr-th--right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of allUsers()" class="usr-row">
+            <td class="usr-td">
+              <div class="usr-avatar-row">
+                <span class="usr-avatar" [class]="'usr-avatar--' + u.roleCls">
+                  {{ u.initiales }}
+                  <span *ngIf="u.online" class="usr-online-dot"></span>
+                </span>
+                <div>
+                  <div class="usr-name">{{ u.nom }}</div>
+                  <div class="usr-email">{{ u.email }}<span *ngIf="u.phone"> · {{ u.phone }}</span></div>
+                </div>
+              </div>
+            </td>
+            <td class="usr-td">
+              <span class="usr-role-badge" [class]="'usr-role-badge--' + u.roleCls">{{ u.role }}</span>
+            </td>
+            <td class="usr-td usr-td--muted">{{ u.zone }}</td>
+            <td class="usr-td">
+              <span [class]="'usr-inst--' + u.instCls">{{ u.institution }}</span>
+            </td>
+            <td class="usr-td">
+              <span class="usr-statut" [class]="'usr-statut--' + u.statutCls">
+                <span class="usr-statut-dot"></span>
+                {{ u.statut }}
+              </span>
+            </td>
+            <td class="usr-td usr-td--right">
+              <button class="usr-act-btn">👁</button>
+              <button class="usr-act-btn">✎</button>
+              <button class="usr-act-btn">···</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="usr-table-foot">
+        <span>6 affichés sur 24 utilisateurs</span>
+        <div class="usr-pagination">
+          <button class="usr-pg-btn">‹</button>
+          <span class="usr-pg-label">1 / 4</span>
+          <button class="usr-pg-btn">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permissions matrix -->
+  <div class="usr-perm-wrap">
+    <div class="usr-perm-head">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>Matrice de permissions par rôle</span>
+      <span class="usr-perm-hint">cliquez pour modifier</span>
+    </div>
+    <div class="usr-perm-scroll">
+      <table class="usr-perm-table">
+        <thead>
+          <tr>
+            <th class="usr-ph">Action / Module</th>
+            <th class="usr-ph usr-ph--violet">Super Admin</th>
+            <th class="usr-ph usr-ph--violet">Admin OREPA</th>
+            <th class="usr-ph usr-ph--green">Chef centre</th>
+            <th class="usr-ph usr-ph--blue">Dispatcher</th>
+            <th class="usr-ph usr-ph--amber">Technicien</th>
+            <th class="usr-ph usr-ph--purple">Auditeur</th>
+            <th class="usr-ph usr-ph--gray">Citoyen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of permMatrix" [class.usr-pr--highlight]="row.highlight">
+            <td class="usr-pm-module" [class.usr-pm-module--red]="row.highlight">{{ row.module }}</td>
+            <td class="usr-pm-cell" [class]="permIcon(row.superAdmin).cls">{{ permIcon(row.superAdmin).label }}</td>
+            <td class="usr-pm-cell" [class]="permIcon(row.adminOrepa).cls">{{ permIcon(row.adminOrepa).label }}</td>
+            <td class="usr-pm-cell" [class]="permIcon(row.chef).cls">{{ permIcon(row.chef).label }}</td>
+            <td class="usr-pm-cell" [class]="permIcon(row.dispatcher).cls">{{ permIcon(row.dispatcher).label }}</td>
+            <td class="usr-pm-cell" [class]="permIcon(row.tech).cls">{{ permIcon(row.tech).label }}</td>
+            <td class="usr-pm-cell" [class]="permIcon(row.auditeur).cls">{{ permIcon(row.auditeur).label }}</td>
+            <td class="usr-pm-cell" [class]="permIcon(row.citoyen).cls">{{ permIcon(row.citoyen).label }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="usr-perm-legend">
+      <span class="usr-leg-label">Légende :</span>
+      <span class="perm-all">✓ Tous droits</span>
+      <span class="perm-rest">✓ Restreint</span>
+      <span class="perm-tool">⚙ Ses propres objets</span>
+      <span class="perm-read">👁 Lecture seule</span>
+      <span class="perm-none">✕ Aucun accès</span>
+    </div>
+  </div>
+
+  <app-ajouter-utilisateur-drawer [visible]="showAjouterDrawer()" (fermer)="showAjouterDrawer.set(false)"></app-ajouter-utilisateur-drawer>
+  <app-creer-superviseur-modal
+    [visible]="showCreerSuperviseur()"
+    (fermer)="showCreerSuperviseur.set(false)"
+    (compteCree)="onSuperviseurOreparCree($event)">
+  </app-creer-superviseur-modal>
+
+  <app-creer-superviseur-urd-modal
+    [visible]="showCreerSuperviseurUrd()"
+    (fermer)="showCreerSuperviseurUrd.set(false)"
+    (compteCree)="onSuperviseurUrdCree($event)">
+  </app-creer-superviseur-urd-modal>
+
+</app-gov-shell>

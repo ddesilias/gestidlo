@@ -1,0 +1,447 @@
+<div class="idd-panel">
+
+  <!-- ══════════════════ STICKY HEADER ══════════════════ -->
+  <div class="idd-header">
+
+    <!-- Row 1: code + nav + close -->
+    <div class="idd-header__top">
+      <span class="idd-code">{{ intervention.code }}</span>
+      <span class="idd-type-pill">{{ typeLabel(intervention.type) }}</span>
+      <span class="idd-prio-dot" [style.background]="prioriteDot(intervention.priority)"
+        [title]="prioriteLabel(intervention.priority)"></span>
+      <div class="idd-nav">
+        <button class="idd-nav-btn" type="button" (click)="allerPrecedent()"
+          [disabled]="currentIdx <= 0" title="Précédente (K)">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="idd-nav-pos">{{ currentIdx + 1 }}/{{ total }}</span>
+        <button class="idd-nav-btn" type="button" (click)="allerSuivant()"
+          [disabled]="currentIdx >= total - 1" title="Suivante (J)">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+        <button class="idd-nav-btn idd-nav-btn--close" type="button"
+          (click)="fermer.emit()" title="Fermer (Esc)">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <p class="idd-title">{{ intervention.title }}</p>
+
+    <!-- Badges + SLA -->
+    <div class="idd-badges">
+      <span class="idd-status-badge"
+        [style.background]="statutBg(intervention.status)"
+        [style.color]="statutDot(intervention.status)">
+        {{ statutLabel(intervention.status) }}
+      </span>
+      <span class="idd-sla-lbl"
+        [class.idd-sla-lbl--ok]="!slaDepasse"
+        [class.idd-sla-lbl--over]="slaDepasse"
+        *ngIf="isActive(intervention.status)">
+        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        SLA · {{ slaLabel }}
+      </span>
+      <button class="idd-source-badge" type="button" *ngIf="intervention.sourceAlertCode" (click)="onVoirAlerte()" title="Voir l'alerte d'origine">
+        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        {{ intervention.sourceAlertCode }}
+      </button>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="idd-action-strip">
+      <ng-container *ngFor="let ns of nextStatuses(intervention.status)">
+        <button class="idd-qbtn idd-qbtn--primary" type="button"
+          *ngIf="ns === 'en-cours'"
+          (click)="setStatus(ns)">▶ Démarrer</button>
+        <button class="idd-qbtn idd-qbtn--success" type="button"
+          *ngIf="ns === 'terminee'"
+          (click)="setStatus(ns)">✓ Terminer</button>
+        <button class="idd-qbtn idd-qbtn--success" type="button"
+          *ngIf="ns === 'validee'"
+          (click)="setStatus(ns)">✓ Valider</button>
+        <button class="idd-qbtn idd-qbtn--muted" type="button"
+          *ngIf="ns === 'cloturee'"
+          (click)="setStatus(ns)">Clôturer</button>
+        <button class="idd-qbtn idd-qbtn--danger" type="button"
+          *ngIf="ns === 'annulee'"
+          (click)="setStatus(ns)">
+          {{ confirmAnnuler ? 'Confirmer ?' : 'Annuler' }}
+        </button>
+      </ng-container>
+    </div>
+
+  </div><!-- /idd-header -->
+
+  <!-- ══════════════════ TABS ══════════════════ -->
+  <div class="idd-tabs">
+    <button class="idd-tab" [class.idd-tab--active]="onglet === 'resume'"
+      type="button" (click)="onglet = 'resume'">Résumé</button>
+    <button class="idd-tab" [class.idd-tab--active]="onglet === 'taches'"
+      type="button" (click)="onglet = 'taches'">
+      Tâches
+      <span class="idd-tab__ct" *ngIf="intervention.tasks.length">
+        {{ tasksDone() }}/{{ intervention.tasks.length }}
+      </span>
+    </button>
+    <button class="idd-tab" [class.idd-tab--active]="onglet === 'historique'"
+      type="button" (click)="onglet = 'historique'">Historique</button>
+    <button class="idd-tab" [class.idd-tab--active]="onglet === 'cloture'"
+      type="button" (click)="onglet = 'cloture'">
+      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      PV / Clôture
+      <span class="idd-tab__dot idd-tab__dot--ok" *ngIf="intervention.reportId"></span>
+    </button>
+  </div>
+
+  <!-- ══════════════════ TAB: RÉSUMÉ ══════════════════ -->
+  <div class="idd-body" *ngIf="onglet === 'resume'">
+
+    <!-- Zone 1 — Identité -->
+    <div class="idd-zone">
+      <div class="idd-zone__hd">Identité</div>
+      <div class="idd-grid">
+        <div class="idd-row">
+          <span class="idd-lbl">Code</span>
+          <span class="idd-val idd-val--mono">{{ intervention.code }}</span>
+        </div>
+        <div class="idd-row">
+          <span class="idd-lbl">Type</span>
+          <span class="idd-val">{{ typeLabel(intervention.type) }}</span>
+        </div>
+        <div class="idd-row">
+          <span class="idd-lbl">Priorité</span>
+          <span class="idd-val">
+            <span class="idd-prio-inline" [style.background]="prioriteDot(intervention.priority)"></span>
+            {{ prioriteLabel(intervention.priority) }}
+          </span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.sourceAlertCode">
+          <span class="idd-lbl">Alerte source</span>
+          <span class="idd-val idd-val--link">{{ intervention.sourceAlertCode }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone 2 — Acteurs -->
+    <div class="idd-zone">
+      <div class="idd-zone__hd">Acteurs</div>
+      <div class="idd-tech-card" *ngIf="intervention.technicianId; else unassigned">
+        <div class="idd-tech-avatar">
+          {{ techInitials(intervention.technicianName) }}
+        </div>
+        <div class="idd-tech-info">
+          <span class="idd-tech-name">{{ intervention.technicianName }}</span>
+          <span class="idd-tech-inst">{{ intervention.institutionName }}</span>
+        </div>
+        <span class="idd-tech-status"
+          [style.background]="statutBg(intervention.status)"
+          [style.color]="statutDot(intervention.status)">
+          {{ statutLabel(intervention.status) }}
+        </span>
+      </div>
+      <ng-template #unassigned>
+        <div class="idd-unassigned-row">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          Non assignée
+          <button class="idd-assign-btn" type="button">Assigner →</button>
+        </div>
+      </ng-template>
+      <div class="idd-row" style="margin-top:.5rem" *ngIf="intervention.assignedBy !== 'systeme'">
+        <span class="idd-lbl">Assignée par</span>
+        <span class="idd-val">{{ intervention.assignedBy }}</span>
+      </div>
+    </div>
+
+    <!-- Zone 3 — Infrastructure & Localisation -->
+    <div class="idd-zone" *ngIf="intervention.infrastructureName || intervention.commune">
+      <div class="idd-zone__hd">Cible terrain</div>
+      <div class="idd-grid">
+        <div class="idd-row" *ngIf="intervention.infrastructureName">
+          <span class="idd-lbl">Infrastructure</span>
+          <span class="idd-val">{{ intervention.infrastructureName }}</span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.commune">
+          <span class="idd-lbl">Localisation</span>
+          <span class="idd-val">
+            {{ intervention.commune }}<ng-container *ngIf="intervention.section">, {{ intervention.section }}</ng-container>
+            <ng-container *ngIf="intervention.department"> — {{ intervention.department }}</ng-container>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone 4 — Temps & SLA -->
+    <div class="idd-zone">
+      <div class="idd-zone__hd">Temps &amp; SLA</div>
+      <div class="idd-grid">
+        <div class="idd-row">
+          <span class="idd-lbl">Créée le</span>
+          <span class="idd-val">{{ dateLabel(intervention.createdAt) }} {{ timeLabel(intervention.createdAt) }}</span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.scheduledAt">
+          <span class="idd-lbl">Planifiée à</span>
+          <span class="idd-val">{{ dateLabel(intervention.scheduledAt) }} {{ timeLabel(intervention.scheduledAt) }}</span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.startedAt">
+          <span class="idd-lbl">Démarrée le</span>
+          <span class="idd-val">{{ dateLabel(intervention.startedAt) }} {{ timeLabel(intervention.startedAt) }}</span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.closedAt">
+          <span class="idd-lbl">Clôturée le</span>
+          <span class="idd-val">{{ dateLabel(intervention.closedAt) }} {{ timeLabel(intervention.closedAt) }}</span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.startedAt || isActive(intervention.status)">
+          <span class="idd-lbl">Durée</span>
+          <span class="idd-val">{{ durationLabel }}</span>
+        </div>
+        <div class="idd-row" *ngIf="isActive(intervention.status)">
+          <span class="idd-lbl">SLA ({{ slaLimitH }}h)</span>
+          <span class="idd-val"
+            [class.idd-val--warn]="slaDepasse"
+            [class.idd-val--ok]="!slaDepasse">
+            {{ slaLabel }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="idd-zone" *ngIf="intervention.description">
+      <div class="idd-zone__hd">Description</div>
+      <p class="idd-desc">{{ intervention.description }}</p>
+    </div>
+
+  </div><!-- /resume -->
+
+  <!-- ══════════════════ TAB: TÂCHES ══════════════════ -->
+  <div class="idd-body" *ngIf="onglet === 'taches'">
+    <div class="idd-empty" *ngIf="!intervention.tasks.length">
+      Aucune tâche définie pour cette intervention.
+    </div>
+    <ng-container *ngIf="intervention.tasks.length">
+      <div class="idd-progress">
+        <div class="idd-progress__bar">
+          <div class="idd-progress__fill" [style.width.%]="tasksPct()"></div>
+        </div>
+        <span class="idd-progress__lbl">{{ tasksDone() }} / {{ intervention.tasks.length }}</span>
+      </div>
+      <div class="idd-tasks">
+        <label *ngFor="let task of intervention.tasks"
+          class="idd-task" [class.idd-task--done]="task.done">
+          <input type="checkbox" class="idd-task__check"
+            [checked]="task.done" (change)="toggleTask(task.id)">
+          <span>{{ task.label }}</span>
+        </label>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- ══════════════════ TAB: HISTORIQUE ══════════════════ -->
+  <div class="idd-body" *ngIf="onglet === 'historique'">
+    <div class="idd-timeline">
+      <div class="idd-tl-item">
+        <div class="idd-tl-dot idd-tl-dot--muted"></div>
+        <div class="idd-tl-content">
+          <span class="idd-tl-evt">Intervention créée</span>
+          <span class="idd-tl-meta">{{ dateLabel(intervention.createdAt) }} {{ timeLabel(intervention.createdAt) }} · par {{ intervention.assignedBy }}</span>
+        </div>
+      </div>
+      <div class="idd-tl-item" *ngIf="intervention.sourceAlertCode">
+        <div class="idd-tl-dot idd-tl-dot--orange"></div>
+        <div class="idd-tl-content">
+          <span class="idd-tl-evt">Déclenchée par alerte {{ intervention.sourceAlertCode }}</span>
+          <span class="idd-tl-meta">Source : {{ intervention.sourceAlertCode }}</span>
+        </div>
+      </div>
+      <div class="idd-tl-item" *ngIf="intervention.status !== 'creee' && intervention.technicianId">
+        <div class="idd-tl-dot idd-tl-dot--blue"></div>
+        <div class="idd-tl-content">
+          <span class="idd-tl-evt">Assignée à {{ intervention.technicianName }}</span>
+          <span class="idd-tl-meta">{{ intervention.institutionName }}</span>
+        </div>
+      </div>
+      <div class="idd-tl-item" *ngIf="intervention.startedAt">
+        <div class="idd-tl-dot idd-tl-dot--blue"></div>
+        <div class="idd-tl-content">
+          <span class="idd-tl-evt">Intervention démarrée</span>
+          <span class="idd-tl-meta">{{ dateLabel(intervention.startedAt) }} {{ timeLabel(intervention.startedAt) }}</span>
+        </div>
+      </div>
+      <div class="idd-tl-item"
+        *ngIf="intervention.status === 'terminee' || intervention.status === 'validee' || intervention.status === 'cloturee'">
+        <div class="idd-tl-dot idd-tl-dot--green"></div>
+        <div class="idd-tl-content">
+          <span class="idd-tl-evt">Travaux terminés — en attente de validation</span>
+          <span class="idd-tl-meta" *ngIf="intervention.notes">{{ intervention.notes | slice:0:80 }}…</span>
+        </div>
+      </div>
+      <div class="idd-tl-item" *ngIf="intervention.status === 'validee' || intervention.status === 'cloturee'">
+        <div class="idd-tl-dot idd-tl-dot--teal"></div>
+        <div class="idd-tl-content"><span class="idd-tl-evt">Résultats validés</span></div>
+      </div>
+      <div class="idd-tl-item" *ngIf="intervention.status === 'cloturee'">
+        <div class="idd-tl-dot idd-tl-dot--muted"></div>
+        <div class="idd-tl-content">
+          <span class="idd-tl-evt">Clôturée — PV archivé</span>
+          <span class="idd-tl-meta" *ngIf="intervention.closedAt">{{ dateLabel(intervention.closedAt) }} {{ timeLabel(intervention.closedAt) }}</span>
+        </div>
+      </div>
+      <div class="idd-tl-item" *ngIf="intervention.status === 'annulee'">
+        <div class="idd-tl-dot idd-tl-dot--red"></div>
+        <div class="idd-tl-content"><span class="idd-tl-evt">Annulée</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ TAB: PV / CLÔTURE ══════════════════ -->
+  <div class="idd-body" *ngIf="onglet === 'cloture'">
+
+    <!-- PV déjà lié -->
+    <div class="idd-pv-linked" *ngIf="intervention.reportId">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <polyline points="9 15 12 18 16 12"/>
+      </svg>
+      <span>PV d'intervention créé · <strong class="idd-pv-code">{{ intervention.reportId }}</strong></span>
+      <button class="idd-pv-view-btn" type="button">Voir dans Rapports →</button>
+    </div>
+
+    <!-- Info contextuelle auto-remplie -->
+    <div class="idd-zone idd-zone--muted">
+      <div class="idd-zone__hd">Métadonnées intervention <span class="idd-zone__auto">auto</span></div>
+      <div class="idd-grid">
+        <div class="idd-row">
+          <span class="idd-lbl">Code</span>
+          <span class="idd-val idd-val--mono">{{ intervention.code }}</span>
+        </div>
+        <div class="idd-row">
+          <span class="idd-lbl">Type</span>
+          <span class="idd-val">{{ typeLabel(intervention.type) }}</span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.technicianId">
+          <span class="idd-lbl">Technicien</span>
+          <span class="idd-val">{{ intervention.technicianName }}</span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.startedAt">
+          <span class="idd-lbl">Durée</span>
+          <span class="idd-val">{{ durationLabel }}</span>
+        </div>
+        <div class="idd-row" *ngIf="intervention.tasks.length">
+          <span class="idd-lbl">Tâches</span>
+          <span class="idd-val">{{ tasksDone() }}/{{ intervention.tasks.length }} complétées</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observations / notes terrain -->
+    <div class="idd-zone">
+      <div class="idd-zone__hd">Observations terrain</div>
+      <textarea class="idd-textarea" rows="4" [(ngModel)]="notesTexte"
+        placeholder="Cause identifiée, actions réalisées, résultats observés, anomalies résiduelles…">
+      </textarea>
+      <div class="idd-existing-note" *ngIf="intervention.notes">
+        <span class="idd-existing-note__lbl">Note précédente :</span>
+        {{ intervention.notes }}
+      </div>
+    </div>
+
+    <!-- Conformité rapide -->
+    <div class="idd-zone">
+      <div class="idd-zone__hd">Conformité &amp; validation</div>
+      <div class="idd-check-row">
+        <label class="idd-checkbox">
+          <input type="checkbox"> Résultats conformes aux normes DINEPA
+        </label>
+      </div>
+      <div class="idd-check-row">
+        <label class="idd-checkbox">
+          <input type="checkbox"> Capteur de validation testé et fonctionnel
+        </label>
+      </div>
+      <div class="idd-check-row">
+        <label class="idd-checkbox">
+          <input type="checkbox"> Bénéficiaires notifiés de la résolution
+        </label>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="idd-cloture-actions">
+      <button class="idd-save-btn" type="button" (click)="saveNotes()"
+        *ngIf="notesTexte.trim().length > 0">
+        Enregistrer les observations
+      </button>
+
+      <div class="idd-pv-cta" *ngIf="!intervention.reportId">
+        <p class="idd-pv-cta__hint">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Aucun PV d'intervention créé. Le rapport sera disponible dans le module Rapports.
+        </p>
+        <button class="idd-pv-btn" type="button" (click)="creerRapport()">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          Créer le PV d'intervention
+        </button>
+        <p class="idd-pv-cta__sub">
+          Ce PV alimentera automatiquement le module Rapports avec filtrage par technicien, mois et type.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /cloture -->
+
+  <!-- Liaisons croisées (footer) -->
+  <div class="idd-links">
+    <button class="idd-link-pill" type="button" *ngIf="intervention.sourceAlertCode">
+      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      {{ intervention.sourceAlertCode }}
+    </button>
+    <button class="idd-link-pill" type="button" *ngIf="intervention.infrastructureName">
+      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+      </svg>
+      {{ intervention.infrastructureName }}
+    </button>
+    <button class="idd-link-pill" type="button" *ngIf="intervention.reportId">
+      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Rapport {{ intervention.reportId }}
+    </button>
+    <button class="idd-link-pill" type="button" *ngIf="intervention.commune">
+      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+      </svg>
+      Carte — {{ intervention.commune }}
+    </button>
+  </div>
+
+</div><!-- /idd-panel -->

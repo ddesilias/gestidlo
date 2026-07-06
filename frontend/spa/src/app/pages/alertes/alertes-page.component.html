@@ -1,0 +1,388 @@
+<div class="ap-shell" [class.ap-shell--embedded]="!!scope">
+
+  <!-- Scoped header (URD embedded mode) -->
+  <div *ngIf="scope" class="ap-scope-header">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#FB7185" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    <span>Alertes · département {{ scope.dept }}</span>
+    <span class="ap-scope-count">{{ effKpis().total }} alertes</span>
+    <div class="ap-vtoggle" style="margin-left:auto">
+      <button class="ap-vt" type="button" [class.ap-vt--on]="effVue() === 'tableau'" (click)="setVueEff('tableau')">Liste</button>
+      <button class="ap-vt" type="button" [class.ap-vt--on]="effVue() === 'kanban'" (click)="setVueEff('kanban')">Kanban</button>
+    </div>
+    <button class="ap-btn ap-btn--primary" type="button" (click)="ouvrirCreerEff()">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Créer
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       HEADER (standalone page only)
+  ══════════════════════════════════════════════════════════ -->
+  <header class="ap-header" *ngIf="!scope">
+    <div class="ap-header__left">
+      <h1 class="ap-header__title">Alertes &amp; incidents</h1>
+      <p class="ap-header__sub">Suivi, priorisation et traitement des anomalies détectées sur le réseau AEP.</p>
+    </div>
+    <div class="ap-header__right">
+      <button class="ap-btn ap-btn--primary" type="button" (click)="ouvrirCreerEff()" title="Créer une alerte (N)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Créer une alerte
+        <kbd class="ap-kbd">N</kbd>
+      </button>
+      <button class="ap-btn ap-btn--ghost" type="button" (click)="ouvrirFiltresEff()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        Filtres
+        <span class="ap-filter-badge" *ngIf="effNbFiltres() > 0">{{ effNbFiltres() }}</span>
+      </button>
+      <div class="ap-vtoggle">
+        <button class="ap-vt" type="button" [class.ap-vt--on]="effVue() === 'tableau'" (click)="setVueEff('tableau')">Liste</button>
+        <button class="ap-vt" type="button" [class.ap-vt--on]="effVue() === 'kanban'" (click)="setVueEff('kanban')">Kanban</button>
+        <button class="ap-vt" type="button" [class.ap-vt--on]="effVue() === 'salle'"  (click)="setVueEff('salle')">Salle</button>
+      </div>
+      <span class="ap-refresh-time">{{ state.lastRefresh() | date:'HH:mm:ss' }}</span>
+      <button class="ap-btn ap-btn--ghost" type="button" (click)="state.refresh()" title="Actualiser">↻</button>
+      <button class="ap-btn ap-btn--ghost" type="button" (click)="exporter()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exporter
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       KPI CARDS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="ap-kpi">
+
+    <button class="ap-kc ap-kc--red"
+      [class.ap-kc--active]="effActives()"
+      type="button" (click)="filtrerActivesEff()">
+      <div class="ap-kc__top"><span class="ap-kc__dot"></span><span class="ap-kc__lbl">Actives</span></div>
+      <div class="ap-kc__val">{{ effKpis().actives }}</div>
+      <div class="ap-kc__trend"
+        [class.ap-kc__trend--up]="effKpiTendances().actives > 0"
+        [class.ap-kc__trend--down]="effKpiTendances().actives < 0">
+        <ng-container *ngIf="effKpiTendances().actives > 0">↑ +{{ effKpiTendances().actives }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().actives < 0">↓ {{ effKpiTendances().actives }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().actives === 0">= stable</ng-container>
+      </div>
+    </button>
+
+    <button class="ap-kc ap-kc--crit"
+      [class.ap-kc--active]="effFiltres().severites.includes('critique')"
+      [class.ap-kc--pulse]="effKpis().critiques > 0"
+      type="button" (click)="toggleSeveriteEff('critique')">
+      <div class="ap-kc__top"><span class="ap-kc__dot"></span><span class="ap-kc__lbl">Critiques</span></div>
+      <div class="ap-kc__val">{{ effKpis().critiques }}</div>
+      <div class="ap-kc__trend"
+        [class.ap-kc__trend--up]="effKpiTendances().critiques > 0"
+        [class.ap-kc__trend--down]="effKpiTendances().critiques < 0">
+        <ng-container *ngIf="effKpiTendances().critiques > 0">↑ +{{ effKpiTendances().critiques }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().critiques < 0">↓ {{ effKpiTendances().critiques }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().critiques === 0">= stable</ng-container>
+      </div>
+    </button>
+
+    <button class="ap-kc ap-kc--blue"
+      [class.ap-kc--active]="effFiltres().statuts.includes('en-cours')"
+      type="button" (click)="toggleStatutEff('en-cours')">
+      <div class="ap-kc__top"><span class="ap-kc__dot"></span><span class="ap-kc__lbl">En cours</span></div>
+      <div class="ap-kc__val">{{ effKpis().enCours }}</div>
+      <div class="ap-kc__trend"
+        [class.ap-kc__trend--up]="effKpiTendances().enCours > 0"
+        [class.ap-kc__trend--down]="effKpiTendances().enCours < 0">
+        <ng-container *ngIf="effKpiTendances().enCours > 0">↑ +{{ effKpiTendances().enCours }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().enCours < 0">↓ {{ effKpiTendances().enCours }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().enCours === 0">= stable</ng-container>
+      </div>
+    </button>
+
+    <button class="ap-kc ap-kc--orange"
+      [class.ap-kc--active]="effFiltres().sansIntervention"
+      [class.ap-kc--alert]="effKpis().sansAction > 0"
+      type="button" (click)="filtrerSansInterventionEff()">
+      <div class="ap-kc__top"><span class="ap-kc__dot"></span><span class="ap-kc__lbl">Sans intervention</span></div>
+      <div class="ap-kc__val">{{ effKpis().sansAction }}</div>
+      <div class="ap-kc__trend"
+        [class.ap-kc__trend--up]="effKpiTendances().sansAction > 0"
+        [class.ap-kc__trend--down]="effKpiTendances().sansAction < 0">
+        <ng-container *ngIf="effKpiTendances().sansAction > 0">↑ +{{ effKpiTendances().sansAction }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().sansAction < 0">↓ {{ effKpiTendances().sansAction }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().sansAction === 0">= stable</ng-container>
+      </div>
+    </button>
+
+    <button class="ap-kc ap-kc--green"
+      [class.ap-kc--active]="effFiltres().statuts.includes('resolue')"
+      type="button" (click)="toggleStatutEff('resolue')">
+      <div class="ap-kc__top"><span class="ap-kc__dot"></span><span class="ap-kc__lbl">Résolues</span></div>
+      <div class="ap-kc__val">{{ effKpis().resolues }}</div>
+      <div class="ap-kc__trend"
+        [class.ap-kc__trend--up]="effKpiTendances().resolues > 0"
+        [class.ap-kc__trend--down]="effKpiTendances().resolues < 0">
+        <ng-container *ngIf="effKpiTendances().resolues > 0">↑ +{{ effKpiTendances().resolues }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().resolues < 0">↓ {{ effKpiTendances().resolues }}</ng-container>
+        <ng-container *ngIf="effKpiTendances().resolues === 0">= stable</ng-container>
+      </div>
+    </button>
+
+
+  </div><!-- /ap-kpi -->
+
+  <!-- ══════════════════════════════════════════════════════════
+       QUICK FILTER CHIPS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="ap-chips">
+    <button class="ap-chip ap-chip--crit"
+      [class.ap-chip--on]="effFiltres().severites.includes('critique')"
+      type="button" (click)="toggleSeveriteEff('critique')">
+      <span class="ap-chip__dot"></span>
+      Critiques
+      <span class="ap-chip__badge" *ngIf="effKpis().critiques > 0">{{ effKpis().critiques }}</span>
+    </button>
+
+    <button class="ap-chip"
+      [class.ap-chip--on]="effFiltres().statuts.includes('ouverte')"
+      type="button" (click)="toggleStatutEff('ouverte')">
+      Non assignées
+      <span class="ap-chip__badge" *ngIf="effKpis().actives > 0">{{ effKpis().actives }}</span>
+    </button>
+
+    <button class="ap-chip"
+      [class.ap-chip--on]="effFiltres().dernieres24h"
+      type="button" (click)="filtrerDernieres24hEff()">
+      ◷ Dernières 24h
+    </button>
+
+    <button class="ap-chip ap-chip--iot"
+      [class.ap-chip--on]="effFiltres().sources.includes('iot')"
+      type="button" (click)="toggleSourceEff('iot')">
+      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/>
+      </svg>
+      Capteurs IoT
+    </button>
+
+    <button class="ap-chip ap-chip--warn"
+      [class.ap-chip--on]="effFiltres().sansIntervention"
+      type="button" (click)="filtrerSansInterventionEff()">
+      ⚠ Sans intervention
+      <span class="ap-chip__badge" *ngIf="effKpis().sansAction > 0">{{ effKpis().sansAction }}</span>
+    </button>
+
+    <button class="ap-chip ap-chip--sla"
+      [class.ap-chip--on]="effFiltres().slaDepasse"
+      type="button" (click)="filtrerSlaDepasseEff()">
+      ⏰ SLA dépassé
+    </button>
+
+    <button class="ap-chip ap-chip--clear" *ngIf="effNbFiltres() > 0"
+      type="button" (click)="reinitialiserFiltresEff()">
+      × Effacer filtres
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TIMELINE 24H
+  ══════════════════════════════════════════════════════════ -->
+  <div class="ap-tl">
+    <app-timeline-24h [timeline]="effTimeline()"></app-timeline-24h>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       BODY
+  ══════════════════════════════════════════════════════════ -->
+  <div class="ap-body">
+    <section class="ap-content">
+
+      <!-- ── LISTE DE CARTES ──────────────────────────────────────────────── -->
+      <div class="ap-list-wrap" *ngIf="effVue() === 'tableau'">
+
+        <div class="ap-empty" *ngIf="effAlertesF().length === 0">
+          Aucune alerte ne correspond aux filtres.
+        </div>
+
+        <div *ngFor="let a of effAlertesF()"
+          class="ap-card"
+          [class.ap-card--crit]="a.severity === 'critique'"
+          [class.ap-card--haute]="a.severity === 'haute'"
+          [class.ap-card--moy]="a.severity === 'moyenne'"
+          [class.ap-card--basse]="a.severity === 'basse'"
+          [class.ap-card--selected]="a.id === state.selection()?.id"
+          [class.ap-card--dim]="!isActive(a.status)"
+          (click)="onRowClick(a.id)">
+
+          <!-- Row 1 : badges + meta -->
+          <div class="ap-card__top">
+            <code class="ap-code">{{ a.code }}</code>
+            <span class="ap-severity-badge"
+              [style.background]="severityBg(a.severity)"
+              [style.color]="severityDot(a.severity)">
+              {{ severiteLabels[a.severity] }}
+            </span>
+            <span class="ap-status-badge"
+              [style.background]="statusBg(a.status)"
+              [style.color]="statusDot(a.status)">
+              {{ statusLabels[a.status] }}
+            </span>
+            <span class="ap-card__source">
+              <span class="ap-source-dot" [style.background]="sourceDot(a.source)"></span>
+              {{ sourceLabels[a.source] }}
+            </span>
+            <span class="ap-card__spacer"></span>
+            <span *ngIf="isActive(a.status)" class="ap-sla"
+              [class.ap-sla--warn]="slaStatus(a.severity, a.createdAt) === 'warn'"
+              [class.ap-sla--over]="slaStatus(a.severity, a.createdAt) === 'over'">
+              ⏱ {{ slaLabel(a.createdAt) }}
+            </span>
+            <span class="ap-card__date">{{ dateLabel(a.createdAt) }} {{ timeLabel(a.createdAt) }}</span>
+          </div>
+
+          <!-- Row 2 : title -->
+          <div class="ap-card__title">{{ a.title }}</div>
+
+          <!-- Row 3 : footer meta + quick actions -->
+          <div class="ap-card__footer">
+            <div class="ap-card__meta">
+              <span *ngIf="a.infrastructureName" class="ap-card__infra">
+                <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+                </svg>
+                {{ a.infrastructureName }}
+              </span>
+              <span *ngIf="a.commune" class="ap-card__loc">
+                {{ a.commune }}<ng-container *ngIf="a.department">, {{ a.department }}</ng-container>
+              </span>
+              <span *ngIf="a.interventionId" class="ap-int-code">{{ a.interventionId }}</span>
+              <span *ngIf="!a.interventionId && isActive(a.status)" class="ap-int-none">
+                <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                À créer
+              </span>
+            </div>
+
+            <!-- Quick actions (revealed on hover) -->
+            <div class="ap-card__actions" (click)="$event.stopPropagation()">
+              <button class="ap-act ap-act--ghost" type="button"
+                (click)="state.selectionner(a)">
+                Détails →
+              </button>
+              <button class="ap-act ap-act--orange" type="button"
+                *ngIf="!a.interventionId && isActive(a.status)"
+                (click)="state.ouvrirIntervention(a)">
+                + Intervenir
+              </button>
+              <button class="ap-act ap-act--green" type="button"
+                *ngIf="a.status === 'en-cours'"
+                (click)="state.setStatus(a.id, 'resolue')">
+                ✓ Résoudre
+              </button>
+              <button class="ap-act ap-act--blue" type="button"
+                *ngIf="a.status === 'assignee'"
+                (click)="state.setStatus(a.id, 'en-cours')">
+                En cours
+              </button>
+              <button class="ap-act ap-act--ghost" type="button"
+                *ngIf="a.status === 'ouverte'"
+                (click)="state.setStatus(a.id, 'ignoree')">
+                Ignorer
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /ap-card -->
+      </div><!-- /ap-list-wrap -->
+
+      <!-- KANBAN -->
+      <app-console-kanban *ngIf="effVue() === 'kanban'"></app-console-kanban>
+
+      <!-- SALLE DE CONTRÔLE -->
+      <div class="ap-salle" *ngIf="effVue() === 'salle'">
+        <div class="ap-salle-kpis">
+          <div class="ap-sk ap-sk--red">
+            <div class="ap-sk-v">{{ effKpis().actives }}</div>
+            <div class="ap-sk-l">Alertes actives</div>
+          </div>
+          <div class="ap-sk ap-sk--crit" [class.ap-sk--pulse]="effKpis().critiques > 0">
+            <div class="ap-sk-v">{{ effKpis().critiques }}</div>
+            <div class="ap-sk-l">Critiques actives</div>
+          </div>
+          <div class="ap-sk ap-sk--blue">
+            <div class="ap-sk-v">{{ effKpis().enCours }}</div>
+            <div class="ap-sk-l">En cours</div>
+          </div>
+          <div class="ap-sk ap-sk--green">
+            <div class="ap-sk-v">{{ effKpis().resolues }}</div>
+            <div class="ap-sk-l">Résolues</div>
+          </div>
+          <div class="ap-sk ap-sk--neutral">
+            <div class="ap-sk-v">{{ effKpis().total }}</div>
+            <div class="ap-sk-l">Total</div>
+          </div>
+        </div>
+
+        <div class="ap-salle-crit" *ngIf="effCritiquesA().length > 0">
+          <div class="ap-salle-crit-hdr">
+            Alertes critiques actives
+            <span class="ap-pulse-dot"></span>
+          </div>
+          <div class="ap-salle-crit-grid">
+            <div class="ap-scc" *ngFor="let a of effCritiquesA()"
+                 (click)="state.selectionner(a); setVueEff('tableau')">
+              <div class="ap-scc-top">
+                <span class="ap-scc-code">{{ a.code }}</span>
+                <span class="ap-scc-stat" [style.color]="statusDot(a.status)">{{ statusLabels[a.status] }}</span>
+              </div>
+              <div class="ap-scc-ttl">{{ a.title }}</div>
+              <div class="ap-scc-meta">{{ a.commune }} · {{ timeLabel(a.createdAt) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ap-salle-ok" *ngIf="effCritiquesA().length === 0">
+          <div class="ap-salle-ok-icon">✓</div>
+          <div class="ap-salle-ok-txt">Aucune alerte critique active</div>
+        </div>
+      </div>
+
+    </section>
+  </div><!-- /ap-body -->
+
+</div><!-- /ap-shell -->
+
+<!-- ══════════════════════════════════════════════════════════
+     BACKDROP + DRAWER (fixed overlay, outside shell)
+══════════════════════════════════════════════════════════ -->
+<div class="ap-drawer-backdrop" *ngIf="state.selection()" (click)="state.selectionner(null)"></div>
+
+<app-alerte-detail-drawer
+  *ngIf="state.selection() as alerte"
+  [alerte]="alerte"
+  (fermer)="state.selectionner(null)">
+</app-alerte-detail-drawer>
+
+<!-- ══════════════════════════════════════════════════════════
+     FILTRES DRAWER
+══════════════════════════════════════════════════════════ -->
+<app-alertes-filters-drawer *ngIf="state.filtresDrawerOuvert()"></app-alertes-filters-drawer>
+
+<!-- ══════════════════════════════════════════════════════════
+     MODAL NOUVELLE ALERTE
+══════════════════════════════════════════════════════════ -->
+<app-nouvelle-alerte *ngIf="effModalCreerOuvert()" [presetDept]="scope?.dept"></app-nouvelle-alerte>
+
+<!-- ══════════════════════════════════════════════════════════
+     MODALE NOUVELLE INTERVENTION
+══════════════════════════════════════════════════════════ -->
+<app-nouvelle-intervention
+  *ngIf="interventionState.modalOuvert()"
+  (fermer)="interventionState.fermerModal()">
+</app-nouvelle-intervention>

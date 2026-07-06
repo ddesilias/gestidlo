@@ -1,0 +1,79 @@
+<div class="ik-board">
+
+  <div class="ik-column" *ngFor="let col of colonnes">
+
+    <!-- Column header -->
+    <div class="ik-col-header" [style.border-top-color]="col.color">
+      <span class="ik-col-label">{{ col.label }}</span>
+      <span class="ik-col-count"
+        [class.ik-col-count--active]="cartesPourColonne(col.id).length > 0">
+        {{ cartesPourColonne(col.id).length }}
+      </span>
+    </div>
+
+    <!-- Cards -->
+    <div class="ik-col-body">
+      <div *ngIf="cartesPourColonne(col.id).length === 0" class="ik-empty">
+        Aucune
+      </div>
+
+      <div *ngFor="let item of cartesPourColonne(col.id)"
+        class="ik-card"
+        [class.ik-card--selected]="isSelected(item.id)"
+        [class.ik-card--critique]="item.priority === 'critique'"
+        [style.border-left-color]="prioriteDot(item.priority)"
+        (click)="onCardClick(item)">
+
+        <!-- Card top: code + priority -->
+        <div class="ik-card__top">
+          <span class="ik-card__code">{{ item.code }}</span>
+          <span class="ik-card__prio" [style.color]="prioriteDot(item.priority)">
+            {{ prioriteLabel(item.priority) }}
+          </span>
+        </div>
+
+        <!-- Title -->
+        <p class="ik-card__title">{{ item.title }}</p>
+
+        <!-- Infrastructure badge -->
+        <span class="ik-card__infra" *ngIf="item.infrastructureName">
+          <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+            <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+            <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+          </svg>
+          {{ item.infrastructureName }}
+        </span>
+
+        <!-- Task progress bar (if tasks exist) -->
+        <div class="ik-card__progress" *ngIf="item.tasks.length > 0">
+          <div class="ik-card__progress-bar">
+            <div class="ik-card__progress-fill" [style.width.%]="tasksPct(item)"></div>
+          </div>
+          <span class="ik-card__progress-lbl">{{ tasksDone(item) }}/{{ item.tasks.length }}</span>
+        </div>
+
+        <!-- Card footer: technician avatar + type + actions -->
+        <div class="ik-card__foot">
+          <div class="ik-card__person">
+            <div class="ik-avatar">{{ initiales(item.technicianName) }}</div>
+            <span class="ik-card__tech">{{ item.technicianName.split(' ')[0] }}</span>
+          </div>
+          <div class="ik-card__actions">
+            <button *ngIf="canMoveForward(item.status)"
+              class="ik-move-btn ik-move-btn--fwd"
+              type="button"
+              [title]="'→ ' + statutLabel(nextStatut(item.status)!)"
+              (click)="moveForward(item); $event.stopPropagation()">
+              →
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /ik-card -->
+
+    </div><!-- /ik-col-body -->
+
+  </div><!-- /ik-column -->
+
+</div>

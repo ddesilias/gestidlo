@@ -1,0 +1,596 @@
+<!-- Backdrop -->
+<div class="ac-backdrop" (click)="fermer.emit()"></div>
+
+<div class="ac-panel" role="dialog" aria-modal="true" aria-label="Ajouter un capteur IoT">
+
+  <!-- ══════════════════ HEADER ══════════════════ -->
+  <div class="ac-head">
+    <div class="ac-head__left">
+      <div class="ac-head__icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="ac-head__title">Ajouter un capteur IoT</h3>
+        <p class="ac-head__sub">
+          Code auto ·
+          <code class="ac-mono">{{ code }}</code>
+          · 6 sections · ~3 min
+        </p>
+      </div>
+    </div>
+    <div class="ac-head__actions">
+      <button class="ac-btn" type="button">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Scanner QR
+      </button>
+      <button class="ac-btn" type="button">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/>
+        </svg>
+        Détecter via BLE
+      </button>
+      <button class="ac-btn ac-btn--icon" type="button" (click)="fermer.emit()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ STEPPER ══════════════════ -->
+  <div class="ac-stepper">
+    <ng-container *ngFor="let e of ETAPES; let last = last">
+      <div class="ac-step" [class.ac-step--active]="etapeActive() === e.n"
+        [class.ac-step--done]="etapeActive() > e.n" (click)="setEtape(e.n)">
+        <span class="ac-step__num">
+          <ng-container *ngIf="etapeActive() > e.n; else numTpl">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </ng-container>
+          <ng-template #numTpl>{{ e.n }}</ng-template>
+        </span>
+        <span class="ac-step__lbl">{{ e.label }}</span>
+      </div>
+      <div class="ac-step__line" *ngIf="!last" [class.ac-step__line--done]="etapeActive() > e.n"></div>
+    </ng-container>
+  </div>
+
+  <!-- ══════════════════ BODY ══════════════════ -->
+  <div class="ac-body">
+
+    <!-- ── FORM (left) ─────────────────────────────────────────────────── -->
+    <div class="ac-form">
+
+      <!-- ─ Section 1 : Identification ─ -->
+      <div class="ac-section">
+        <div class="ac-section__hd">
+          <span class="ac-section__num ac-section__num--active">1</span>
+          <h4 class="ac-section__title">Identification du capteur</h4>
+        </div>
+
+        <div class="ac-row2">
+          <div class="ac-field">
+            <label class="ac-lbl">Code GestiDLO <span class="ac-req">*</span></label>
+            <input class="ac-input ac-input--mono" type="text" [(ngModel)]="code"/>
+            <p class="ac-hint">Format CPT-[TYPE]-[NUM] · auto-généré</p>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Nom du capteur <span class="ac-req">*</span></label>
+            <input class="ac-input" type="text" [(ngModel)]="nom" placeholder="ex: Pression sortie réservoir R-01"/>
+          </div>
+        </div>
+
+        <!-- Type cards -->
+        <div class="ac-field" style="margin-bottom:10px;">
+          <label class="ac-lbl">Type de mesure <span class="ac-req">*</span></label>
+          <div class="ac-types">
+            <label *ngFor="let t of TYPES" class="ac-type-card" [class.ac-type-card--active]="typeMesure() === t.id"
+              (click)="setType(t.id)">
+              <ng-container [ngSwitch]="t.id">
+                <svg *ngSwitchCase="'pression'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="14"/></svg>
+                <svg *ngSwitchCase="'debit'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12 Q5 6 8 12 Q11 18 14 12 Q17 6 20 12 Q21 14 22 12"/></svg>
+                <svg *ngSwitchCase="'niveau'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                <svg *ngSwitchCase="'qualite'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 2h8l1 7H7L8 2z"/><path d="M7 9c0 6 2.5 10 5 10s5-4 5-10"/></svg>
+              </ng-container>
+              <span class="ac-type-card__lbl">{{ t.label }}</span>
+              <span class="ac-type-card__sub">{{ t.sub }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="ac-row2">
+          <div class="ac-field">
+            <label class="ac-lbl">Modèle / fabricant <span class="ac-req">*</span></label>
+            <select class="ac-select" [(ngModel)]="modele">
+              <option *ngFor="let m of MODELES" [value]="m">{{ m }}</option>
+            </select>
+            <p class="ac-hint">Sélection ajuste auto les paramètres techniques</p>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Numéro de série <span class="ac-req">*</span></label>
+            <input class="ac-input ac-input--mono" type="text" [(ngModel)]="numSerie" placeholder="ex: SN-2026-A12F4"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ Section 2 : Localisation ─ -->
+      <div class="ac-section">
+        <div class="ac-section__hd">
+          <span class="ac-section__num">2</span>
+          <h4 class="ac-section__title">Localisation géographique</h4>
+          <span class="ac-section__link">→ lié à <a href="#" class="ac-link" (click)="$event.preventDefault()">Gouvernance</a> (zones)</span>
+        </div>
+
+        <div class="ac-row3">
+          <div class="ac-field">
+            <label class="ac-lbl">Département</label>
+            <select class="ac-select" [(ngModel)]="departement">
+              <option>Ouest</option><option>Nippes</option><option>Sud</option><option>Nord</option>
+            </select>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Commune</label>
+            <select class="ac-select" [(ngModel)]="commune">
+              <option>Léogâne</option><option>Petit-Goâve</option>
+            </select>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Section communale</label>
+            <select class="ac-select" [(ngModel)]="section">
+              <option>Dessources</option><option>Centre</option><option>Lacombe</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ac-row3-100">
+          <div class="ac-field">
+            <label class="ac-lbl">Latitude</label>
+            <input class="ac-input ac-input--mono" type="text" [(ngModel)]="lat"/>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Longitude</label>
+            <input class="ac-input ac-input--mono" type="text" [(ngModel)]="lon"/>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">&nbsp;</label>
+            <button class="ac-btn ac-btn--block" type="button">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              Carte
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ Section 3 : Association ─ -->
+      <div class="ac-section">
+        <div class="ac-section__hd">
+          <span class="ac-section__num">3</span>
+          <h4 class="ac-section__title">Association infrastructure &amp; responsabilité</h4>
+          <span class="ac-section__link">→ <a href="#" class="ac-link" (click)="$event.preventDefault()">Infrastructures</a> · <a href="#" class="ac-link" (click)="$event.preventDefault()">Utilisateurs</a></span>
+        </div>
+
+        <div class="ac-row2">
+          <div class="ac-field">
+            <label class="ac-lbl">Infrastructure liée <span class="ac-req">*</span></label>
+            <select class="ac-select" [(ngModel)]="infraLiee">
+              <option>Réservoir R-01 · Dessources</option>
+              <option>Conduite C-127 · Léogâne</option>
+              <option>Station pompage SP-01</option>
+            </select>
+            <p class="ac-hint-link">+ Créer une nouvelle infrastructure</p>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Point d'installation</label>
+            <select class="ac-select" [(ngModel)]="pointInstall">
+              <option>Sortie réservoir · vanne V-12</option>
+              <option>Entrée réservoir</option>
+              <option>Conduite principale</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ac-row2">
+          <div class="ac-field">
+            <label class="ac-lbl">Institution responsable</label>
+            <select class="ac-select" [(ngModel)]="institution">
+              <option>DINEPA Ouest</option><option>OREPA Ouest</option><option>Mairie de Léogâne</option>
+            </select>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Technicien affecté</label>
+            <select class="ac-select" [(ngModel)]="technicien">
+              <option>Jean P. · spécialiste réservoirs</option>
+              <option>Gérald B. · IoT & réseaux</option>
+              <option>Marc D. · hydraulique</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ Section 4 : Connectivité ─ -->
+      <div class="ac-section">
+        <div class="ac-section__hd">
+          <span class="ac-section__num">4</span>
+          <h4 class="ac-section__title">Connectivité &amp; passerelle</h4>
+        </div>
+
+        <!-- Passerelle card -->
+        <div class="ac-gw-card">
+          <div class="ac-gw-card__hd">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#60A5FA" stroke-width="1.8" stroke-linecap="round">
+              <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+              <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+              <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+              <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+              <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+            </svg>
+            <span class="ac-gw-card__title">Passerelle IoT (microcontrôleur)</span>
+          </div>
+          <div class="ac-row2">
+            <div class="ac-field">
+              <label class="ac-lbl ac-lbl--sm">Microcontrôleur</label>
+              <select class="ac-select" [(ngModel)]="microcontroleur">
+                <option>ESP32 · GDL-GW-001</option>
+                <option>ESP8266 NodeMCU</option>
+                <option>Arduino Nano IoT 33</option>
+                <option>Raspberry Pi 4</option>
+              </select>
+            </div>
+            <div class="ac-field">
+              <label class="ac-lbl ac-lbl--sm">Pin / interface</label>
+              <select class="ac-select" [(ngModel)]="pin">
+                <option>GPIO 34 (ADC analogique)</option>
+                <option>GPIO 5 (digital pulse)</option>
+                <option>I2C SDA/SCL</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Protocoles -->
+        <div class="ac-field">
+          <label class="ac-lbl">Protocole de transmission</label>
+          <div class="ac-protocols">
+            <button *ngFor="let p of PROTOCOLES" class="ac-protocol"
+              [class.ac-protocol--active]="protocole() === p"
+              type="button" (click)="setProtocole(p)">{{ p }}</button>
+          </div>
+        </div>
+
+        <!-- Topic MQTT -->
+        <div class="ac-field">
+          <label class="ac-lbl">Topic MQTT</label>
+          <input class="ac-input ac-input--mono" type="text" [(ngModel)]="topicMqtt"/>
+          <p class="ac-hint">Structure : <code class="ac-code">gestidlo/&#123;commune&#125;/&#123;section&#125;/&#123;infra_id&#125;/&#123;type&#125;</code></p>
+        </div>
+
+        <div class="ac-row3">
+          <div class="ac-field">
+            <label class="ac-lbl">Type réseau</label>
+            <select class="ac-select" [(ngModel)]="typeReseau">
+              <option>Wi-Fi</option><option>NB-IoT</option><option>LoRaWAN</option><option>GSM / 4G</option>
+            </select>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Fréquence d'envoi</label>
+            <select class="ac-select" [(ngModel)]="freqEnvoi">
+              <option>30 secondes</option><option>1 minute</option><option>5 minutes</option>
+              <option>15 minutes</option><option>Sur changement &gt; seuil</option>
+            </select>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">QoS MQTT</label>
+            <select class="ac-select" [(ngModel)]="qosMqtt">
+              <option>1 · au moins une fois</option>
+              <option>0 · au plus une fois</option>
+              <option>2 · exactement une fois</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ Section 5 : Calibration ─ -->
+      <div class="ac-section">
+        <div class="ac-section__hd">
+          <span class="ac-section__num">5</span>
+          <h4 class="ac-section__title">Paramètres techniques &amp; calibration</h4>
+        </div>
+
+        <div class="ac-warn-banner">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span><strong>Calibration requise.</strong> Les capteurs sans calibration ont &gt;10% d'imprécision (cas YF-S201). Effectuer après installation physique.</span>
+        </div>
+
+        <div class="ac-row3">
+          <div class="ac-field">
+            <label class="ac-lbl">Plage min</label>
+            <div class="ac-input-unit">
+              <input class="ac-input" type="text" [(ngModel)]="plageMin"/>
+              <select class="ac-select ac-select--unit" [(ngModel)]="uniteRange"><option>bar</option><option>%</option><option>L/min</option></select>
+            </div>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Plage max</label>
+            <div class="ac-input-unit">
+              <input class="ac-input" type="text" [(ngModel)]="plageMax"/>
+              <select class="ac-select ac-select--unit" [(ngModel)]="uniteRange"><option>bar</option><option>%</option><option>L/min</option></select>
+            </div>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Précision</label>
+            <input class="ac-input" type="text" [(ngModel)]="precision"/>
+          </div>
+        </div>
+
+        <div class="ac-row3">
+          <div class="ac-field">
+            <label class="ac-lbl">Tension d'entrée</label>
+            <select class="ac-select" [(ngModel)]="tensionEntree">
+              <option>0.5 - 4.5 V</option><option>0 - 5 V</option><option>4 - 20 mA</option>
+            </select>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Formule conversion</label>
+            <input class="ac-input ac-input--mono ac-input--sm" type="text" [(ngModel)]="formuleConversion"/>
+          </div>
+          <div class="ac-field">
+            <label class="ac-lbl">Offset</label>
+            <input class="ac-input" type="text" [(ngModel)]="offset"/>
+          </div>
+        </div>
+
+        <!-- Calibration initiale -->
+        <div class="ac-calib-block">
+          <div class="ac-calib-block__hd">
+            <span class="ac-calib-block__title">Calibration initiale</span>
+            <button class="ac-btn ac-btn--primary ac-btn--sm" type="button">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="2"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/>
+              </svg>
+              Lancer test
+            </button>
+          </div>
+          <div class="ac-row3">
+            <div>
+              <span class="ac-calib-lbl">Valeur mesurée</span>
+              <div class="ac-calib-val">{{ valeurMesuree }}</div>
+            </div>
+            <div>
+              <span class="ac-calib-lbl">Valeur référence</span>
+              <input class="ac-input" type="text" [(ngModel)]="valeurReference"/>
+            </div>
+            <div>
+              <span class="ac-calib-lbl">Correction appliquée</span>
+              <div class="ac-calib-val ac-calib-val--ok">{{ correction }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ Section 6 : Seuils ─ -->
+      <div class="ac-section ac-section--last">
+        <div class="ac-section__hd">
+          <span class="ac-section__num">6</span>
+          <h4 class="ac-section__title">Seuils d'alerte &amp; règles</h4>
+          <span class="ac-section__link">→ <a href="#" class="ac-link" (click)="$event.preventDefault()">Alertes</a> · <a href="#" class="ac-link" (click)="$event.preventDefault()">Gouvernance</a></span>
+        </div>
+
+        <div class="ac-rules">
+          <!-- Header row -->
+          <div class="ac-rules__row ac-rules__row--head">
+            <span>Sévérité</span>
+            <span>Condition</span>
+            <span>Seuil</span>
+            <span>Durée</span>
+            <span>SLA</span>
+            <span></span>
+          </div>
+          <!-- Data rows -->
+          <div *ngFor="let r of regles()" class="ac-rules__row">
+            <span class="ac-sev" [ngClass]="severiteCls(r.severite)">{{ r.severite }}</span>
+            <select class="ac-select" [(ngModel)]="r.condition">
+              <option>&lt; inférieur à</option>
+              <option>&gt; supérieur à</option>
+              <option>= égal à</option>
+            </select>
+            <div class="ac-input-unit">
+              <input class="ac-input" type="text" [(ngModel)]="r.seuil"/>
+              <span class="ac-unit-lbl">bar</span>
+            </div>
+            <input class="ac-input" type="text" [(ngModel)]="r.duree"/>
+            <input class="ac-input" type="text" [(ngModel)]="r.sla"/>
+            <button class="ac-del-btn" type="button" (click)="supprimerRegle(r.id)" aria-label="Supprimer">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <button class="ac-btn ac-btn--add-rule" type="button" (click)="ajouterRegle()">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Ajouter une règle
+          </button>
+        </div>
+
+        <div class="ac-checks">
+          <label class="ac-check"><input type="checkbox" [(ngModel)]="alerteHorsLigne"/> Alerte si capteur hors ligne &gt; 10 min</label>
+          <label class="ac-check"><input type="checkbox" [(ngModel)]="alerteBatterie"/> Alerte si batterie &lt; 20%</label>
+          <label class="ac-check"><input type="checkbox" [(ngModel)]="notifTechnicien"/> Notifier le technicien affecté</label>
+        </div>
+      </div>
+
+    </div><!-- /ac-form -->
+
+    <!-- ── PREVIEW (right) ──────────────────────────────────────────────── -->
+    <div class="ac-preview">
+
+      <!-- Aperçu -->
+      <div class="ac-preview__block">
+        <div class="ac-preview__hd">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span class="ac-preview__hd-lbl">Aperçu</span>
+        </div>
+        <div class="ac-preview__card">
+          <div class="ac-preview__card-top">
+            <span class="ac-preview__dot"></span>
+            <code class="ac-mono ac-preview__code">{{ code }}</code>
+            <span class="ac-type-mini">{{ typeMesure() | titlecase }}</span>
+          </div>
+          <p class="ac-preview__name">{{ nom || 'Pression sortie réservoir R-01' }}</p>
+          <div class="ac-preview__meta">
+            <div>
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+              </svg>
+              {{ infraLiee }}
+            </div>
+            <div>
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {{ commune }} · {{ section }}
+            </div>
+            <div>
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+              </svg>
+              {{ microcontroleur.split('·')[0].trim() }} · {{ protocole() }}
+            </div>
+          </div>
+          <div class="ac-preview__footer">État initial : <span class="ac-preview__state">Non calibré</span></div>
+        </div>
+      </div>
+
+      <!-- Payload MQTT -->
+      <div class="ac-preview__block">
+        <div class="ac-preview__hd">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <span class="ac-preview__hd-lbl">Payload MQTT attendu</span>
+        </div>
+        <div class="ac-payload">
+<span class="ac-pl--comment">// {{ topicMqtt }}</span>
+{{ '{' }}
+  <span class="ac-pl--key">"sensor_code"</span>: <span class="ac-pl--str">"{{ code }}"</span>,
+  <span class="ac-pl--key">"type"</span>: <span class="ac-pl--str">"{{ typeMesure() }}"</span>,
+  <span class="ac-pl--key">"value"</span>: <span class="ac-pl--num">1.8</span>,
+  <span class="ac-pl--key">"unit"</span>: <span class="ac-pl--str">"{{ uniteRange }}"</span>,
+  <span class="ac-pl--key">"battery"</span>: <span class="ac-pl--num">87</span>,
+  <span class="ac-pl--key">"signal"</span>: <span class="ac-pl--str">"good"</span>,
+  <span class="ac-pl--key">"timestamp"</span>: <span class="ac-pl--str">"2026-05-14T08:42:00Z"</span>
+{{ '}' }}
+        </div>
+      </div>
+
+      <!-- Impact -->
+      <div class="ac-preview__block">
+        <div class="ac-preview__hd">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span class="ac-preview__hd-lbl">Impact à la création</span>
+        </div>
+        <div class="ac-impact-list">
+          <div class="ac-impact-item ac-impact-item--ok">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Capteur enregistré en base
+          </div>
+          <div class="ac-impact-item ac-impact-item--ok">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Topic MQTT abonné
+          </div>
+          <div class="ac-impact-item ac-impact-item--ok">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Fiche infra mise à jour
+          </div>
+          <div class="ac-impact-item ac-impact-item--ok">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ regles().length }} règles d'alerte activées
+          </div>
+          <div class="ac-impact-item ac-impact-item--ok">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Notification à {{ technicien.split('·')[0].trim() }}
+          </div>
+          <div class="ac-impact-item ac-impact-item--ok">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Apparition sur carte
+          </div>
+          <div class="ac-impact-item ac-impact-item--wait">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#BA7517" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Test connexion (en attente)
+          </div>
+        </div>
+      </div>
+
+      <!-- Conseil -->
+      <div class="ac-preview__block">
+        <div class="ac-preview__hd">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#BA7517" stroke-width="2" stroke-linecap="round">
+            <line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/>
+            <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+          </svg>
+          <span class="ac-preview__hd-lbl">Conseil</span>
+        </div>
+        <div class="ac-conseil">
+          Pour Danfoss MBS 3000, la calibration usine est de ±0.5%. Effectuez quand même une calibration avec une référence terrain après installation pour compenser dérive.
+        </div>
+      </div>
+
+    </div><!-- /ac-preview -->
+
+  </div><!-- /ac-body -->
+
+  <!-- ══════════════════ FOOTER ══════════════════ -->
+  <div class="ac-foot">
+    <div class="ac-foot__left">
+      <span class="ac-foot__saved">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Brouillon auto-sauvé
+      </span>
+      <span class="ac-foot__sep">·</span>
+      <span class="ac-foot__step">Étape {{ etapeActive() }} / 6 · <span class="ac-foot__required">6 champs requis</span></span>
+      <button class="ac-btn" type="button">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="2"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        </svg>
+        Tester connexion
+      </button>
+    </div>
+    <div class="ac-foot__nav">
+      <button class="ac-btn ac-btn--ghost" type="button" (click)="fermer.emit()">Annuler</button>
+      <button class="ac-btn" type="button" (click)="etapePrecedente()" [disabled]="etapeActive() === 1">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Précédent
+      </button>
+      <button *ngIf="!estDerniereEtape()" class="ac-btn ac-btn--primary" type="button" (click)="etapeSuivante()">
+        Suivant
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button *ngIf="estDerniereEtape()" class="ac-btn ac-btn--primary" type="button" (click)="onEnregistrer()">
+        Enregistrer le capteur
+        <span class="ac-shortcut">Ctrl+S</span>
+      </button>
+    </div>
+  </div>
+
+</div><!-- /ac-panel -->

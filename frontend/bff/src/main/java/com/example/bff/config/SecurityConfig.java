@@ -6,6 +6,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -30,6 +31,9 @@ public class SecurityConfig {
 						.requestMatchers("/api/auth/login").permitAll()
 						.requestMatchers("/api/auth/logout").permitAll()
 						.requestMatchers("/api/health").permitAll()
+						// Référentiel = lookups globaux : lecture pour tout authentifié, écriture admin.
+						// (Même règle que le métier — l'allow-list était dédoublée ici aussi.)
+						.requestMatchers(HttpMethod.GET, "/api/reference/**").authenticated()
 						.requestMatchers("/api/reference/**").hasRole("ADMIN")
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)));

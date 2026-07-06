@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface MeasurementRepository extends JpaRepository<MeasurementEntity, Long> {
 	Optional<MeasurementEntity> findTop1ByPointIdAndTypeOrderByTimestampDesc(String pointId, String type);
 
+	/** Dernière mesure (tous types) d'un point — état/valeur courante du capteur. */
+	Optional<MeasurementEntity> findTop1ByPointIdOrderByTimestampDesc(String pointId);
+
 	List<MeasurementEntity> findByPointIdAndTypeAndTimestampBetweenOrderByTimestampAsc(
 			String pointId,
 			String type,

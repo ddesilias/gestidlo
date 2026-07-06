@@ -1,0 +1,150 @@
+$bg:      #0F1419;
+$bg-card: #13202B;
+$bg-in:   #1A2530;
+$bdr:     #1F2A33;
+$bdr-btn: #2A3744;
+$text:    #E2E8EE;
+$muted:   #8B9AAB;
+$vmuted:  #6B7785;
+$green:   #4ADE80;
+$blue:    #60A5FA;
+$amber:   #FBBF24;
+$red:     #FB7185;
+
+.lz-page {
+  padding: 16px;
+  max-width: 860px;
+  margin: 0 auto;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: $text;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.lz-header {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.lz-header__title { font-size: 14px; font-weight: 500; color: #F5F7FA; }
+.lz-header__sub   { font-size: 10px; color: $vmuted; margin-left: 4px; }
+
+.lz-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 999px;
+  &--green {
+    background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.3); color: $green;
+  }
+}
+
+/* ── Source check banner ───────────────────────────────────────── */
+.lz-source-check {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; padding: 7px 11px; border-radius: 7px;
+  background: $bg-in; border: 0.5px solid $bdr;
+  margin-bottom: 10px; color: $muted;
+  svg { flex-shrink: 0; }
+}
+
+/* ── Cards ─────────────────────────────────────────────────────── */
+.lz-card {
+  background: $bg-card; border: 1px solid $bdr; border-radius: 10px;
+  padding: 12px; margin-bottom: 10px;
+}
+.lz-card__head {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 500; color: #F5F7FA;
+  margin-bottom: 9px;
+  svg { flex-shrink: 0; }
+}
+.lz-card__sub { font-size: 10px; color: $vmuted; font-weight: 400; margin-left: 2px; }
+
+/* ── Rows ──────────────────────────────────────────────────────── */
+.lz-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 9px; border-radius: 7px; background: $bg-in;
+  margin-bottom: 5px;
+  &--attached { border: 0.5px solid rgba(74,222,128,.15); }
+  &:last-child { margin-bottom: 0; }
+}
+.lz-row__icon {
+  font-size: 14px; color: $blue; flex-shrink: 0;
+  &--green { color: $green; }
+}
+.lz-row__body { flex: 1; min-width: 0; }
+.lz-row__name { font-size: 11px; color: #F5F7FA; }
+.lz-row__meta { font-size: 9px; color: $vmuted; margin-top: 1px; }
+
+/* ── Attach form ───────────────────────────────────────────────── */
+.lz-attach-form {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap; flex-shrink: 0;
+}
+
+/* ── Anchor ────────────────────────────────────────────────────── */
+.lz-anchor {
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+}
+.lz-anchor__btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; padding: 2px 7px; border-radius: 5px;
+  background: $bg; border: 0.5px solid $bdr-btn; color: $vmuted; cursor: pointer;
+  &--set { border-color: rgba(96,165,250,.4); color: $blue; }
+  &:hover { color: $blue; border-color: rgba(96,165,250,.4); }
+  svg { flex-shrink: 0; }
+}
+
+/* ── New infra shortcut ────────────────────────────────────────── */
+.lz-new-infra {
+  display: flex; align-items: center; gap: 9px;
+  background: $bg-in; border-radius: 7px; padding: 8px 10px;
+  font-size: 11px; color: $muted;
+  strong { color: #F5F7FA; }
+  svg { flex-shrink: 0; }
+}
+
+/* ── Note ──────────────────────────────────────────────────────── */
+.lz-note {
+  display: flex; align-items: flex-start; gap: 5px;
+  font-size: 9px; color: $vmuted; margin-top: 7px; line-height: 1.5;
+  svg { flex-shrink: 0; margin-top: 1px; }
+}
+
+/* ── Empty ─────────────────────────────────────────────────────── */
+.lz-empty {
+  padding: 16px; text-align: center; font-size: 11px; color: $vmuted;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.lz-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 6px; padding: 5px 10px; font-size: 11px;
+  cursor: pointer; border: none; transition: all 120ms;
+  white-space: nowrap;
+
+  &--ghost {
+    background: $bg-in; border: 1px solid $bdr-btn; color: #CBD5E1;
+    &:hover { background: $bdr; }
+  }
+  &--outline-blue {
+    background: rgba(96,165,250,.1); border: 0.5px solid rgba(96,165,250,.4);
+    color: $blue; font-weight: 500;
+    &:hover { background: rgba(96,165,250,.2); }
+  }
+  &--confirm {
+    background: rgba(74,222,128,.15); border: 1px solid rgba(74,222,128,.3);
+    color: $green; font-weight: 500;
+    &:hover { background: rgba(74,222,128,.25); }
+  }
+  &--danger-sm {
+    background: transparent; border: 0; color: $vmuted; padding: 4px;
+    &:hover { color: $red; }
+  }
+}
+
+/* ── Inputs ────────────────────────────────────────────────────── */
+.lz-input {
+  background: $bg; border: 0.5px solid $bdr-btn; border-radius: 4px;
+  padding: 4px 7px; font-size: 11px; color: $text; outline: none;
+  &:focus { border-color: $blue; }
+  &--sm      { width: 140px; }
+  &--narrow  { width: 60px; }
+  &--anchor  { width: 100px; }
+}

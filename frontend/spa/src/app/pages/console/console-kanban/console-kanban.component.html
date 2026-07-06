@@ -1,0 +1,29 @@
+<div class="ck">
+  <div class="ck-col" *ngFor="let col of state.kolonnes"
+       [style.border-top-color]="col.color"
+       [style.background]="col.bg">
+    <div class="ck-col-hdr">
+      <span class="ck-col-lbl" [style.color]="col.color">{{ col.label }}</span>
+      <span class="ck-col-cnt">{{ state.cartesParColonne(col.id).length }}</span>
+    </div>
+    <div class="ck-cards">
+      <div class="ck-card" *ngFor="let a of state.cartesParColonne(col.id)"
+           [class.ck-card--crit]="a.severity === 'critique'"
+           (click)="state.selectionner(a)">
+        <div class="ck-card-top">
+          <span class="ck-sev-dot" [style.background]="state.severityDot(a.severity)"></span>
+          <span class="ck-code">{{ a.code }}</span>
+        </div>
+        <div class="ck-card-ttl">{{ a.title }}</div>
+        <div class="ck-card-loc" *ngIf="a.commune">{{ a.commune }}</div>
+        <div class="ck-card-foot">
+          <span class="ck-src-dot" [style.background]="state.sourceDot(a.source)"></span>
+          <span class="ck-time">{{ state.timeLabel(a.createdAt) }}</span>
+        </div>
+      </div>
+      <div class="ck-empty" *ngIf="state.cartesParColonne(col.id).length === 0">
+        Aucune alerte
+      </div>
+    </div>
+  </div>
+</div>

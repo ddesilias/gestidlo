@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Porte de validation AEP – Contexte haïtien · GestiDlo</title>
+<style>
+  :root {
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --border-radius-lg: 12px;
+    --color-text-primary:     #111827;
+    --color-text-secondary:   #374151;
+    --color-text-tertiary:    #6b7280;
+    --color-text-success:     #15803d;
+    --color-text-warning:     #b45309;
+    --color-text-danger:      #dc2626;
+    --color-text-info:        #1d4ed8;
+    --color-background-primary:   #ffffff;
+    --color-background-secondary: #f9fafb;
+    --color-background-info:      #eff6ff;
+    --color-background-success:   #f0fdf4;
+    --color-background-warning:   #fffbeb;
+    --color-background-danger:    #fef2f2;
+    --color-border-secondary: #d1d5db;
+    --color-border-tertiary:  #e5e7eb;
+    --color-border-info:      #93c5fd;
+    --color-border-warning:   #fcd34d;
+  }
+  body {
+    background: #f3f4f6;
+    margin: 0;
+    padding: 20px;
+    font-family: var(--font-sans);
+  }
+
+  .hv-rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 11px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--color-background-secondary);
+  }
+  .hv-rule-body { flex: 1; }
+  .hv-rule-body .sub {
+    font-size: 9px;
+    color: var(--color-text-tertiary);
+    margin-top: 1px;
+    line-height: 1.4;
+  }
+  .hv-tag {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 5px;
+    white-space: nowrap;
+    flex: none;
+    margin-top: 1px;
+  }
+  .hv-blk  { background: var(--color-background-danger);  color: var(--color-text-danger); }
+  .hv-der  { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .hv-info { background: var(--color-background-info);    color: var(--color-text-info); }
+  .hv-ok   { color: var(--color-text-success); flex: none; margin-top: 1px; }
+  .hv-warn { color: var(--color-text-warning); flex: none; margin-top: 1px; }
+
+  .hv-chip {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 0.5px solid var(--color-border-secondary);
+    color: var(--color-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .kv { display: flex; justify-content: space-between; font-size: 10px; color: var(--color-text-secondary); margin-top: 3px; }
+  .kv span:last-child { color: var(--color-text-primary); font-weight: 500; }
+
+  section-title {
+    display: block;
+    font-size: 9px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin: 10px 0 5px;
+  }
+</style>
+</head>
+<body>
+<div style="max-width:680px;margin:0 auto">
+
+  <!-- Titre de page -->
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:2px">Gouvernance · Territoire · Cycle de vie</div>
+    <div style="font-size:17px;font-weight:500;color:var(--color-text-primary)">Porte de validation – contexte haïtien</div>
+    <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:2px">
+      Règles calées sur la réalité terrain, pas sur un manuel idéal
+    </div>
+  </div>
+
+  <!-- ══ CARTE PRINCIPALE ══ -->
+  <div style="border:2px solid var(--color-border-info);border-radius:var(--border-radius-lg);padding:13px;background:var(--color-background-primary)">
+
+    <!-- En-tête zone -->
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">
+      <span style="width:22px;height:22px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;flex:none;font-size:13px">🛡</span>
+      <div>
+        <div style="font-size:14px;font-weight:500;color:var(--color-text-primary)">Validation · Soisson</div>
+        <div style="font-size:10px;color:var(--color-text-tertiary)">HT-09-32-07 · Tabarre · Ouest</div>
+      </div>
+      <span class="hv-chip" style="margin-left:auto">👤 superviseur OREPA Ouest</span>
+    </div>
+
+    <!-- Drapeaux contextuels -->
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="hv-chip">🛰 recensé par satellite</span>
+      <span class="hv-chip" style="color:var(--color-text-warning)">⚠ zone d'accès limité</span>
+      <span class="hv-chip">🔄 rotation 3j/7</span>
+      <span class="hv-chip" style="color:var(--color-text-danger)">⚡ EDH + groupe</span>
+    </div>
+
+    <!-- ─── SECTION : RÈGLES DE VALIDATION ─── -->
+    <section-title>Règles de validation</section-title>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:11px">
+
+      <!-- 1 : Périmètre -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Périmètre tracé &amp; fermé
+          <div class="sub">polygone valide requis pour affichage choroplèthe</div>
+        </div>
+        <span class="hv-tag hv-blk">bloquant</span>
+      </div>
+
+      <!-- 2 : Bâti par satellite -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Bâti compté · 745 (satellite)
+          <div class="sub">méthode terrain / satellite / mixte — toutes admises</div>
+        </div>
+        <span class="hv-tag hv-info">méthode admise</span>
+      </div>
+
+      <!-- 3 : Enquête terrain – dérogation (accès impossible) -->
+      <div class="hv-rule" style="background:var(--color-background-warning);grid-column:1/-1">
+        <span class="hv-warn">⚠</span>
+        <div class="hv-rule-body">
+          Enquête terrain · accès impossible (insécurité)
+          <div class="sub" style="color:var(--color-text-warning)">
+            Population estimée par ratio satellite · justification + pièce jointe obligatoires ·
+            zone marquée <strong>« données partielles »</strong>
+          </div>
+        </div>
+        <span class="hv-tag hv-der">dérogation tracée</span>
+      </div>
+
+      <!-- 4 : Paramètres méthodo -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Paramètres méthodo saisis
+          <div class="sub">dotation · taux de croissance · horizon 2040</div>
+        </div>
+        <span class="hv-tag hv-blk">bloquant</span>
+      </div>
+
+      <!-- 5 : Débit – bloquant avec dérogation possible -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Source · débit 56 ≥ 27,4 l/s
+          <div class="sub">
+            si déficit : dérogation OREPA/DINEPA → zone marquée
+            <strong>« déficit ressource »</strong>, classée à risque
+          </div>
+        </div>
+        <span class="hv-tag hv-der">bloq. / dérог. si déficit</span>
+      </div>
+
+      <!-- 6 : Énergie pompage -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Énergie pompage déclarée
+          <div class="sub">EDH + groupe électrogène (intermittence EDH documentée)</div>
+        </div>
+        <span class="hv-tag hv-blk">bloquant</span>
+      </div>
+
+      <!-- 7 : Régime de distribution -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Régime de distribution renseigné
+          <div class="sub">rotation 3j/7 · planning quartier · continuité mesurée vs planning</div>
+        </div>
+        <span class="hv-tag hv-blk">bloquant</span>
+      </div>
+
+      <!-- 8 : Chaîne institutionnelle -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          TEPAC + CAEPA assignés
+          <div class="sub">TEPAC Tabarre · CAEPA Dessources · responsable terrain</div>
+        </div>
+        <span class="hv-tag hv-blk">bloquant</span>
+      </div>
+
+      <!-- 9 : Pertes (branchements illicites) -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Pertes réseau documentées
+          <div class="sub">pertes techniques + branchements illicites estimés séparément</div>
+        </div>
+        <span class="hv-tag hv-blk">bloquant</span>
+      </div>
+
+      <!-- 10 : Monnaie + taux -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Coûts en gourdes renseignés
+          <div class="sub">USD saisi avec taux + date (inflation) · ex : 82 M Gdes / ~600 k USD au 2025-05</div>
+        </div>
+        <span class="hv-tag hv-blk">bloquant</span>
+      </div>
+
+      <!-- 11 : Pas de chevauchement -->
+      <div class="hv-rule">
+        <span class="hv-ok">✓</span>
+        <div class="hv-rule-body">
+          Pas de chevauchement géo
+          <div class="sub">aucune zone validée ne se superpose</div>
+        </div>
+        <span class="hv-tag hv-blk">bloquant</span>
+      </div>
+
+      <!-- 12 : Liens OREPA/CAEPA -->
+      <div class="hv-rule">
+        <span class="hv-warn">⚠</span>
+        <div class="hv-rule-body">
+          Liens OREPA / Mairie
+          <div class="sub">n'empêche pas la validation · lève un avertissement</div>
+        </div>
+        <span class="hv-tag hv-der">recommandé</span>
+      </div>
+
+    </div>
+
+    <!-- ─── BLOC DÉROGATION ─── -->
+    <div style="background:var(--color-background-warning);border-radius:8px;padding:10px;margin-bottom:11px;border:0.5px solid var(--color-border-warning)">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--color-text-warning);margin-bottom:5px">
+        📄 Dérogation tracée requise
+      </div>
+      <div style="font-size:10px;color:var(--color-text-warning);line-height:1.6">
+        Enquête terrain non réalisable – insécurité zone. Population estimée par ratio satellite (Google Earth).
+        Justification écrite + pièce jointe obligatoires · validée par superviseur OREPA Ouest ·
+        la zone sera marquée <strong>« données partielles »</strong> dans le référentiel et sur la carte.
+      </div>
+      <!-- Champ de saisie -->
+      <div style="margin-top:7px;border:0.5px solid var(--color-border-warning);border-radius:6px;padding:7px 9px;background:var(--color-background-primary);font-size:11px;color:var(--color-text-tertiary)">
+        Motif de dérogation · min. 50 caractères…
+      </div>
+      <div style="margin-top:5px;display:flex;gap:6px;align-items:center;font-size:10px;color:var(--color-text-warning)">
+        📎 Pièce jointe (rapport terrain / note insécurité) ·
+        <span style="text-decoration:underline;cursor:pointer">Joindre un fichier</span>
+      </div>
+    </div>
+
+    <!-- ─── RÉSUMÉ HYDRAULIQUE ─── -->
+    <section-title>Bilan hydraulique · Soisson 2025</section-title>
+    <div style="background:var(--color-background-secondary);border-radius:8px;padding:8px 10px;margin-bottom:11px;display:grid;grid-template-columns:1fr 1fr;gap:4px">
+      <div class="kv"><span>Débit source capté</span><span>56 l/s</span></div>
+      <div class="kv"><span>Débit de pointe Qpj</span><span>27,4 l/s</span></div>
+      <div class="kv"><span>Débit moy. journalier Qmj</span><span>18,3 l/s</span></div>
+      <div class="kv"><span>Marge hydraulique</span><span style="color:var(--color-text-success)">+28,6 l/s ✓</span></div>
+      <div class="kv"><span>Régime distribution</span><span>Rotation 3j/7</span></div>
+      <div class="kv"><span>Continuité mesurée vs planning</span><span>91%</span></div>
+      <div class="kv"><span>Pertes techniques estimées</span><span>18%</span></div>
+      <div class="kv"><span>Branchements illicites estimés</span><span>~12%</span></div>
+      <div class="kv"><span>Énergie pompage</span><span>EDH + groupe électrogène</span></div>
+      <div class="kv"><span>Intermittence EDH</span><span style="color:var(--color-text-warning)">~6h/j documenté</span></div>
+      <div class="kv"><span>Coût infrastructure</span><span>82 M Gdes</span></div>
+      <div class="kv"><span>Équivalent USD</span><span style="color:var(--color-text-tertiary)">~600 k USD (taux mai 2025)</span></div>
+    </div>
+
+    <!-- ─── CHAÎNE INSTITUTIONNELLE ─── -->
+    <section-title>Chaîne institutionnelle</section-title>
+    <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:12px;font-size:10px;color:var(--color-text-secondary)">
+      <span class="hv-chip">🏛 DINEPA</span>
+      <span style="color:var(--color-text-tertiary)">→</span>
+      <span class="hv-chip">🏢 OREPA Ouest</span>
+      <span style="color:var(--color-text-tertiary)">→</span>
+      <span class="hv-chip">👥 CAEPA Dessources</span>
+      <span style="color:var(--color-text-tertiary)">→</span>
+      <span class="hv-chip" style="border-color:var(--color-border-info);color:var(--color-text-info)">🔧 TEPAC Tabarre</span>
+      <span style="color:var(--color-text-tertiary)">→</span>
+      <span class="hv-chip">🏛 Mairie</span>
+    </div>
+    <!-- Note TEPAC -->
+    <div style="font-size:9px;color:var(--color-text-tertiary);margin-bottom:11px">
+      ℹ TEPAC (Technicien Communal de l'Eau Potable et de l'Assainissement) · absent des wireframes précédents – ajouté ici
+    </div>
+
+    <!-- ─── BOUTON DE VALIDATION ─── -->
+    <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;border-top:0.5px solid var(--color-border-tertiary);padding-top:11px">
+      <!-- Validation avec dérogation -->
+      <span style="font-size:12px;padding:6px 13px;border-radius:6px;border:2px solid var(--color-border-warning);color:var(--color-text-warning);font-weight:500;cursor:pointer">
+        ✓ Valider avec dérogation
+      </span>
+      <!-- Validation standard (inactive ici car dérogation requise) -->
+      <span style="font-size:12px;padding:6px 13px;border-radius:6px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-tertiary);cursor:not-allowed">
+        Valider sans dérogation
+      </span>
+      <span style="font-size:10px;color:var(--color-text-tertiary)">
+        → état : supervisée · marquée <strong>« données partielles »</strong>
+      </span>
+    </div>
+
+  </div>
+
+  <!-- ══ NOTES DE CONCEPTION ══ -->
+  <div style="margin-top:14px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:11px 13px;background:var(--color-background-primary)">
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px">
+      Principes de conception · contexte haïtien
+    </div>
+    <div style="display:grid;gap:7px;font-size:11px;color:var(--color-text-secondary)">
+
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <span style="flex:none;color:var(--color-text-warning)">⚠</span>
+        <div>
+          <strong>Blocage ≠ barrière</strong> — bloquer dur la règle « débit ≥ Qpj » interdirait de superviser
+          les zones les plus fragiles. La règle est bloquante avec dérogation tracée :
+          le superviseur peut valider malgré le déficit, mais doit le justifier, et la zone est marquée
+          « déficit ressource » (attribut visible, classe à risque).
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <span style="flex:none;color:var(--color-text-info)">ℹ</span>
+        <div>
+          <strong>Continuité vs planning de rotation</strong> — la continuité 24/7 n'est pas la norme.
+          Mesurer contre le planning prévu (ex. 3j/7 = 43 %) évite un faux score « mauvais »
+          sur toutes les zones haïtiennes.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <span style="flex:none;color:var(--color-text-info)">ℹ</span>
+        <div>
+          <strong>Méthode de recensement admise : satellite</strong> — comptage bâti par Google Earth
+          valide quand l'accès terrain est impossible. Méthode documentée dans la dérogation.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <span style="flex:none;color:var(--color-text-info)">ℹ</span>
+        <div>
+          <strong>Données de base IHSI</strong> — projections anciennes au niveau local.
+          Le comptage de zone fait foi ; l'année de référence est donc critique pour la comparabilité.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <span style="flex:none;color:var(--color-text-danger)">⚡</span>
+        <div>
+          <strong>Dépendance énergétique</strong> — intermittence EDH documentée obligatoire.
+          La fiabilité du pompage est une variable de risque, pas une évidence.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <span style="flex:none;color:var(--color-text-tertiary)">G</span>
+        <div>
+          <strong>Monnaie</strong> — coûts en gourdes en premier. USD saisi avec taux + date
+          à cause de l'inflation. Pas de conversion implicite figée.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

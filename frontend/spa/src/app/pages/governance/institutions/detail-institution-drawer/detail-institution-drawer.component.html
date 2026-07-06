@@ -1,0 +1,388 @@
+<div *ngIf="visible && institution" class="did-overlay" (click)="fermer.emit()">
+  <div class="did-panel" (click)="$event.stopPropagation()">
+
+    <!-- ── HEADER ── -->
+    <div class="did-head">
+      <div class="did-head__top">
+        <div class="did-head__left">
+          <div class="did-head__icon" [class]="'did-head__icon--' + institution.typeCls">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          </div>
+          <div class="did-head__meta">
+            <div class="did-head__badges">
+              <span class="did-code">{{ institution.code }}</span>
+              <span class="did-badge" [class]="'did-badge--' + institution.typeCls">{{ institution.typeLabel }}</span>
+              <span class="did-active" *ngIf="institution.statut==='active'">
+                <span class="did-active-dot"></span>ACTIVE
+              </span>
+            </div>
+            <h3 class="did-head__nom">{{ institution.nom }}</h3>
+            <p class="did-head__sub">{{ institution.sigle }} · {{ institution.city }} · délégation DINEPA</p>
+          </div>
+        </div>
+        <div class="did-head__nav">
+          <button class="did-nav-btn" type="button"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span class="did-nav-pos">{{ currentIndex }} / {{ totalCount }}</span>
+          <button class="did-nav-btn" type="button"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></button>
+          <button class="did-nav-btn" type="button"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3"/></svg></button>
+          <button class="did-nav-btn did-close-btn" type="button" (click)="fermer.emit()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </div>
+
+      <div class="did-head__actions">
+        <button class="did-act-btn did-act-btn--primary" type="button" (click)="inviterUtilisateur()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Inviter un utilisateur
+        </button>
+        <button class="did-act-btn" type="button" (click)="modifier()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Modifier
+        </button>
+        <button class="did-act-btn" type="button" (click)="deleguerPouvoirs()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Déléguer pouvoirs
+        </button>
+        <button class="did-act-btn" type="button" (click)="etendrePerimetre()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Étendre périmètre
+        </button>
+        <button class="did-act-btn" type="button" (click)="exporterFiche()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporter fiche
+        </button>
+        <button class="did-act-btn" type="button">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── TABS ── -->
+    <div class="did-tabs">
+      <button *ngFor="let t of tabs" type="button" class="did-tab" [class.did-tab--active]="activeTab()===t.id" (click)="activeTab.set(t.id)">
+        {{ t.label }}
+        <span *ngIf="t.badge" class="did-tab-badge" [class]="'did-tab-badge--' + t.badgeCls">{{ t.badge }}</span>
+      </button>
+    </div>
+
+    <!-- ── BODY ── -->
+    <div class="did-body">
+
+      <!-- VUE D'ENSEMBLE (institutions non-OREPA) -->
+      <ng-container *ngIf="!isUrd && activeTab()==='overview'">
+
+        <!-- Identification + Contact -->
+        <div class="did-grid2">
+          <div class="did-card">
+            <div class="did-card__head">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+              Identification
+            </div>
+            <div class="did-kv-grid">
+              <div class="did-kv"><span class="did-k">Sigle officiel</span><span class="did-v did-v--bold">{{ institution.sigle }}</span></div>
+              <div class="did-kv"><span class="did-k">Code interne</span><span class="did-v did-v--mono">{{ institution.code }}</span></div>
+              <div class="did-kv"><span class="did-k">Type</span><span class="did-v" [class]="'did-v--' + institution.typeCls">{{ institution.typeLabel }}</span></div>
+              <div class="did-kv"><span class="did-k">Délégation de</span><span class="did-v did-v--link">DINEPA national</span></div>
+              <div class="did-kv"><span class="did-k">Créée le</span><span class="did-v">14/03/2026</span></div>
+              <div class="did-kv"><span class="did-k">N° accréditation</span><span class="did-v did-v--mono">DEC-2026-014</span></div>
+            </div>
+          </div>
+
+          <div class="did-card">
+            <div class="did-card__head">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Contact & responsable
+            </div>
+            <div class="did-resp-row">
+              <span class="did-avatar" [class]="'did-avatar--' + institution.responsableCls">{{ institution.responsableInitiales }}</span>
+              <div class="did-resp-info">
+                <div class="did-resp-name">{{ institution.responsable }}</div>
+                <div class="did-resp-role">Chef de centre · Responsable principal</div>
+              </div>
+              <button class="did-link-btn" type="button">Profil →</button>
+            </div>
+            <div class="did-contact-list">
+              <div class="did-contact-item">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span class="did-mono">{{ institution.sigle.toLowerCase() }}&#64;dinepa.gouv.ht</span>
+              </div>
+              <div class="did-contact-item">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18C1.62 2.1 2.4 1.1 3.5 1h3a2 2 0 0 1 2 1.72A12.84 12.84 0 0 0 9.18 6a2 2 0 0 1-.45 2.11L7.61 9.23A16 16 0 0 0 14.77 16.39l1.11-1.11a2 2 0 0 1 2.11-.45A12.84 12.84 0 0 0 21.28 16a2 2 0 0 1 1.72 2z"/></svg>
+                <span>+509 38 12 4567</span>
+              </div>
+              <div class="did-contact-item">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>{{ institution.city }} · Bureau régional</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pouvoirs -->
+        <div class="did-card">
+          <div class="did-card__head">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Pouvoirs & permissions de l'institution
+            <button class="did-link-btn" type="button" (click)="modifier()" style="margin-left:auto">Modifier →</button>
+          </div>
+          <div class="did-perm-grid">
+            <div *ngFor="let p of POUVOIRS" class="did-perm-cell" [class]="'did-perm-cell--' + p.cls" [class.did-perm-cell--disabled]="!p.ok">
+              <div class="did-perm-cell__head">
+                <svg *ngIf="p.ok" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg *ngIf="!p.ok" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <span class="did-perm-cell__label" [class]="p.ok ? 'did-perm-cell__label--' + p.cls : ''">{{ p.label }}</span>
+              </div>
+              <div class="did-perm-cell__note">{{ p.note }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quotas -->
+        <div class="did-card">
+          <div class="did-card__head">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            Quotas & licences attribués
+          </div>
+          <div class="did-quota-grid">
+            <div *ngFor="let q of QUOTAS" class="did-quota">
+              <div class="did-quota__head">
+                <span class="did-quota__label">{{ q.label }}</span>
+                <span class="did-quota__val" [class]="'did-quota__val--' + q.cls">{{ q.current }}/{{ q.max }}{{ q.unit }}</span>
+              </div>
+              <div class="did-quota__bar">
+                <div class="did-quota__fill" [class]="'did-quota__fill--' + q.cls" [style.width.%]="q.pct"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Équipe -->
+        <div class="did-card">
+          <div class="did-card__head">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Équipe rattachée
+            <span class="did-card__hint">{{ institution.users }} utilisateurs · répartition par rôle</span>
+          </div>
+          <div class="did-role-grid">
+            <div class="did-role-cell did-role-cell--green"><span class="did-role-count">2</span><span class="did-role-lbl">Chefs centre</span></div>
+            <div class="did-role-cell did-role-cell--blue"><span class="did-role-count">3</span><span class="did-role-lbl">Dispatchers</span></div>
+            <div class="did-role-cell did-role-cell--amber"><span class="did-role-count">10</span><span class="did-role-lbl">Techniciens</span></div>
+            <div class="did-role-cell did-role-cell--purple"><span class="did-role-count">2</span><span class="did-role-lbl">Auditeurs</span></div>
+            <div class="did-role-cell did-role-cell--gray"><span class="did-role-count">1</span><span class="did-role-lbl">Lecture</span></div>
+          </div>
+          <div class="did-avatar-strip">
+            <span class="did-strip-lbl">Membres récents :</span>
+            <div class="did-avatars">
+              <span class="did-av did-av--green">MR</span>
+              <span class="did-av did-av--blue">MD</span>
+              <span class="did-av did-av--amber">JP</span>
+              <span class="did-av did-av--amber">SC</span>
+              <span class="did-av did-av--purple">PL</span>
+              <span class="did-av did-av--gray">+13</span>
+            </div>
+            <button class="did-link-btn" type="button" (click)="voirTousUtilisateurs()">Voir tous les utilisateurs</button>
+          </div>
+        </div>
+
+        <!-- Périmètre -->
+        <div class="did-card">
+          <div class="did-card__head">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Périmètre territorial
+            <span class="did-card__hint did-card__hint--green">{{ institution.communes }} communes · {{ institution.activesCommunes }} actives</span>
+          </div>
+          <div class="did-communes">
+            <span *ngFor="let c of COMMUNES_ACTIVES"   class="did-commune did-commune--active">✓ {{ c }}</span>
+            <span *ngFor="let c of COMMUNES_INACTIVES" class="did-commune">{{ c }}</span>
+            <span class="did-commune">+ {{ institution.communes - COMMUNES_ACTIVES.length - COMMUNES_INACTIVES.length }} autres</span>
+            <button type="button" class="did-commune did-commune--add" (click)="etendrePerimetre()">+ Étendre périmètre</button>
+          </div>
+        </div>
+
+        <!-- Alert banner -->
+        <div class="did-alert-banner">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="did-alert-banner__text">
+            <div class="did-alert-banner__title">Convention de délégation à mettre à jour</div>
+            <div class="did-alert-banner__sub">La convention DINEPA-{{ institution.nom }} expire dans 47 jours · renouvellement à initier</div>
+          </div>
+          <button class="did-alert-btn" type="button" (click)="initierRenouvellement()">Initier renouvellement</button>
+        </div>
+
+        <!-- Liaisons -->
+        <div class="did-card">
+          <div class="did-card__head">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Liaisons croisées
+          </div>
+          <div class="did-liaisons">
+            <span *ngFor="let l of LIAISONS" class="did-liaison" [class]="'did-liaison--' + l.cls">{{ l.label }}</span>
+          </div>
+        </div>
+
+      </ng-container>
+
+      <!-- OREPA VUE D'ENSEMBLE -->
+      <ng-container *ngIf="isUrd && activeTab()==='overview'">
+
+        <!-- Deploy warning banner -->
+        <div *ngIf="isADeployer" class="did-orepa-warn">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="did-orepa-warn__text">
+            <strong>OREPA non déployée</strong> — Aucun compte superviseur actif pour cet OREPA.
+            Aucune donnée opérationnelle ne peut être collectée tant que le déploiement n'est pas effectué.
+          </div>
+        </div>
+
+        <!-- 2 info cards -->
+        <div class="did-grid2">
+          <div class="did-card">
+            <div class="did-card__head">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+              Identité institutionnelle
+            </div>
+            <div class="did-kv-grid">
+              <div class="did-kv"><span class="did-k">Sigle officiel</span><span class="did-v did-v--bold">{{ institution!.sigle }}</span></div>
+              <div class="did-kv"><span class="did-k">Code interne</span><span class="did-v did-v--mono">{{ institution!.code }}</span></div>
+              <div class="did-kv"><span class="did-k">Siège</span><span class="did-v">{{ institution!.city }}</span></div>
+              <div class="did-kv"><span class="did-k">Tutelle</span><span class="did-v did-v--link">DINEPA national</span></div>
+              <div class="did-kv"><span class="did-k">Statut</span>
+                <span class="did-v" [class]="institution!.statut === 'active' ? 'did-v--green' : 'did-v--amber'">
+                  {{ institution!.statut === 'active' ? 'Active · déployée' : 'À déployer' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="did-card">
+            <div class="did-card__head">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Périmètre opérationnel
+            </div>
+            <div class="did-kv-grid">
+              <div class="did-kv"><span class="did-k">Communes totales</span><span class="did-v did-v--bold">{{ institution!.communes }}</span></div>
+              <div class="did-kv"><span class="did-k">Communes actives</span>
+                <span class="did-v" [class]="institution!.activesCommunes > 0 ? 'did-v--green' : 'did-v--amber'">
+                  {{ institution!.activesCommunes > 0 ? institution!.activesCommunes : '0 — à déployer' }}
+                </span>
+              </div>
+              <div class="did-kv"><span class="did-k">Utilisateurs</span>
+                <span class="did-v" [class]="institution!.users > 0 ? 'did-v--blue' : 'did-v--amber'">
+                  {{ institution!.users > 0 ? institution!.users : '—' }}
+                </span>
+              </div>
+              <div class="did-kv"><span class="did-k">SLA actuel</span>
+                <span class="did-v" [class]="institution!.sla >= 90 ? 'did-v--green' : 'did-v--amber'">
+                  {{ institution!.sla > 0 ? institution!.sla + '%' : '—' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compte superviseur -->
+        <div class="did-card">
+          <div class="did-card__head">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Compte superviseur OREPA
+            <span *ngIf="isADeployer" class="did-tab-badge did-tab-badge--amber" style="margin-left:auto">Non créé</span>
+            <span *ngIf="!isADeployer && createdSuperviseur()" class="did-tab-badge did-tab-badge--green did-badge-pulse" style="margin-left:auto">✓ CRÉÉ · ACTIF</span>
+            <span *ngIf="!isADeployer && !createdSuperviseur()" class="did-tab-badge did-tab-badge--green" style="margin-left:auto">Actif</span>
+          </div>
+
+          <ng-container *ngIf="!isADeployer">
+            <div class="did-resp-row">
+              <span class="did-avatar" [class]="'did-avatar--' + superviseurData.cls">{{ superviseurData.initiales }}</span>
+              <div class="did-resp-info">
+                <div class="did-resp-name">{{ superviseurData.nom }}</div>
+                <div class="did-resp-role">Superviseur OREPA · Compte actif</div>
+              </div>
+              <button class="did-link-btn" type="button">Voir profil →</button>
+            </div>
+            <div class="did-contact-list">
+              <div class="did-contact-item">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span class="did-mono">{{ superviseurData.email }}</span>
+              </div>
+              <div class="did-contact-item">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span>Identifiant : </span><span class="did-mono">{{ superviseurData.username }}</span>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="isADeployer">
+            <div class="did-orepa-no-compte">
+              <p class="did-orepa-no-compte__text">
+                Aucun compte superviseur n'a été créé pour cet OREPA.<br>
+                Le superviseur est l'administrateur délégué qui gérera les infrastructures, capteurs et interventions dans son périmètre.
+              </p>
+              <button class="did-orepa-btn-create" type="button" (click)="showCreerSuperviseur.set(true)">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Créer le compte superviseur
+              </button>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Reference: OREPA Ouest deployed (only shown to undeployed ORPAs) -->
+        <div *ngIf="isADeployer" class="did-card">
+          <div class="did-card__head">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            Référence · OREPA Ouest déployée
+            <span class="did-tab-badge did-tab-badge--green" style="margin-left:auto">Déployée · Active</span>
+          </div>
+          <div class="did-orepa-ref">
+            <div class="did-orepa-ref__item"><span class="did-k">Superviseur</span><span class="did-v">Maria Romain</span></div>
+            <div class="did-orepa-ref__item"><span class="did-k">Identifiant</span><span class="did-v did-v--mono">sup.ouest</span></div>
+            <div class="did-orepa-ref__item"><span class="did-k">Utilisateurs actifs</span><span class="did-v did-v--blue">18</span></div>
+            <div class="did-orepa-ref__item"><span class="did-k">SLA moyen</span><span class="did-v did-v--green">92%</span></div>
+            <div class="did-orepa-ref__item"><span class="did-k">Communes actives</span><span class="did-v did-v--green">2 / 20</span></div>
+            <div class="did-orepa-ref__item"><span class="did-k">Conformité</span><span class="did-v did-v--green">92%</span></div>
+          </div>
+        </div>
+
+      </ng-container>
+
+      <!-- PLACEHOLDER TABS -->
+      <div *ngIf="activeTab()!=='overview'" class="did-placeholder">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="did-placeholder__title">Onglet en construction</div>
+        <div class="did-placeholder__sub">Données disponibles dans la prochaine version</div>
+      </div>
+
+    </div>
+
+    <!-- ── OREPA DEPLOY FOOTER ── -->
+    <div *ngIf="isUrd && isADeployer" class="did-orepa-footer">
+      <button class="did-orepa-foot-btn" type="button" (click)="fermer.emit()">Fermer</button>
+      <button class="did-orepa-foot-btn did-orepa-foot-btn--deploy" type="button" (click)="showCreerSuperviseur.set(true)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 2 15 9 20 9 11 22 4 15 9 15"/></svg>
+        Déployer cet OREPA
+      </button>
+    </div>
+
+    <!-- ── INFO BANNER ── -->
+    <div class="did-info-bar">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Chaque institution est un conteneur d'autorité. Les utilisateurs, infrastructures et SLA héritent de son périmètre.</span>
+      <button class="did-doc-btn" type="button" (click)="voirDoc()">Voir la doc →</button>
+    </div>
+
+  </div>
+</div>
+
+<app-creer-superviseur-modal *ngIf="visible" [visible]="showCreerSuperviseur()" (fermer)="showCreerSuperviseur.set(false)" (compteCree)="onCompteCree($event)"></app-creer-superviseur-modal>
+
+<!-- Success toast -->
+<div *ngIf="showToast()" class="did-toast">
+  <div class="did-toast__icon">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="did-toast__body">
+    <div class="did-toast__title">Compte créé · {{ createdSuperviseur()?.orepa }} est maintenant supervisée</div>
+    <div class="did-toast__sub">{{ createdSuperviseur()?.nom }} peut se connecter · DINEPA a été notifié · action tracée</div>
+  </div>
+  <button class="did-toast__close" type="button" (click)="showToast.set(false)">
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>

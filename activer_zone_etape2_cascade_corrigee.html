@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Activer une zone – Étape 2 · Gouvernance · GestiDlo</title>
+<style>
+  :root {
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --border-radius-lg: 12px;
+    --color-text-primary:     #111827;
+    --color-text-secondary:   #374151;
+    --color-text-tertiary:    #6b7280;
+    --color-text-success:     #15803d;
+    --color-text-warning:     #b45309;
+    --color-text-danger:      #dc2626;
+    --color-text-info:        #1d4ed8;
+    --color-background-primary:   #ffffff;
+    --color-background-secondary: #f9fafb;
+    --color-background-info:      #eff6ff;
+    --color-background-success:   #f0fdf4;
+    --color-background-warning:   #fffbeb;
+    --color-border-secondary: #d1d5db;
+    --color-border-tertiary:  #e5e7eb;
+    --color-border-info:      #93c5fd;
+    --color-border-success:   #86efac;
+  }
+  body {
+    background: #1f2937;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+    font-family: var(--font-sans);
+  }
+
+  .av-lbl {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .av-field {
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    background: var(--color-background-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .av-hint {
+    font-size: 10px;
+    color: var(--color-text-tertiary);
+    margin-top: 3px;
+  }
+  .av-opt {
+    padding: 7px 10px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 0.5px solid var(--color-border-tertiary);
+    cursor: pointer;
+  }
+  .av-opt:hover { background: var(--color-background-secondary); }
+</style>
+</head>
+<body>
+
+<div style="width:460px;max-width:100%;background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)">
+
+  <!-- ── En-tête ── -->
+  <div style="padding:12px 14px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:flex-start;justify-content:space-between">
+    <div>
+      <div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">Activer une zone</div>
+      <div style="font-size:11px;color:var(--color-text-tertiary)">étape 2 sur 3 · responsabilité &amp; gouvernance</div>
+    </div>
+    <span style="font-size:18px;color:var(--color-text-tertiary);cursor:pointer" aria-label="Fermer">✕</span>
+  </div>
+
+  <!-- ── Fil d'étapes ── -->
+  <div style="display:flex;align-items:center;gap:0;padding:10px 14px">
+    <!-- Étape 1 : complète -->
+    <span style="width:20px;height:20px;border-radius:50%;background:var(--color-background-success);color:var(--color-text-success);display:flex;align-items:center;justify-content:center;font-size:11px;flex:none">✓</span>
+    <div style="flex:1;height:1px;background:var(--color-text-success);opacity:.4"></div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <!-- Étape 2 : active -->
+      <span style="width:20px;height:20px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex:none">2</span>
+      <span style="font-size:11px;color:var(--color-text-info);font-weight:500">Gouvernance</span>
+    </div>
+    <div style="flex:1;height:1px;background:var(--color-border-tertiary)"></div>
+    <!-- Étape 3 : à venir -->
+    <span style="width:20px;height:20px;border-radius:50%;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-tertiary);display:flex;align-items:center;justify-content:center;font-size:10px;flex:none">3</span>
+  </div>
+
+  <!-- ── Bandeau de scope (filtre visible) ── -->
+  <!--
+    CORRECTION : rend explicite que TOUTES les listes qui suivent sont scopées
+    sur le territoire choisi à l'étape 1. L'utilisateur comprend pourquoi
+    certaines entités n'apparaissent pas.
+  -->
+  <div style="margin:0 14px 12px;background:var(--color-background-secondary);border-radius:6px;padding:7px 10px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--color-text-secondary)">
+    <span style="color:var(--color-text-info)">⊘</span>
+    Listes filtrées pour
+    <span style="color:var(--color-text-primary);font-weight:500">Ouest › Léogâne</span>
+    <span style="margin-left:auto;font-size:9px;color:var(--color-text-tertiary)">choisi à l'étape 1</span>
+  </div>
+
+  <div style="padding:0 14px 6px">
+
+    <!-- ── OREPA : lecture seule, dérivé du département ── -->
+    <!--
+      CORRECTION : l'OREPA n'est pas un choix — il se déduit du département.
+      Ouest → OREPA Ouest. Afficher en lecture seule évite l'erreur de saisie
+      et rend la logique visible.
+    -->
+    <div style="margin-bottom:12px">
+      <span class="av-lbl">
+        OREPA régional
+        <span style="color:var(--color-text-tertiary)">· dérivé du département</span>
+      </span>
+      <div class="av-field" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">
+        <span>🏢 OREPA Ouest</span>
+        <span style="font-size:11px;color:var(--color-text-tertiary)">🔒 automatique</span>
+      </div>
+      <div class="av-hint">Département Ouest → OREPA Ouest · aucune saisie requise</div>
+    </div>
+
+    <!-- ── Type d'opérateur local ── -->
+    <!--
+      CORRECTION : l'opérateur n'est pas toujours un CAEPA en Haïti.
+      Ce champ détermine quelle liste s'affiche ensuite.
+      Types possibles : CAEPA / opérateur privé / ONG / kiosque communautaire / régie.
+    -->
+    <div style="margin-bottom:12px">
+      <span class="av-lbl">Type d'opérateur local</span>
+      <div class="av-field" style="color:var(--color-text-primary)">
+        <span>CAEPA</span>
+        <span style="font-size:13px;color:var(--color-text-tertiary)">▾</span>
+      </div>
+      <div class="av-hint">CAEPA · opérateur privé · ONG · kiosque communautaire · régie</div>
+    </div>
+
+    <!-- ── Sélecteur CAEPA filtré sur la commune ── -->
+    <!--
+      CORRECTION :
+      - Avant : champ texte libre → doublons, fautes de frappe, aucun lien vers la vraie fiche
+      - Après : liste dépendante scopée sur Léogâne · 3 CAEPA enregistrés trouvés
+      - Porte de sortie « + enregistrer » si le bon CAEPA n'existe pas encore
+    -->
+    <div style="margin-bottom:12px">
+      <span class="av-lbl">
+        Opérateur
+        <span style="color:var(--color-text-tertiary)">· filtré pour Léogâne</span>
+      </span>
+
+      <!-- Dropdown ouvert -->
+      <div style="border:0.5px solid var(--color-border-info);border-radius:6px;overflow:hidden">
+
+        <!-- Recherche dans la liste -->
+        <div class="av-field" style="border:none;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary)">
+          <span>🔍 Rechercher un CAEPA…</span>
+        </div>
+
+        <!-- Option sélectionnée -->
+        <div class="av-opt" style="background:var(--color-background-info);color:var(--color-text-info);border-top:none">
+          <span>👥</span> CAEPA Dessources
+          <span style="margin-left:auto">✓</span>
+        </div>
+
+        <!-- Autres options de Léogâne -->
+        <div class="av-opt" style="color:var(--color-text-primary)">
+          <span>👥</span> CAEPA Petite Rivière
+        </div>
+        <div class="av-opt" style="color:var(--color-text-primary)">
+          <span>👥</span> CAEPA Parc-Cahouane
+        </div>
+
+        <!-- Porte de sortie : enregistrer un nouveau -->
+        <div class="av-opt" style="color:var(--color-text-info);background:var(--color-background-secondary)">
+          <span>+</span> Enregistrer un nouveau CAEPA dans Léogâne
+        </div>
+
+      </div>
+      <div class="av-hint">3 CAEPA enregistrés dans Léogâne · CAEPA Dessources sélectionné</div>
+    </div>
+
+    <!-- ── Responsable terrain (TEPAC) : cas vide ── -->
+    <!--
+      CORRECTION :
+      - "Agent DINEPA" était incorrect — DINEPA est l'échelon national, le terrain c'est le TEPAC
+      - Ce bloc montre exprès l'état vide, fréquent en Haïti
+      - Pas de blocage : « + enregistrer » permet de créer la fiche à la volée
+        (la fiche vivra dans le référentiel des acteurs, pas dans ce modal)
+    -->
+    <div style="margin-bottom:14px">
+      <span class="av-lbl">
+        Responsable terrain (TEPAC)
+        <span style="color:var(--color-text-tertiary)">· filtré pour Léogâne</span>
+      </span>
+
+      <!-- État vide -->
+      <div style="border:0.5px dashed var(--color-border-secondary);border-radius:6px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px">
+          👤 Aucun TEPAC / agent enregistré pour cette commune
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <span style="font-size:11px;padding:5px 11px;border-radius:6px;border:0.5px solid var(--color-border-info);color:var(--color-text-info);cursor:pointer">
+            + Enregistrer un responsable
+          </span>
+          <span style="font-size:11px;padding:5px 11px;border-radius:6px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-tertiary);cursor:pointer">
+            Passer (compléter plus tard)
+          </span>
+        </div>
+      </div>
+      <div class="av-hint">
+        ℹ Le responsable terrain est géré dans l'annuaire des acteurs · ce modal n'en crée pas une copie
+      </div>
+    </div>
+
+    <!-- ── Note architecture ── -->
+    <!--
+      Question de fond exposée : si l'annuaire des acteurs (CAEPA / TEPAC) n'existe pas encore,
+      les listes déroulantes n'auront jamais rien à afficher — c'est lui qu'il faut poser en premier.
+    -->
+    <div style="background:var(--color-background-warning);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:10px;color:var(--color-text-warning);line-height:1.5">
+      ⚠ <strong>Décision d'architecture :</strong> ces CAEPA et TEPAC sont lus depuis un
+      <em>référentiel des acteurs</em> centralisé (module à part). Si ce référentiel n'existe pas encore,
+      les listes resteront vides quel que soit le filtrage. Le « + enregistrer » est l'exception,
+      pas le flux principal.
+    </div>
+
+  </div>
+
+  <!-- ── Pied de modal ── -->
+  <div style="padding:11px 14px;border-top:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;padding:6px 12px;border-radius:6px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);cursor:pointer">
+      ← Retour
+    </span>
+    <span style="font-size:12px;padding:6px 14px;border-radius:6px;border:2px solid var(--color-border-info);color:var(--color-text-info);font-weight:500;cursor:pointer">
+      Continuer →
+    </span>
+  </div>
+
+</div>
+
+</body>
+</html>

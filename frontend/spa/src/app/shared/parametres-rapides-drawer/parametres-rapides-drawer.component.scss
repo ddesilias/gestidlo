@@ -1,0 +1,89 @@
+$bg:#0F1419; $bg-deep:#0A0E12; $bg-card:#161E28; $bg-in:#1A2530; $bdr:#1F2A33; $bdr-btn:#2A3744;
+$text:#E2E8EE; $muted:#8B9AAB; $vmuted:#6B7785;
+$green:#10B981; $red:#EF4444; $blue:#3B82F6; $amber:#F59E0B;
+
+// Overlay & Panel
+.prm-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:300; display:flex; justify-content:flex-end; }
+.prm-panel   { background:$bg; width:480px; height:100%; display:flex; flex-direction:column; overflow:hidden; border-left:1px solid $bdr; }
+
+// Header
+.prm-head { padding:16px 20px; border-bottom:1px solid $bdr; display:flex; align-items:center; gap:12px; background:linear-gradient(to right,rgba(139,92,246,.07),transparent); flex-shrink:0; }
+.prm-head__icon { width:38px; height:38px; background:rgba(139,92,246,.15); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#A78BFA; flex-shrink:0; }
+.prm-head__title { font-size:15px; font-weight:500; color:#F5F7FA; }
+.prm-head__sub   { font-size:11px; color:$muted; margin-top:1px; }
+.prm-close { margin-left:auto; background:$bg-in; border:1px solid $bdr-btn; color:$muted; padding:6px 8px; border-radius:6px; cursor:pointer; display:flex; }
+
+// Body
+.prm-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:16px; }
+
+// Profile card
+.prm-profile-card { display:flex; align-items:center; gap:12px; padding:12px; background:$bg-card; border:1px solid $bdr; border-radius:10px; }
+.prm-avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#A78BFA,#7C3AED); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; flex-shrink:0; }
+.prm-profile-info { flex:1; min-width:0; }
+.prm-profile-name  { font-size:13px; font-weight:500; color:$text; }
+.prm-profile-role  { font-size:11px; color:#A78BFA; margin-top:1px; }
+.prm-profile-email { font-size:10px; color:$muted; margin-top:1px; }
+.prm-online-badge  { font-size:10px; color:#34D399; background:rgba(16,185,129,.12); padding:3px 8px; border-radius:999px; white-space:nowrap; }
+
+// Section
+.prm-section { display:flex; flex-direction:column; gap:10px; }
+.prm-section__title { font-size:11px; font-weight:600; color:$muted; text-transform:uppercase; letter-spacing:.5px; }
+.prm-field { display:flex; flex-direction:column; gap:4px; }
+.prm-lbl   { font-size:10px; color:$muted; font-weight:500; }
+.prm-input { background:$bg-in; border:1px solid $bdr-btn; color:$text; padding:8px 10px; border-radius:6px; font-size:12px; outline:none; width:100%; box-sizing:border-box; }
+.prm-hint  { font-size:10px; color:$vmuted; line-height:1.4; }
+.prm-row2  { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+// Themes
+.prm-themes { display:flex; gap:6px; }
+.prm-theme-btn { background:$bg-in; border:1px solid $bdr-btn; border-radius:8px; padding:8px 10px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; transition:border-color .15s;
+  span { font-size:10px; color:$muted; }
+  &--active { border-color:#A78BFA; span { color:$text; } }
+}
+.prm-theme-swatch { width:100%; height:16px; border-radius:3px; }
+.prm-theme--dark     { background:#0F1419; border:1px solid $bdr-btn; }
+.prm-theme--midnight { background:#07090f; border:1px solid #151b2a; }
+.prm-theme--slate    { background:#0f172a; border:1px solid #1e293b; }
+
+// Language & Size buttons
+.prm-lang-btns,.prm-size-btns { display:flex; gap:4px; flex-wrap:wrap; }
+.prm-lang-btn,.prm-size-btn { background:$bg-in; border:1px solid $bdr-btn; color:$muted; font-size:11px; padding:4px 10px; border-radius:5px; cursor:pointer;
+  &--active { border-color:$blue; color:$text; background:rgba(59,130,246,.08); }
+}
+
+// Notifications toggles
+.prm-toggles { display:flex; flex-direction:column; gap:8px; }
+.prm-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px; background:$bg-in; border:1px solid $bdr-btn; border-radius:8px; cursor:pointer; }
+.prm-toggle-info { display:flex; flex-direction:column; gap:1px; }
+.prm-toggle-lbl  { font-size:12px; color:$text; }
+.prm-toggle-sub  { font-size:10px; color:$muted; }
+
+// Toggle switch
+.prm-toggle-switch { width:36px; height:20px; background:$bdr-btn; border-radius:999px; position:relative; transition:background .2s; flex-shrink:0;
+  &--on { background:$green; }
+}
+.prm-toggle-knob { position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; }
+.prm-toggle-switch--on .prm-toggle-knob { transform:translateX(16px); }
+
+// Security
+.prm-security-list { display:flex; flex-direction:column; gap:6px; }
+.prm-security-item { display:flex; align-items:center; padding:10px; background:$bg-in; border:1px solid $bdr-btn; border-radius:8px; gap:10px; }
+.prm-security-info { flex:1; display:flex; flex-direction:column; gap:1px; }
+.prm-security-lbl  { font-size:12px; color:$text; }
+.prm-security-sub  { font-size:10px; color:$muted; &--green { color:#34D399; } }
+.prm-sec-btn { background:$bg; border:1px solid $bdr-btn; color:#60A5FA; font-size:11px; padding:4px 10px; border-radius:5px; cursor:pointer; white-space:nowrap;
+  &:hover { border-color:#60A5FA; }
+}
+
+// Shortcuts
+.prm-shortcuts { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.prm-shortcut  { display:flex; align-items:center; gap:8px; padding:8px; background:$bg-in; border:1px solid $bdr-btn; border-radius:6px; }
+.prm-kbd { background:$bg-card; border:1px solid $bdr-btn; color:$text; font-size:10px; padding:3px 6px; border-radius:4px; font-family:'Courier New',monospace; white-space:nowrap; }
+.prm-shortcut-lbl { font-size:11px; color:$muted; }
+
+// Footer
+.prm-foot { padding:12px 20px; background:$bg-deep; border-top:1px solid $bdr; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.prm-foot-btn { background:$bg-in; border:1px solid $bdr-btn; color:#CBD5E1; font-size:12px; padding:7px 14px; border-radius:6px; cursor:pointer;
+  &--primary { background:#7C3AED; border-color:#7C3AED; color:#fff; font-weight:500; }
+  &--danger  { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); color:#F87171; display:flex; align-items:center; gap:5px; }
+}

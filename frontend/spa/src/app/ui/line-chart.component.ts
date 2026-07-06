@@ -88,6 +88,9 @@ export class LineChartComponent {
   @Input({ required: true }) values: Array<{ timestamp: string; value: number }> = [];
   @Input() title = 'Trend';
   @Input() subtitle = '';
+  /** Format des étiquettes d'axe (min/max). Défauts rétro-compatibles : 2 décimales, sans suffixe. */
+  @Input() decimals = 2;
+  @Input() valueSuffix = '';
 
   get min(): number {
     return Math.min(...this.values.map((v) => v.value));
@@ -98,11 +101,11 @@ export class LineChartComponent {
   }
 
   get minLabel(): string {
-    return Number.isFinite(this.min) ? `${this.min.toFixed(2)}` : '';
+    return Number.isFinite(this.min) ? `${this.min.toFixed(this.decimals)}${this.valueSuffix}` : '';
   }
 
   get maxLabel(): string {
-    return Number.isFinite(this.max) ? `${this.max.toFixed(2)}` : '';
+    return Number.isFinite(this.max) ? `${this.max.toFixed(this.decimals)}${this.valueSuffix}` : '';
   }
 
   get linePath(): string {

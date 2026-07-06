@@ -1,0 +1,262 @@
+<app-gov-shell title="Règles & SLA" [moduleNum]="4">
+
+  <!-- Toast notification -->
+  <div class="sla-toast" *ngIf="showToast()" role="alert">
+    <div class="sla-toast__icon">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="sla-toast__body">
+      <span class="sla-toast__title">Règle créée avec succès</span>
+      <span class="sla-toast__code">{{ toastCode() }}</span>
+    </div>
+    <button class="sla-toast__link" (click)="activeTab.set('liste'); dismissToast()">Voir la règle →</button>
+    <button class="sla-toast__close" (click)="dismissToast()">✕</button>
+  </div>
+
+  <!-- Header -->
+  <div class="sla-header">
+    <div class="sla-header__left">
+      <div class="sla-header__icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <h2 class="sla-header__h2">Règles & SLA</h2>
+        <p class="sla-header__sub">Matrice SLA · seuils d'alerte · workflows · escalades automatiques</p>
+      </div>
+    </div>
+    <div class="sla-header__actions">
+      <button class="sla-btn sla-btn--ghost">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>
+        Simulateur
+      </button>
+      <button class="sla-btn sla-btn--ghost">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+        Versions
+      </button>
+      <button class="sla-btn sla-btn--amber" (click)="showCreerRegleModal.set(true)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle règle
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="sla-tabs">
+    <button *ngFor="let t of TABS" class="sla-tab" [class.sla-tab--active]="activeTab()===t.id" (click)="activeTab.set(t.id)">{{ t.label }}</button>
+  </div>
+
+  <!-- ── Liste des règles ── -->
+  <ng-container *ngIf="activeTab()==='liste'">
+    <div class="sla-list-bar">
+      <input class="sla-list-search" type="text" placeholder="Rechercher une règle…" [value]="listSearch()" (input)="listSearch.set($any($event.target).value)">
+      <div class="sla-list-chips">
+        <button class="sla-chip" [class.sla-chip--on]="listCat()===''"  (click)="listCat.set('')">Toutes ({{ filteredRegles().length }})</button>
+        <button class="sla-chip sla-chip--blue"  [class.sla-chip--on]="listCat()==='SLA'"      (click)="listCat.set(listCat()==='SLA'      ? '' : 'SLA')">SLA</button>
+        <button class="sla-chip sla-chip--amber" [class.sla-chip--on]="listCat()==='Seuil'"    (click)="listCat.set(listCat()==='Seuil'    ? '' : 'Seuil')">Seuils</button>
+        <button class="sla-chip sla-chip--green" [class.sla-chip--on]="listCat()==='Workflow'" (click)="listCat.set(listCat()==='Workflow' ? '' : 'Workflow')">Workflows</button>
+        <button class="sla-chip sla-chip--red"   [class.sla-chip--on]="listCat()==='Escalade'" (click)="listCat.set(listCat()==='Escalade' ? '' : 'Escalade')">Escalades</button>
+      </div>
+    </div>
+
+    <div class="sla-rules-list">
+      <div *ngFor="let r of filteredRegles()" class="sla-rule-row" [class.sla-rule-row--new]="r.isNew">
+        <!-- icon -->
+        <div class="sla-rule-icon" [class]="'sla-rule-icon--' + r.iconCls">
+          <svg *ngIf="r.iconCls==='clock'"  viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <svg *ngIf="r.iconCls==='gauge'"  viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 7.38 16.75"/><path d="M5 19.25A10 10 0 0 1 12 2"/><line x1="12" y1="12" x2="16" y2="8"/></svg>
+          <svg *ngIf="r.iconCls==='flow'"   viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 16 12 13 21 7 3 4 12 2 12"/></svg>
+          <svg *ngIf="r.iconCls==='alert'"  viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <svg *ngIf="r.iconCls==='docs'"   viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+
+        <!-- main info -->
+        <div class="sla-rule-main">
+          <div class="sla-rule-head">
+            <code class="sla-rule-code">{{ r.code }}</code>
+            <span class="sla-rule-nom">{{ r.nom }}</span>
+            <span *ngIf="r.isNew" class="sla-badge-new">NOUVEAU</span>
+          </div>
+          <div class="sla-rule-desc">{{ r.desc }}</div>
+          <div class="sla-rule-meta">
+            <span class="sla-rule-trigger" [class]="'sla-rule-trigger--' + r.declencheurCls">⚡ {{ r.declencheur }}</span>
+            <span class="sla-rule-sep">·</span>
+            <span class="sla-rule-sla">⏱ {{ r.sla }}</span>
+            <span class="sla-rule-sep">·</span>
+            <span class="sla-rule-zone">📍 {{ r.perimetre }}</span>
+          </div>
+        </div>
+
+        <!-- right -->
+        <div class="sla-rule-right">
+          <span class="sla-cat-tag" [class]="'sla-cat-tag--' + r.catCls">{{ r.categorie }}</span>
+          <span class="sla-statut-tag" [class]="'sla-statut-tag--' + r.statut">{{ r.statut }}</span>
+          <span class="sla-dec-count">{{ r.declenchee }}</span>
+          <div class="sla-rule-btns">
+            <button class="sla-btn sla-btn--ghost sla-btn--xs">✎ Modifier</button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="filteredRegles().length === 0" class="sla-empty">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>Aucune règle correspondante</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Matrice SLA ── -->
+  <ng-container *ngIf="activeTab()==='matrice'">
+    <div class="sla-card">
+      <div class="sla-card__head">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Matrice SLA — délai de résolution par type et gravité</span>
+        <span class="sla-card__hint">cliquez une cellule pour modifier</span>
+      </div>
+      <div class="sla-scroll">
+        <table class="sla-table">
+          <thead>
+            <tr>
+              <th class="sla-th sla-th--left">Type d'incident</th>
+              <th class="sla-th sla-th--red">Critique</th>
+              <th class="sla-th sla-th--amber">Haute</th>
+              <th class="sla-th sla-th--blue">Moyenne</th>
+              <th class="sla-th sla-th--gray">Basse</th>
+              <th class="sla-th sla-th--right">Performance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of slaRows" class="sla-tr">
+              <td class="sla-td sla-td--name">
+                <div class="sla-incident">{{ r.type }}</div>
+                <div class="sla-incident__sub">{{ r.desc }}</div>
+              </td>
+              <td class="sla-td"><div class="sla-cell" [class.sla-cell--red-bg]="r.critique.cls==='red-bg'" [class.sla-cell--red-bdr]="r.critique.cls==='red-bdr'">
+                <span class="sla-cell__val sla-cell__val--red">{{ r.critique.val }}</span>
+                <span class="sla-cell__ok">{{ r.critique.ok }}</span>
+              </div></td>
+              <td class="sla-td"><div class="sla-cell">
+                <span class="sla-cell__val sla-cell__val--amber">{{ r.haute.val }}</span>
+                <span class="sla-cell__ok">{{ r.haute.ok }}</span>
+              </div></td>
+              <td class="sla-td"><div class="sla-cell">
+                <span class="sla-cell__val">{{ r.moyenne.val }}</span>
+                <span class="sla-cell__ok">{{ r.moyenne.ok }}</span>
+              </div></td>
+              <td class="sla-td"><div class="sla-cell">
+                <span class="sla-cell__val">{{ r.basse.val }}</span>
+                <span class="sla-cell__ok">{{ r.basse.ok }}</span>
+              </div></td>
+              <td class="sla-td sla-td--right">
+                <span class="sla-perf" [class.sla-perf--green]="r.perfCls==='green'" [class.sla-perf--amber]="r.perfCls==='amber'">{{ r.perf }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sla-card__foot">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Les délais s'appliquent depuis la création de l'alerte. Toute modification déclenche un recalcul des SLA en cours.</span>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Seuils ── -->
+  <ng-container *ngIf="activeTab()==='seuils'">
+    <div class="sla-card sla-card--pad">
+      <div class="sla-threshold">
+        <div class="sla-thr__label"><span class="sla-mono sla-mono--blue">PRESSION</span> <span class="sla-thr__sub">capteur Danfoss MBS 3000</span></div>
+        <div class="sla-bar">
+          <div class="sla-bar__seg sla-bar__seg--red" style="width:18%"><span>URG</span></div>
+          <div class="sla-bar__seg sla-bar__seg--amber" style="width:12%"><span>CRIT</span></div>
+          <div class="sla-bar__seg sla-bar__seg--green" style="width:50%"><span>NORMAL</span></div>
+          <div class="sla-bar__seg sla-bar__seg--amber" style="width:15%"><span>ATTN</span></div>
+          <div class="sla-bar__seg sla-bar__seg--red" style="width:5%"><span>URG</span></div>
+        </div>
+        <div class="sla-thr__scale">0 · 0.5 · 1.0 · 3.5 · 7.0 · 8.0 · 10 bar</div>
+        <div class="sla-thr__note">Critique &lt; <strong class="c-amber">1.0 bar</strong> pendant 2 min · Urgence &lt; <strong class="c-red">0.5 bar</strong> immédiat</div>
+      </div>
+      <div class="sla-threshold">
+        <div class="sla-thr__label"><span class="sla-mono sla-mono--green">NIVEAU</span> <span class="sla-thr__sub">capteur JSN-SR04T (ultrasonique)</span></div>
+        <div class="sla-bar">
+          <div class="sla-bar__seg sla-bar__seg--red" style="width:15%"><span>CRIT</span></div>
+          <div class="sla-bar__seg sla-bar__seg--amber" style="width:15%"><span>ATTN</span></div>
+          <div class="sla-bar__seg sla-bar__seg--green" style="width:70%"><span>NORMAL</span></div>
+        </div>
+        <div class="sla-thr__scale">0% · 15% · 30% · 100%</div>
+      </div>
+      <div class="sla-threshold">
+        <div class="sla-thr__label"><span class="sla-mono sla-mono--amber">DÉBIT</span> <span class="sla-thr__sub">capteur YF-S201 (effet Hall)</span></div>
+        <div class="sla-complex">Règle complexe · <strong class="c-red">Critique :</strong> débit nul + pompe active · <strong class="c-amber">Suspicion fuite :</strong> débit ↓ + pression ↓ (corrélation 2 capteurs)</div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Workflow ── -->
+  <ng-container *ngIf="activeTab()==='workflow'">
+    <div class="sla-card sla-card--pad">
+      <div class="sla-wf-title">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 16 12 13 21 7 3 4 12 2 12"/></svg>
+        Workflow d'intervention standard · <span class="c-green">8 étapes · v3.1</span>
+      </div>
+      <div class="sla-wf-steps">
+        <ng-container *ngFor="let s of workflowSteps; let last = last">
+          <div class="sla-step" [class.sla-step--current]="s.current" [class.sla-step--done]="s.done && !s.current" [class.sla-step--todo]="!s.done">
+            <div class="sla-step__num" [class.sla-step__num--green]="s.done && !s.current" [class.sla-step__num--amber]="s.current" [class.sla-step__num--gray]="!s.done">{{ s.num }}</div>
+            <div class="sla-step__body">
+              <span class="sla-step__label">{{ s.label }}</span>
+              <span class="sla-step__sub">{{ s.sub }}</span>
+            </div>
+            <span class="sla-step__tag" [class]="'sla-tag--' + s.tagCls">{{ s.tag }}</span>
+          </div>
+          <div *ngIf="!last" class="sla-step__line" [class.sla-step__line--solid]="s.done" [class.sla-step__line--dashed]="!s.done"></div>
+        </ng-container>
+      </div>
+      <div class="sla-wf-actions">
+        <button class="sla-btn sla-btn--ghost" style="flex:1">✎ Modifier le workflow</button>
+        <button class="sla-btn sla-btn--ghost">⧉</button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Escalades ── -->
+  <ng-container *ngIf="activeTab()==='escalades'">
+    <div class="sla-card sla-card--pad">
+      <div class="sla-esc-rule">
+        <span class="sla-esc-badge sla-esc-badge--red">CRITIQUE</span>
+        <span class="sla-muted">Si alerte non prise en charge dans</span>
+        <strong class="c-red">15 min</strong>
+        <span class="sla-arrow">→</span>
+        <span class="sla-tag-inline sla-tag-inline--blue">Dispatcher</span>
+        <span class="sla-arrow">→</span>
+        <span class="sla-muted">puis dans</span>
+        <strong class="c-red">30 min</strong>
+        <span class="sla-arrow">→</span>
+        <span class="sla-tag-inline sla-tag-inline--green">Chef de centre</span>
+        <span class="sla-esc-status">● ACTIVE</span>
+      </div>
+      <div class="sla-esc-rule">
+        <span class="sla-esc-badge sla-esc-badge--amber">QUALITÉ EAU</span>
+        <span class="sla-muted">Si pH ou turbidité critique</span>
+        <span class="sla-arrow">→</span>
+        <span class="sla-muted">Notifier immédiatement</span>
+        <span class="sla-tag-inline sla-tag-inline--green">Chef centre</span>
+        <span class="sla-muted">+</span>
+        <span class="sla-tag-inline sla-tag-inline--violet">DINEPA national</span>
+        <span class="sla-muted">+ SMS usagers</span>
+        <span class="sla-esc-status">● ACTIVE</span>
+      </div>
+      <div class="sla-esc-rule">
+        <span class="sla-esc-badge sla-esc-badge--gray">NUIT (22h-6h)</span>
+        <span class="sla-muted">Toute alerte critique</span>
+        <span class="sla-arrow">→</span>
+        <span class="sla-muted">SMS + appel au</span>
+        <span class="sla-tag-inline sla-tag-inline--amber">Technicien de garde</span>
+        <span class="sla-esc-status">● ACTIVE</span>
+      </div>
+      <button class="sla-btn sla-btn--add">+ Ajouter une règle d'escalade</button>
+    </div>
+  </ng-container>
+
+  <app-creer-regle-modal [visible]="showCreerRegleModal()" (fermer)="showCreerRegleModal.set(false)"></app-creer-regle-modal>
+
+</app-gov-shell>

@@ -1,0 +1,354 @@
+<div *ngIf="visible" class="nim-overlay" (click)="fermer.emit()">
+  <div class="nim-modal" (click)="$event.stopPropagation()">
+
+    <!-- ── Header ── -->
+    <div class="nim-head">
+      <div class="nim-head__left">
+        <div class="nim-head__icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div>
+          <div class="nim-head__title">Nouvelle institution</div>
+          <div class="nim-head__sub">Créer une organisation · attribuer périmètre · définir pouvoirs · nommer admin</div>
+        </div>
+      </div>
+      <div class="nim-head__right">
+        <span class="nim-head__step">Étape {{ activeStep() }} / 7</span>
+        <button class="nim-close-btn" type="button" (click)="fermer.emit()">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Stepper ── -->
+    <div class="nim-stepper">
+      <ng-container *ngFor="let s of STEP_LABELS; let last = last">
+        <button type="button"
+          class="nim-step"
+          [class.nim-step--done]="activeStep() > s.num"
+          [class.nim-step--active]="activeStep() === s.num"
+          (click)="goTo(s.num)">
+          <span class="nim-step-num">{{ activeStep() > s.num ? '✓' : s.num }}</span>
+          {{ s.label }}
+        </button>
+        <div *ngIf="!last" class="nim-step-sep" [class.nim-step-sep--done]="activeStep() > s.num"></div>
+      </ng-container>
+    </div>
+
+    <!-- ── Body (2-col grid via SCSS .nim-body) ── -->
+    <div class="nim-body">
+
+      <!-- LEFT: form -->
+      <div class="nim-form">
+
+        <!-- ── STEP 1 — Type ── -->
+        <ng-container *ngIf="activeStep() === 1">
+          <div>
+            <div class="nim-section-label">Choisissez le type d'institution à créer</div>
+            <p style="margin:4px 0 12px; font-size:11px; color:#8B9AAB;">Le type détermine la hiérarchie et les pouvoirs par défaut</p>
+          </div>
+
+          <div class="nim-type-grid">
+            <!-- DINEPA — locked (already exists) -->
+            <div class="nim-type-card nim-type-card--blue" style="opacity:.45; cursor:not-allowed; pointer-events:none;">
+              <div class="nim-type-card__icon nim-type-card__icon--blue">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </div>
+              <div class="nim-type-card__label">DINEPA</div>
+              <div class="nim-type-card__sub">Niveau national · 1 seule instance</div>
+              <div style="margin-top:6px; font-size:9px; color:#F87171; background:rgba(239,68,68,.1); padding:2px 6px; border-radius:4px; display:inline-block;">🔒 Déjà existant</div>
+            </div>
+
+            <button *ngFor="let t of TYPE_OPTIONS" type="button"
+              class="nim-type-card"
+              [class.nim-type-card--selected]="selectedType() === t.id"
+              [class.nim-type-card--blue]="t.cls === 'blue'"
+              [class.nim-type-card--green]="t.cls === 'green'"
+              [class.nim-type-card--amber]="t.cls === 'amber'"
+              (click)="selectType(t.id)">
+              <div class="nim-type-card__icon"
+                   [class.nim-type-card__icon--blue]="t.cls === 'blue'"
+                   [class.nim-type-card__icon--green]="t.cls === 'green'"
+                   [class.nim-type-card__icon--amber]="t.cls === 'amber'">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/></svg>
+              </div>
+              <div class="nim-type-card__label">{{ t.label }}</div>
+              <div class="nim-type-card__sub">{{ t.sub }}</div>
+            </button>
+          </div>
+
+          <!-- Selected type info -->
+          <div class="nim-conseil" style="border-color:rgba(16,185,129,.25); background:rgba(16,185,129,.05);">
+            <div class="nim-conseil__head" style="color:#34D399;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Vous avez choisi : {{ typeLabel }}
+            </div>
+            <div class="nim-conseil__text" style="color:#34D399; opacity:.85;">
+              <ng-container *ngIf="selectedType() === 'municipalite'">Une municipalité est rattachée à une OREPA et peut gérer plusieurs CAEPA. Elle hérite automatiquement des règles SLA de son OREPA parente.</ng-container>
+              <ng-container *ngIf="selectedType() === 'orepa'">Un OREPA couvre un département administratif. Il supervise les municipalités et CAEPA de sa région.</ng-container>
+              <ng-container *ngIf="selectedType() === 'caepa'">Un CAEPA gère une section communale spécifique. Il est rattaché à une municipalité et représente les usagers locaux.</ng-container>
+              <ng-container *ngIf="selectedType() === 'ong'">Une ONG partenaire a des droits limités en lecture et peut partager des données terrain avec le réseau DINEPA.</ng-container>
+              <ng-container *ngIf="selectedType() === 'bailleur'">Un bailleur finance des projets et a accès aux rapports et indicateurs de performance contractuels.</ng-container>
+              <ng-container *ngIf="selectedType() === 'operateur'">Un opérateur privé exploite un réseau délégué. Il opère sous convention et doit soumettre des rapports périodiques.</ng-container>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ── STEP 2 — Identité ── -->
+        <ng-container *ngIf="activeStep() === 2">
+          <div class="nim-field">
+            <div class="nim-field__label">Nom officiel <span class="nim-field__required">*</span></div>
+            <input class="nim-input" type="text" [(ngModel)]="nom" placeholder="ex. Municipalité de Carrefour"/>
+          </div>
+          <div class="nim-field-row">
+            <div class="nim-field">
+              <div class="nim-field__label">Sigle <span class="nim-field__required">*</span></div>
+              <input class="nim-input" type="text" [(ngModel)]="sigle" placeholder="MUN-CARREFOUR" style="font-family:'Courier New',monospace; font-size:11px; color:#93C5FD;"/>
+            </div>
+            <div class="nim-field">
+              <div class="nim-field__label">Type</div>
+              <div style="font-size:12px; color:#34D399; padding:6px 0;">{{ typeLabel }}</div>
+            </div>
+          </div>
+          <div class="nim-field">
+            <div class="nim-field__label">Description / localisation</div>
+            <textarea class="nim-input nim-textarea" [(ngModel)]="description" rows="2" placeholder="19 sections communales · Département Ouest"></textarea>
+          </div>
+          <div class="nim-field-hint">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+            Le sigle sera utilisé pour générer automatiquement le code unique de l'institution (ex. INST-MUN-CARREFOUR-01).
+          </div>
+        </ng-container>
+
+        <!-- ── STEP 3 — Hiérarchie ── -->
+        <ng-container *ngIf="activeStep() === 3">
+          <!-- Synthèse étapes précédentes -->
+          <div style="background:#161E28; border:1px solid #1F2A33; border-radius:6px; padding:10px 12px; display:flex; gap:16px; font-size:11px;">
+            <span style="color:#6B7785;">Type : <strong style="color:#34D399;">{{ typeLabel }}</strong></span>
+            <span style="color:#6B7785;">Nom : <strong style="color:#E2E8EE;">{{ nom }}</strong></span>
+            <span style="color:#6B7785;">Sigle : <code style="color:#93C5FD; font-family:'Courier New',monospace;">{{ sigle }}</code></span>
+          </div>
+
+          <!-- Rattachement -->
+          <div class="nim-field">
+            <div class="nim-field__label">Rattachement hiérarchique <span class="nim-field__required">*</span></div>
+            <div style="background:#161E28; border:1.5px solid rgba(59,130,246,.3); border-radius:8px; padding:12px; display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <div style="width:32px; height:32px; background:rgba(59,130,246,.2); border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#60A5FA" stroke-width="1.75" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:9px; color:#60A5FA; text-transform:uppercase; letter-spacing:.4px; font-weight:500;">OREPA (régional)</div>
+                <div style="font-size:12px; color:#F5F7FA; font-weight:500;">OREPA Ouest</div>
+                <div style="font-size:10px; color:#8B9AAB; margin-top:1px;">{{ nom || 'Cette institution' }} fait partie du département Ouest (suggéré automatiquement)</div>
+              </div>
+              <div style="color:#34D399; font-size:16px;">✓</div>
+              <button type="button" style="background:#1A2530; border:1px solid #2A3744; color:#60A5FA; font-size:10px; padding:4px 8px; border-radius:4px; cursor:pointer; white-space:nowrap;">Changer</button>
+            </div>
+            <div class="nim-field-hint">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+              Rattachement automatique basé sur le département géographique. Modifiable si nécessaire.
+            </div>
+          </div>
+
+          <!-- Chaîne d'autorité -->
+          <div style="background:#161E28; border:1px solid #1F2A33; border-radius:8px; padding:12px; font-size:11px; color:#8B9AAB;">
+            <div style="font-size:10px; color:#6B7785; text-transform:uppercase; letter-spacing:.4px; font-weight:500; margin-bottom:10px;">Position dans la chaîne d'autorité</div>
+            <div class="nim-chain">
+              <div class="nim-chain-node">
+                <div class="nim-chain-node__icon" style="background:rgba(139,92,246,.2);">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/></svg>
+                </div>
+                <div>
+                  <div class="nim-chain-node__label">DINEPA</div>
+                  <div class="nim-chain-node__sub">Direction nationale</div>
+                </div>
+              </div>
+              <div class="nim-chain-arrow">↓</div>
+              <div class="nim-chain-node">
+                <div class="nim-chain-node__icon" style="background:rgba(59,130,246,.2);">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+                </div>
+                <div>
+                  <div class="nim-chain-node__label">OREPA Ouest</div>
+                  <div class="nim-chain-node__sub">Bureau régional</div>
+                </div>
+              </div>
+              <div class="nim-chain-arrow">↓</div>
+              <div class="nim-chain-node nim-chain-node--new">
+                <div>
+                  <div class="nim-chain-node__label">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    {{ nom || 'Nouvelle institution' }}
+                  </div>
+                  <div class="nim-chain-node__sub" style="color:#93C5FD;">En création</div>
+                </div>
+              </div>
+              <div class="nim-chain-arrow">↓</div>
+              <div class="nim-chain-node" style="opacity:.5;">
+                <div class="nim-chain-node__icon" style="background:rgba(245,158,11,.15);">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </div>
+                <div>
+                  <div class="nim-chain-node__label" style="color:#94A3B8;">CAEPA (à créer)</div>
+                  <div class="nim-chain-node__sub">Comités usagers futurs</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Héritage -->
+          <div style="background:#161E28; border:1px solid #1F2A33; border-radius:8px; padding:12px;">
+            <div style="font-size:10px; color:#6B7785; text-transform:uppercase; letter-spacing:.4px; font-weight:500; margin-bottom:4px;">Héritage automatique depuis OREPA Ouest</div>
+            <div style="font-size:11px; color:#8B9AAB; margin-bottom:10px;">{{ nom || 'Cette institution' }} héritera automatiquement de :</div>
+            <div class="nim-inherit-grid">
+              <div class="nim-inherit-row">
+                <div class="nim-inherit-left">
+                  <span class="nim-inherit-icon">📋</span>
+                  <div>
+                    <div class="nim-inherit-label">Règles SLA OREPA</div>
+                    <div class="nim-inherit-sub">47 règles · modifiables localement</div>
+                  </div>
+                </div>
+                <button type="button" class="nim-toggle" [class.nim-toggle--on]="heriter_sla()" (click)="heriter_sla.set(!heriter_sla())">
+                  <span class="nim-toggle-knob"></span>
+                </button>
+              </div>
+              <div class="nim-inherit-row">
+                <div class="nim-inherit-left">
+                  <span class="nim-inherit-icon">📊</span>
+                  <div>
+                    <div class="nim-inherit-label">Modèles de rapports</div>
+                    <div class="nim-inherit-sub">DINEPA mensuel · trimestriel</div>
+                  </div>
+                </div>
+                <button type="button" class="nim-toggle" [class.nim-toggle--on]="heriter_rapports()" (click)="heriter_rapports.set(!heriter_rapports())">
+                  <span class="nim-toggle-knob"></span>
+                </button>
+              </div>
+              <div class="nim-inherit-row">
+                <div class="nim-inherit-left">
+                  <span class="nim-inherit-icon">🔄</span>
+                  <div>
+                    <div class="nim-inherit-label">Workflows d'intervention</div>
+                    <div class="nim-inherit-sub">12 workflows standard</div>
+                  </div>
+                </div>
+                <button type="button" class="nim-toggle" [class.nim-toggle--on]="heriter_workflows()" (click)="heriter_workflows.set(!heriter_workflows())">
+                  <span class="nim-toggle-knob"></span>
+                </button>
+              </div>
+              <div class="nim-inherit-row">
+                <div class="nim-inherit-left">
+                  <span class="nim-inherit-icon">🔔</span>
+                  <div>
+                    <div class="nim-inherit-label">Politiques notifications</div>
+                    <div class="nim-inherit-sub">SMS + email + push</div>
+                  </div>
+                </div>
+                <button type="button" class="nim-toggle" [class.nim-toggle--on]="heriter_notifs()" (click)="heriter_notifs.set(!heriter_notifs())">
+                  <span class="nim-toggle-knob"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Warning -->
+          <div class="nim-warn">
+            <span class="nim-warn__icon">⚠️</span>
+            <div>
+              <div class="nim-warn__title">Notification automatique</div>
+              <div class="nim-warn__text">Une fois créée, cette institution sera annoncée à <strong style="color:#FCD34D;">Maria Romain</strong> (Chef OREPA Ouest) qui devra approuver le rattachement. Délai SLA : <strong style="color:#FCD34D;">48h</strong>.</div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ── STEPS 4–7 — Placeholders ── -->
+        <ng-container *ngIf="activeStep() >= 4">
+          <div class="nim-placeholder">
+            <div class="nim-placeholder__icon">
+              <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="nim-placeholder__title">Étape {{ activeStep() }} — {{ stepLabel }}</div>
+            <div class="nim-placeholder__sub">Cette étape sera disponible dans la prochaine version</div>
+          </div>
+        </ng-container>
+
+      </div><!-- /nim-form -->
+
+      <!-- RIGHT: sidebar -->
+      <div class="nim-sidebar">
+
+        <!-- Aperçu -->
+        <div class="nim-preview-card">
+          <div class="nim-preview-card__head">Aperçu institution</div>
+          <div style="text-align:center; padding:8px 0;">
+            <div style="width:40px; height:40px; background:rgba(16,185,129,.15); border-radius:9px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px;">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            </div>
+            <div style="font-size:9px; color:#34D399; text-transform:uppercase; letter-spacing:.4px; font-weight:600; margin-bottom:2px;">{{ typeLabel }}</div>
+            <div style="font-size:12px; font-weight:500; color:#F5F7FA;">{{ nom || '— à nommer —' }}</div>
+          </div>
+          <span class="nim-preview-badge nim-preview-badge--amber" style="width:100%; text-align:center; display:block; margin-top:6px;">En cours · brouillon</span>
+        </div>
+
+        <!-- Checklist -->
+        <div class="nim-checklist">
+          <div class="nim-checklist__head">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Checklist
+          </div>
+          <ng-container *ngFor="let c of CHECKLIST_ITEMS">
+            <div class="nim-checklist-item">
+              <div class="nim-checklist-item__icon"
+                   [class.nim-checklist-item__icon--done]="activeStep() > c.step"
+                   [class.nim-checklist-item__icon--current]="activeStep() === c.step"
+                   [class.nim-checklist-item__icon--pending]="activeStep() < c.step">
+                <span *ngIf="activeStep() > c.step">✓</span>
+                <span *ngIf="activeStep() === c.step">→</span>
+                <span *ngIf="activeStep() < c.step">○</span>
+              </div>
+              <span class="nim-checklist-item__label"
+                    [class.nim-checklist-item__label--done]="activeStep() > c.step"
+                    [class.nim-checklist-item__label--current]="activeStep() === c.step">{{ c.label }}</span>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Conseil -->
+        <div class="nim-conseil">
+          <div class="nim-conseil__head">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+            Bon à savoir
+          </div>
+          <div class="nim-conseil__text">
+            <ng-container *ngIf="activeStep() === 1">Choisissez soigneusement le type — il détermine la hiérarchie et les pouvoirs qui seront attribués par défaut.</ng-container>
+            <ng-container *ngIf="activeStep() === 2">Le sigle sera utilisé dans tous les codes et références système. Choisissez un sigle court et unique.</ng-container>
+            <ng-container *ngIf="activeStep() === 3">Une municipalité peut gérer plusieurs <strong style="color:#93C5FD;">CAEPA</strong> — un par section communale. Ces CAEPA seront créés ultérieurement par l'administrateur local.</ng-container>
+            <ng-container *ngIf="activeStep() >= 4">Vous pouvez enregistrer en brouillon et reprendre plus tard. Le formulaire est automatiquement sauvegardé toutes les 30 secondes.</ng-container>
+          </div>
+        </div>
+
+      </div><!-- /nim-sidebar -->
+
+    </div><!-- /nim-body -->
+
+    <!-- ── Footer ── -->
+    <div class="nim-footer">
+      <div class="nim-footer__left">
+        <span style="font-size:11px; color:#6B7785;">Étape {{ activeStep() }} / 7 · {{ stepLabel }}</span>
+        <span style="font-size:10px; color:#34D399; margin-left:10px;">
+          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:inline-block; vertical-align:middle; margin-right:2px;"><polyline points="20 6 9 17 4 12"/></svg>
+          Sauvegardé · auto
+        </span>
+      </div>
+      <div class="nim-footer__right">
+        <button type="button" class="nim-btn nim-btn--ghost"   (click)="fermer.emit()">Annuler</button>
+        <button type="button" class="nim-btn nim-btn--outline" *ngIf="activeStep() > 1"  (click)="prev()">← Précédent</button>
+        <button type="button" class="nim-btn nim-btn--outline"                            (click)="enregistrerBrouillon()">Brouillon</button>
+        <button type="button" class="nim-btn nim-btn--primary" *ngIf="activeStep() < 7"  (click)="next()">Continuer →</button>
+        <button type="button" class="nim-btn nim-btn--success" *ngIf="activeStep() === 7" (click)="creer()">✓ Créer l'institution</button>
+      </div>
+    </div>
+
+  </div>
+</div>

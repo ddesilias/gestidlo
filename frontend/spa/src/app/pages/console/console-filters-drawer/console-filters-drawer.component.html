@@ -1,0 +1,81 @@
+<div class="cfd-backdrop" (click)="state.fermerFiltres()"></div>
+
+<aside class="cfd">
+  <div class="cfd-hdr">
+    <span class="cfd-ttl">Filtres</span>
+    <span class="cfd-badge" *ngIf="state.nombreFiltresActifs() > 0">{{ state.nombreFiltresActifs() }}</span>
+    <button class="cfd-x" type="button" (click)="state.fermerFiltres()">✕</button>
+  </div>
+
+  <div class="cfd-body">
+
+    <div class="cfd-sec">
+      <div class="cfd-sec-ttl">Recherche</div>
+      <input class="cfd-input" type="text" placeholder="Code, titre, commune..."
+             [value]="state.filtres().recherche"
+             (input)="state.modifierRecherche($any($event.target).value)"/>
+    </div>
+
+    <div class="cfd-sec">
+      <div class="cfd-sec-ttl">Sévérité</div>
+      <label class="cfd-lbl" *ngFor="let s of SEVERITES">
+        <input type="checkbox"
+               [checked]="state.filtres().severites.includes(s)"
+               (change)="state.toggleSeverite(s)"/>
+        <span class="cfd-dot" [style.background]="state.severityDot(s)"></span>
+        {{ state.severityLabel(s) }}
+      </label>
+    </div>
+
+    <div class="cfd-sec">
+      <div class="cfd-sec-ttl">Statut</div>
+      <label class="cfd-lbl" *ngFor="let s of STATUTS">
+        <input type="checkbox"
+               [checked]="state.filtres().statuts.includes(s)"
+               (change)="state.toggleStatut(s)"/>
+        <span class="cfd-dot" [style.background]="state.statusDot(s)"></span>
+        {{ state.statusLabel(s) }}
+      </label>
+    </div>
+
+    <div class="cfd-sec">
+      <div class="cfd-sec-ttl">Source</div>
+      <label class="cfd-lbl" *ngFor="let s of SOURCES">
+        <input type="checkbox"
+               [checked]="state.filtres().sources.includes(s)"
+               (change)="state.toggleSource(s)"/>
+        <span class="cfd-dot" [style.background]="state.sourceDot(s)"></span>
+        {{ state.sourceLabel(s) }}
+      </label>
+    </div>
+
+    <div class="cfd-sec" *ngIf="state.departementsDisponibles().length">
+      <div class="cfd-sec-ttl">Département</div>
+      <label class="cfd-lbl" *ngFor="let d of state.departementsDisponibles()">
+        <input type="checkbox"
+               [checked]="state.filtres().departements.includes(d)"
+               (change)="toggleDep(d)"/>
+        {{ d }}
+      </label>
+    </div>
+
+    <div class="cfd-sec">
+      <label class="cfd-lbl">
+        <input type="checkbox"
+               [checked]="state.filtres().sansIntervention"
+               (change)="state.filtrerSansIntervention()"/>
+        Sans intervention liée
+      </label>
+    </div>
+
+  </div>
+
+  <div class="cfd-footer">
+    <button class="cfd-reset" type="button" (click)="state.reinitialiserFiltres()">
+      Réinitialiser
+    </button>
+    <button class="cfd-apply" type="button" (click)="state.fermerFiltres()">
+      Appliquer
+    </button>
+  </div>
+</aside>

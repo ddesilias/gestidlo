@@ -1,0 +1,496 @@
+// ── Dark theme palette ───────────────────────────────────────────────────────
+$bg:       #0F1419;
+$bg-card:  #161E28;
+$bg-deep:  #0A1520;
+$bg-btn:   #1A2530;
+$bdr:      1px solid #1F2A33;
+$bdr-btn:  #2A3744;
+$text:     #E2E8EE;
+$text-h:   #F5F7FA;
+$text-sm:  #CBD5E1;
+$muted:    #8B9AAB;
+$vmuted:   #6B7785;
+$green:    #10B981;
+$green2:   #34D399;
+$green3:   #4ADE80;
+$red:      #EF4444;
+$red2:     #F87171;
+$red3:     #FB7185;
+$amber:    #F59E0B;
+$amber2:   #FBBF24;
+$blue:     #3B82F6;
+$blue2:    #60A5FA;
+$blue3:    #93C5FD;
+
+// ── Page container ───────────────────────────────────────────────────────────
+.cp-page {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 20px 24px 32px;
+  max-width: 1400px; margin: 0 auto;
+  background: $bg;
+  min-height: 100%;
+  color: $text;
+}
+
+// ── Header ───────────────────────────────────────────────────────────────────
+.cp-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+
+.cp-header__left {
+  flex: 1; min-width: 280px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+
+.cp-title {
+  margin: 0; font-size: 18px; font-weight: 500; color: $text-h;
+  display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+
+.cp-header__badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.cp-subtitle { margin: 0; font-size: 13px; color: $muted; }
+
+.cp-header__actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
+.cp-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  background: $bg-btn; border: 1px solid $bdr-btn; color: $text-sm;
+  transition: all .15s; white-space: nowrap;
+  &:hover { background: lighten($bg-btn, 5%); }
+
+  &--primary {
+    background: $blue; color: #fff; border-color: $blue; font-weight: 500;
+    &:hover { background: darken($blue, 6%); }
+  }
+  &--sm { padding: 3px 6px; font-size: 10px; }
+  &--icon { padding: 4px 6px; }
+}
+
+// ── Header badges ─────────────────────────────────────────────────────────────
+.cp-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 500;
+  border: 1px solid transparent;
+
+  &--gw {
+    background: rgba(15,110,86,0.15); color: $green3; border-color: rgba(15,110,86,0.3);
+    .cp-badge__pulse {
+      width: 6px; height: 6px; background: $green3; border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(74,222,128,0.2);
+    }
+  }
+  &--crit-count {
+    background: rgba(226,75,74,0.15); color: $red3; border-color: rgba(226,75,74,0.3);
+    .cp-badge__dot { width: 6px; height: 6px; background: $red3; border-radius: 50%; box-shadow: 0 0 0 3px rgba(251,113,133,0.2); }
+  }
+  &--mqtt {
+    background: rgba(99,179,237,0.1); color: $blue3; border-color: rgba(99,179,237,0.2);
+    font-size: 11px;
+  }
+
+  // table status badges
+  &--online     { background: rgba(16,185,129,0.15); color: $green2; border-color: rgba(16,185,129,0.3); }
+  &--critique   { background: rgba(239,68,68,0.15);  color: $red2;   border-color: rgba(239,68,68,0.3); }
+  &--attention  { background: rgba(245,158,11,0.15); color: $amber2; border-color: rgba(245,158,11,0.3); }
+  &--offline    { background: $bg-btn; color: $muted; border-color: $bdr-btn; }
+  &--maintenance{ background: rgba(59,130,246,0.15); color: $blue2;  border-color: rgba(59,130,246,0.3); }
+  &--signal     { background: $bg-btn; color: $muted; border-color: $bdr-btn; }
+  &--battery    { background: rgba(245,158,11,0.15); color: $amber2; border-color: rgba(245,158,11,0.3); }
+
+  &__dot {
+    width: 5px; height: 5px; border-radius: 50%; background: currentColor;
+    &--pulse { animation: cp-pulse 1.6s infinite; }
+  }
+}
+
+@keyframes cp-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+  50%       { box-shadow: 0 0 0 4px transparent; }
+}
+
+// ── KPI strip ─────────────────────────────────────────────────────────────────
+.cp-kpi-strip {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+}
+
+.cp-kpi {
+  background: $bg-card; border: $bdr; border-radius: 8px;
+  padding: 12px; cursor: pointer; position: relative;
+  border-left: 3px solid transparent; transition: border-color .15s, filter .15s;
+  &:hover { filter: brightness(1.08); }
+
+  &--blue   { border-left-color: $blue; }
+  &--green  { border-left-color: $green; }
+  &--gray   { border-left-color: $vmuted; }
+  &--red    { border-left-color: $red; }
+  &--orange { border-left-color: $amber; }
+
+  &__pulse {
+    position: absolute; top: 10px; right: 10px;
+    width: 6px; height: 6px; background: $green; border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+    &--red { background: $red; box-shadow: 0 0 0 4px rgba(239,68,68,0.2); width: 8px; height: 8px; }
+  }
+
+  &__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+
+  &__lbl { font-size: 10px; color: $muted; text-transform: uppercase; letter-spacing: .5px; }
+
+  &__val-row { display: flex; align-items: baseline; gap: 5px; }
+
+  &__val {
+    font-size: 24px; font-weight: 500;
+    .cp-kpi--blue   & { color: $blue2;  }
+    .cp-kpi--green  & { color: $green2; }
+    .cp-kpi--gray   & { color: #94A3B8; }
+    .cp-kpi--red    & { color: $red2;   }
+    .cp-kpi--orange & { color: $amber2; }
+  }
+
+  &__sub-inline { font-size: 11px; color: $muted; }
+
+  &__delta {
+    font-size: 10px; font-weight: 500;
+    &--up { color: $green3; }
+    &--danger { color: $red3; }
+  }
+
+  &__sub { margin-top: 3px; font-size: 9px; color: $vmuted; }
+
+  &__bar {
+    margin-top: 6px; height: 3px; background: rgba(16,185,129,0.15); border-radius: 2px; overflow: hidden;
+    &-fill { height: 100%; background: $green; border-radius: 2px; transition: width .4s; }
+  }
+
+  &__link {
+    margin-top: 4px; font-size: 9px; color: $blue2;
+    text-decoration: underline; cursor: pointer;
+    &:hover { color: lighten($blue2, 10%); }
+  }
+}
+
+// ── Filter chips ──────────────────────────────────────────────────────────────
+.cp-chips {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+
+.cp-chips__lbl {
+  font-size: 11px; color: $vmuted; text-transform: uppercase;
+  letter-spacing: .5px; margin-right: 4px;
+}
+
+.cp-chip {
+  padding: 4px 10px; border-radius: 999px; font-size: 12px; cursor: pointer;
+  background: $bg-btn; border: 1px solid $bdr-btn; color: $text-sm;
+  transition: all .15s; white-space: nowrap;
+  &:hover { background: lighten($bg-btn, 5%); }
+  &--on { background: $blue; color: #fff; border-color: $blue; }
+  &--red { background: rgba(239,68,68,0.15); color: $red2; border-color: rgba(239,68,68,0.3); font-weight: 500; }
+  &--on-red { background: $red; color: #fff; border-color: $red; font-weight: 500; }
+  &--link { background: none; border: none; color: $blue2; padding-left: 4px; }
+}
+
+// ── Card base ─────────────────────────────────────────────────────────────────
+.cp-card {
+  background: $bg-card; border: $bdr; border-radius: 8px; overflow: hidden;
+}
+
+.cp-card__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: $bdr;
+  &-left  { display: flex; align-items: center; gap: 7px; }
+  &-right { display: flex; align-items: center; gap: 4px; }
+}
+
+.cp-card__title { font-size: 12px; font-weight: 500; color: $text; }
+.cp-card__sub   { font-size: 10px; color: $vmuted; }
+
+// ── Dual layout ───────────────────────────────────────────────────────────────
+.cp-dual { display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; }
+
+// ── Map ───────────────────────────────────────────────────────────────────────
+.cp-map-card { display: flex; flex-direction: column; }
+
+.cp-map {
+  position: relative; flex: 1; height: 340px; overflow: hidden;
+  svg { width: 100%; height: 100%; display: block; }
+}
+
+.cp-map__legend {
+  position: absolute; bottom: 8px; left: 8px;
+  background: $bg; border: $bdr; border-radius: 6px;
+  padding: 6px 8px;
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+
+.cp-map__lgd-item {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 9px; color: $text-sm;
+}
+
+.cp-map__lgd-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+// ── Real-time flux ────────────────────────────────────────────────────────────
+.cp-flux-card { display: flex; flex-direction: column; }
+
+.cp-flux__live {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; color: $green3; font-weight: 500; margin-left: auto;
+}
+
+.cp-flux__live-dot {
+  width: 5px; height: 5px; background: $green3; border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(74,222,128,0.2);
+}
+
+.cp-flux-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  padding: 10px 12px; background: $bg; border-bottom: $bdr;
+}
+
+.cp-flux-stat {
+  &__lbl { font-size: 9px; color: $vmuted; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 2px; }
+  &__val {
+    font-size: 14px; font-weight: 500; color: $text-h;
+    span { font-size: 9px; color: $muted; }
+    &--green { color: $green2; }
+  }
+}
+
+.cp-flux-list {
+  flex: 1; overflow-y: auto; max-height: 230px;
+  scrollbar-width: thin; scrollbar-color: $bdr-btn transparent;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: $bdr-btn; border-radius: 4px; }
+}
+
+.cp-flux-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-bottom: $bdr; transition: background .12s;
+  &:last-child { border-bottom: none; }
+  &:hover { background: rgba(255,255,255,0.03); }
+
+  &--critique  { background: rgba(239,68,68,0.05); }
+  &--attention { background: rgba(245,158,11,0.04); }
+}
+
+.cp-flux-row__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+
+.cp-flux-row__code {
+  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 10px; font-weight: 500; color: $blue2; cursor: pointer;
+  text-decoration: underline; text-decoration-color: rgba(96,165,250,0.3);
+  &--offline { text-decoration: line-through; color: $vmuted; }
+}
+
+.cp-flux-row__meta { font-size: 9px; color: $vmuted; }
+
+.cp-flux-row__right { text-align: right; display: flex; flex-direction: column; gap: 1px; }
+
+.cp-flux-row__val {
+  font-size: 12px; font-weight: 500; color: $text;
+  &.cp-val--critique  { color: $red2; }
+  &.cp-val--attention { color: $amber2; }
+}
+
+.cp-flux-badge {
+  font-size: 9px; font-weight: 500; text-align: right; color: $muted;
+  &.cp-badge--critique  { color: $red2; }
+  &.cp-badge--attention { color: $amber2; }
+  &.cp-badge--online    { color: $green2; }
+  &.cp-badge--offline   { color: $muted; }
+  &.cp-badge--maintenance { color: $blue2; }
+  &.cp-badge--signal    { color: $muted; }
+  &.cp-badge--battery   { color: $amber2; }
+}
+
+// ── Status dot ────────────────────────────────────────────────────────────────
+.cp-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  &--ok       { background: $green; }
+  &--critique { background: $red;  box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+  &--attention{ background: $amber; }
+  &--offline  { background: $vmuted; }
+  &--warn     { background: $amber; }
+  &--pulse    { animation: cp-pulse 1.6s infinite; }
+}
+
+// ── Table card ────────────────────────────────────────────────────────────────
+.cp-table-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; background: $bg; border-bottom: $bdr;
+  &__left  { display: flex; align-items: center; gap: 8px; }
+  &__right { display: flex; gap: 6px; }
+}
+
+.cp-table-count { font-size: 11px; color: $muted; font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
+.cp-table-sep   { font-size: 11px; color: $vmuted; }
+
+.cp-search-wrap {
+  display: flex; align-items: center; gap: 5px;
+  background: $bg-btn; border: 1px solid $bdr-btn; border-radius: 6px; padding: 2px 8px;
+  svg { color: $vmuted; flex-shrink: 0; }
+}
+
+.cp-search {
+  border: none; outline: none; background: none; font-size: 11px;
+  color: $text; width: 180px;
+  &::placeholder { color: $vmuted; }
+}
+
+.cp-table-scroll { overflow-x: auto; }
+
+.cp-table { width: 100%; border-collapse: collapse; font-size: 11px; color: $text; }
+
+.cp-th {
+  padding: 8px 10px; text-align: left; background: $bg;
+  border-bottom: $bdr; font-size: 9px; color: $vmuted;
+  text-transform: uppercase; letter-spacing: .5px; font-weight: 500; white-space: nowrap;
+  &--r  { text-align: right; }
+  &--c  { text-align: center; }
+  &--cb { width: 30px; }
+}
+
+.cp-tr {
+  border-bottom: $bdr; transition: background .1s;
+  &:hover { background: rgba(255,255,255,0.025); }
+  &--critique  { background: rgba(239,68,68,0.04); }
+  &--attention { background: rgba(245,158,11,0.03); }
+  &--offline   { opacity: .65; }
+}
+
+.cp-td {
+  padding: 10px; vertical-align: middle; white-space: nowrap;
+  color: $muted; font-size: 11px;
+  &--r       { text-align: right; }
+  &--c       { text-align: center; }
+  &--cb      { width: 30px; }
+  &--loc     { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+  &--actions { text-align: right; }
+  &--stale   { color: $red2; }
+}
+
+.cp-checkbox { margin: 0; cursor: pointer; accent-color: $blue; }
+
+.cp-code {
+  font-family: 'SF Mono', 'Fira Code', monospace; font-weight: 500; color: $blue2; cursor: pointer;
+  &:hover { text-decoration: underline; }
+  &--offline { color: $muted; text-decoration: line-through; }
+}
+
+.cp-type-badge {
+  padding: 2px 6px; border-radius: 4px; font-size: 10px;
+  background: $bg-btn; color: $text-sm; border: 1px solid $bdr-btn;
+}
+
+.cp-infra-link { color: $blue2; cursor: pointer; &:hover { text-decoration: underline; } }
+
+.cp-mesure { font-weight: 500; color: $text; }
+
+.cp-val--critique  { color: $red2  !important; }
+.cp-val--attention { color: $amber2 !important; }
+
+// ── Battery ────────────────────────────────────────────────────────────────
+.cp-batt {
+  display: inline-flex; align-items: center; gap: 4px;
+  &__bar {
+    width: 18px; height: 8px; border: 1px solid $bdr-btn;
+    border-radius: 2px; padding: 1px; overflow: hidden;
+  }
+  &__fill { height: 100%; border-radius: 1px; transition: width .3s; }
+  &__pct  { font-size: 10px; color: $muted; }
+
+  &--ok   .cp-batt__fill  { background: $green; }
+  &--mid  .cp-batt__fill  { background: $amber; }
+  &--low  .cp-batt__fill  { background: $red; }
+  &--mid  .cp-batt__pct   { color: $amber2; }
+  &--low  .cp-batt__pct   { color: $red2; font-weight: 600; }
+}
+
+// ── Signal ─────────────────────────────────────────────────────────────────
+.cp-signal {
+  font-size: .7rem; letter-spacing: .5px;
+  &--ok   { color: $green2; }
+  &--warn { color: $amber2; }
+  &--bad  { color: $vmuted; }
+}
+
+// ── Technician avatar ──────────────────────────────────────────────────────
+.cp-tech { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: $muted; }
+
+.cp-tech__avatar {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 500; flex-shrink: 0;
+}
+
+// ── Action buttons ─────────────────────────────────────────────────────────
+.cp-act-btn {
+  padding: 3px 6px; border-radius: 4px; border: 1px solid $bdr-btn;
+  background: $bg-btn; color: $text-sm; cursor: pointer;
+  transition: all .12s; margin-left: 2px;
+  &:hover { background: lighten($bg-btn, 7%); color: $text; }
+  &--primary {
+    background: $blue; color: #fff; border-color: $blue;
+    &:hover { background: darken($blue, 6%); }
+  }
+}
+
+.cp-muted { color: $vmuted; }
+
+// ── Table footer ───────────────────────────────────────────────────────────
+.cp-table-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; border-top: $bdr; background: $bg;
+  &__info  { font-size: 10px; color: $vmuted; }
+  &__pages { display: flex; align-items: center; gap: 4px; }
+}
+
+.cp-page-btn {
+  padding: 3px 8px; border-radius: 4px; border: 1px solid $bdr-btn;
+  background: $bg-btn; cursor: pointer; color: $text-sm; transition: all .12s;
+  &:hover:not(:disabled) { background: lighten($bg-btn, 6%); }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+}
+
+.cp-page-label { font-size: 11px; padding: 3px 8px; color: $text-sm; }
+
+// ── ESP32 banner ───────────────────────────────────────────────────────────
+.cp-esp32-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 8px;
+  background: $bg-card; border: 1px solid rgba(59,130,246,0.3);
+}
+
+.cp-esp32-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(59,130,246,0.15); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.cp-esp32-text { flex: 1; min-width: 0; }
+
+.cp-esp32-title { margin: 0; font-size: 12px; font-weight: 500; color: $text; }
+
+.cp-esp32-sub { margin: 2px 0 0; font-size: 11px; color: $muted; line-height: 1.5; }
+
+.cp-esp32-topic {
+  font-family: 'Fira Code', 'Courier New', monospace; font-size: 10.5px;
+  background: $bg; padding: 1px 5px; border-radius: 3px; color: $blue3;
+}
+
+.cp-esp32-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+// ── Responsive ────────────────────────────────────────────────────────────
+@media (max-width: 960px) {
+  .cp-dual { grid-template-columns: 1fr; }
+  .cp-kpi-strip { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .cp-kpi-strip { grid-template-columns: 1fr 1fr; }
+  .cp-page { padding: 12px; }
+}

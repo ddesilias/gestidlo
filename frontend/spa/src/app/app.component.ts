@@ -9,8 +9,9 @@ import { FormsModule } from '@angular/forms';
 import { ToastContainerComponent } from './ui/toast-container.component';
 import { RefreshService } from './refresh.service';
 import { AuthService, AuthUser } from './auth.service';
-import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
+import { AlertStore } from './alert.store';
+import { Subscription, filter } from 'rxjs';
+import { NavigationError, Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -42,7 +43,8 @@ export class AppComponent implements OnDestroy {
     private readonly i18n: I18nService,
     private readonly refresh: RefreshService,
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly alertStore: AlertStore,
   ) {
     this.theme.init();
     this.i18n.init();
@@ -50,8 +52,43 @@ export class AppComponent implements OnDestroy {
     this.autoRefresh = this.loadAutoRefresh();
     this.applyAutoRefresh();
 
+    // Communes sans TEPAC connues statiquement — Carrefour est le cas documenté
+    const COMMUNES_SANS_TEPAC = new Set(['Carrefour']);
+    this.alertStore.checkAndEscalate(commune => !COMMUNES_SANS_TEPAC.has(commune));
+
     this.user = this.auth.userSnapshot();
     this.userSubscription = this.auth.userStream().subscribe((u) => (this.user = u));
+
+    // Auto-guérison des chunks périmés : après un rebuild du conteneur spa, un onglet
+    // resté ouvert garde en mémoire les anciens noms de chunks hashés. Le lazy-load d'une
+    // page échoue alors sur un 404 ("Failed to fetch dynamically imported module"). On
+    // recharge une seule fois (garde anti-boucle : pas de rechargement si on vient déjà
+    // d'en faire un < 10 s, sinon un déploiement réellement cassé bouclerait à l'infini).
+    this.chunkErrorSubscription = this.router.events
+      .pipe(filter((e): e is NavigationError => e instanceof NavigationError))
+      .subscribe((e) => this.handleNavigationError(e));
+  }
+
+  private chunkErrorSubscription?: Subscription;
+
+  private handleNavigationError(event: NavigationError): void {
+    const message = String(event?.error?.message ?? '');
+    const isChunkError =
+      message.includes('dynamically imported module') ||
+      message.includes('Loading chunk') ||
+      message.includes('Importing a module script failed');
+    if (!isChunkError) {
+      return;
+    }
+    const key = 'gestidlo.chunkReloadAt';
+    const last = Number(sessionStorage.getItem(key) ?? '0');
+    if (Date.now() - last < 10000) {
+      // On vient déjà de recharger : le chunk manque vraiment (déploiement cassé). On n'insiste pas.
+      console.error('Chunk introuvable après rechargement — build incohérent ?', event.error);
+      return;
+    }
+    sessionStorage.setItem(key, String(Date.now()));
+    window.location.reload();
   }
 
   get isAuthenticated(): boolean {
@@ -122,7 +159,7 @@ export class AppComponent implements OnDestroy {
     if (!this.autoRefresh) {
       return;
     }
-    this.refreshInterval = window.setInterval(() => this.refresh.trigger('auto'), 5000);
+    this.refreshInterval = window.setInterval(() => this.refresh.trigger('auto'), 30000);
   }
 
   get isDark(): boolean {
@@ -150,5 +187,6 @@ export class AppComponent implements OnDestroy {
       window.clearInterval(this.refreshInterval);
     }
     this.userSubscription?.unsubscribe();
+    this.chunkErrorSubscription?.unsubscribe();
   }
 }

@@ -1,0 +1,146 @@
+<div class="lz-page" *ngIf="zone() as z; else notFound">
+
+  <!-- ── En-tête ── -->
+  <div class="lz-header">
+    <button class="lz-btn lz-btn--ghost" (click)="retour()">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Territoire
+    </button>
+    <span class="lz-header__title">{{ z.nom }}</span>
+    <span class="lz-badge lz-badge--green">
+      <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      supervisée
+    </span>
+    <span class="lz-header__sub">{{ z.dept }} › {{ z.commune }} · lier les ouvrages au réseau</span>
+  </div>
+
+  <!-- ── Vérification source ── -->
+  <div class="lz-source-check" *ngIf="z.qpj">
+    <ng-container *ngIf="sourceOk()">
+      <svg width="11" height="11" fill="none" stroke="#4ADE80" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Règle « débit source ≥ pointe » satisfaite — marqueur « ressource à confirmer » levé
+    </ng-container>
+    <ng-container *ngIf="!sourceOk()">
+      <svg width="11" height="11" fill="none" stroke="#FBBF24" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Source non confirmée — ancrer une infrastructure « alimente » avec débit ≥ {{ z.qpj }} l/s (Qpj)
+    </ng-container>
+  </div>
+
+  <!-- ── Ouvrages proposés (détection commune) ── -->
+  <div class="lz-card">
+    <div class="lz-card__head">
+      <svg width="11" height="11" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      <span>Ouvrages dans {{ z.commune }}</span>
+      <span class="lz-card__sub">détectés par commune · proposés au rattachement</span>
+    </div>
+
+    <div *ngIf="infrasProposees().length === 0 && infrasAttachees().length === 0" class="lz-empty">
+      Aucun ouvrage dans cette commune — enregistrer un nouvel ouvrage ci-dessous
+    </div>
+
+    <div *ngFor="let infra of infrasProposees()" class="lz-row">
+      <i class="ti {{ iconFor(infra.type) }} lz-row__icon" aria-hidden="true"></i>
+      <div class="lz-row__body">
+        <div class="lz-row__name">{{ infra.name }}</div>
+        <div class="lz-row__meta">{{ infra.code }} · {{ infra.capacity || '—' }}</div>
+      </div>
+
+      <!-- Formulaire d'attachement inline -->
+      <ng-container *ngIf="attachForms()[infra.id] as form; else attachBtn">
+        <div class="lz-attach-form">
+          <select class="lz-input lz-input--sm" [ngModel]="form.role"
+                  (ngModelChange)="updateAttachField(infra.id,'role',$event)">
+            <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
+          </select>
+          <input class="lz-input lz-input--sm" type="text" placeholder="Nœud (ex: A0)"
+                 [ngModel]="form.anchor" (ngModelChange)="updateAttachField(infra.id,'anchor',$event)">
+          <input class="lz-input lz-input--narrow" type="number" min="1" max="100" placeholder="100%"
+                 title="Quote-part débit %"
+                 [ngModel]="form.quotePart" (ngModelChange)="updateAttachField(infra.id,'quotePart',$event)">
+          <button class="lz-btn lz-btn--confirm" (click)="confirmAttach(infra.id)">Rattacher</button>
+          <button class="lz-btn lz-btn--ghost" (click)="closeAttach(infra.id)">✕</button>
+        </div>
+      </ng-container>
+      <ng-template #attachBtn>
+        <button class="lz-btn lz-btn--outline-blue" (click)="openAttach(infra.id)">+ Rattacher</button>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ── Ouvrages rattachés ── -->
+  <div class="lz-card" *ngIf="infrasAttachees().length > 0">
+    <div class="lz-card__head">
+      <svg width="11" height="11" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>Ouvrages rattachés</span>
+      <span class="lz-card__sub">{{ infrasAttachees().length }} ouvrage(s)</span>
+    </div>
+
+    <div *ngFor="let item of infrasAttachees()" class="lz-row lz-row--attached">
+      <i class="ti {{ iconFor(item.infra.type) }} lz-row__icon lz-row__icon--green" aria-hidden="true"></i>
+      <div class="lz-row__body">
+        <div class="lz-row__name">{{ item.infra.name }}</div>
+        <div class="lz-row__meta">
+          {{ item.infra.code }} · {{ roleLabel(item.lien.role) }}
+          <span *ngIf="item.lien.quotePartDebit"> · {{ item.lien.quotePartDebit }}% du débit</span>
+        </div>
+      </div>
+
+      <!-- Ancrage réseau -->
+      <div class="lz-anchor">
+        <ng-container *ngIf="anchorForms()[item.lien.id] !== undefined; else anchorDisplay">
+          <input class="lz-input lz-input--sm lz-input--anchor" type="text" placeholder="ID nœud (ex: A0)"
+                 [ngModel]="anchorForms()[item.lien.id]"
+                 (ngModelChange)="updateAnchorField(item.lien.id, $event)">
+          <button class="lz-btn lz-btn--confirm" (click)="confirmAnchor(item.lien.id)">✓</button>
+          <button class="lz-btn lz-btn--ghost" (click)="closeAnchor(item.lien.id)">✕</button>
+        </ng-container>
+        <ng-template #anchorDisplay>
+          <button class="lz-anchor__btn"
+                  [class.lz-anchor__btn--set]="!!item.lien.noeudAncrageId"
+                  (click)="openAnchor(item.lien.id, item.lien.noeudAncrageId)">
+            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/></svg>
+            {{ item.lien.noeudAncrageId ? 'Nœud ' + item.lien.noeudAncrageId : 'Ancrer nœud' }}
+          </button>
+        </ng-template>
+      </div>
+
+      <button class="lz-btn lz-btn--danger-sm" title="Détacher" (click)="detach(item.lien.id)">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div *ngIf="infrasAttachees().length > 0" class="lz-note">
+      <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      L'ancrage confirme rétroactivement la règle « source ≥ pointe » si la station rattachée couvre le Qpj de {{ z.qpj }} l/s.
+      Si un ouvrage dessert plusieurs zones, saisir la quote-part de débit pour éviter le double comptage dans les KPI.
+    </div>
+  </div>
+
+  <!-- ── Enregistrer un nouvel ouvrage ── -->
+  <div class="lz-card">
+    <div class="lz-card__head">
+      <svg width="11" height="11" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Enregistrer un nouvel ouvrage</span>
+    </div>
+    <div class="lz-new-infra">
+      <svg width="14" height="14" fill="none" stroke="#6B7785" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      <span>Nouvel ouvrage · territoire pré-rempli :
+        <strong>{{ z.dept }} › {{ z.commune }} › {{ z.nom }}</strong>
+      </span>
+      <button class="lz-btn lz-btn--outline-blue" style="margin-left:auto" (click)="naviguerNouvelOuvrage()">
+        Enregistrer →
+      </button>
+    </div>
+    <div class="lz-note" style="margin-top:6px">
+      Ouvre le formulaire Infrastructures déjà rattaché à la zone — pas de re-saisie du territoire.
+    </div>
+  </div>
+
+</div>
+
+<ng-template #notFound>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;gap:12px;color:#6B7785;font-size:12px">
+    Zone introuvable
+    <button class="lz-btn lz-btn--ghost" (click)="retour()">← Territoire</button>
+  </div>
+</ng-template>

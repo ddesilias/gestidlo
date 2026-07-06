@@ -1,0 +1,167 @@
+<app-gov-shell title="Conformité &amp; Réglementation" [moduleNum]="5">
+
+  <div class="conf-header">
+    <div class="conf-header__icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div>
+      <h2 class="conf-header__h2">Conformité &amp; Réglementation</h2>
+      <p class="conf-header__sub">Normes DINEPA · OMS · calendrier réglementaire · modèles de rapports</p>
+    </div>
+    <div class="conf-header__actions">
+      <button class="conf-btn conf-btn--ghost">Modèles de rapports</button>
+      <button class="conf-btn conf-btn--ghost">Référentiel normes</button>
+      <button class="conf-btn conf-btn--green" (click)="showGenererModal.set(true)">Générer un rapport</button>
+    </div>
+  </div>
+
+  <div class="conf-tabs">
+    <button *ngFor="let t of TABS" class="conf-tab" [class.conf-tab--active]="activeTab()===t.id" (click)="activeTab.set(t.id)">{{ t.label }}</button>
+  </div>
+
+  <div class="conf-grid">
+
+    <!-- Left: Calendar panel -->
+    <div class="conf-cal-panel">
+
+      <div class="conf-prog">
+        <div class="conf-prog__bar">
+          <div class="conf-prog__fill" [style.width.%]="progressPct"></div>
+          <div class="conf-prog__cursor" [style.left.%]="progressPct"></div>
+        </div>
+        <span class="conf-prog__label">{{ progressPct }}% · {{ soumisCount }} rapports / {{ totalCount }}</span>
+      </div>
+
+      <!-- Urgent -->
+      <div class="conf-sec">
+        <div class="conf-sec__head conf-sec__head--rouge">
+          <span>Cette semaine · urgent</span>
+          <span class="conf-sec__badge conf-sec__badge--rouge">{{ echeancesUrgentes.length }}</span>
+        </div>
+        <div *ngFor="let e of echeancesUrgentes" class="conf-card" [ngClass]="e.urgenceCls">
+          <div class="conf-card__date">
+            <div class="conf-card__mois">{{ e.mois }}</div>
+            <div class="conf-card__jour">{{ e.jour }}</div>
+            <div class="conf-card__delai">{{ e.delai }}</div>
+          </div>
+          <div class="conf-card__body">
+            <div class="conf-card__meta">
+              <span class="conf-ref">{{ e.ref }}</span>
+              <span class="conf-badge" [ngClass]="e.badgeCls">{{ e.badge }}</span>
+            </div>
+            <div class="conf-card__titre">{{ e.titre }}</div>
+            <div class="conf-card__sous">{{ e.sous }}</div>
+          </div>
+          <button class="conf-card__btn" [ngClass]="e.btnCls" (click)="showGenererModal.set(true)">{{ e.btnLabel }}</button>
+        </div>
+      </div>
+
+      <!-- Ce mois-ci -->
+      <div class="conf-sec">
+        <div class="conf-sec__head conf-sec__head--amber">
+          <span>Ce mois-ci</span>
+          <span class="conf-sec__badge conf-sec__badge--amber">{{ echeancesMois.length }}</span>
+        </div>
+        <div *ngFor="let e of echeancesMois" class="conf-card-light">
+          <div class="conf-card__date">
+            <div class="conf-card__mois">{{ e.mois }}</div>
+            <div class="conf-card__jour conf-card__jour--gray">{{ e.jour }}</div>
+          </div>
+          <div class="conf-card__body">
+            <div class="conf-card__titre">{{ e.titre }}</div>
+            <div class="conf-card__sous conf-card__sous--muted">{{ e.sous }}</div>
+          </div>
+          <span class="conf-mode">{{ e.mode }}</span>
+        </div>
+      </div>
+
+      <!-- Déjà soumis -->
+      <div class="conf-sec">
+        <div class="conf-sec__head conf-sec__head--green">
+          <span>Déjà soumis · 2026</span>
+          <span class="conf-sec__badge conf-sec__badge--green">{{ echeancesSoumises.length }}</span>
+        </div>
+        <div class="conf-soumis-grid">
+          <div *ngFor="let s of echeancesSoumises" class="conf-soumis-card">
+            <div class="conf-soumis-ref">{{ s.ref }}</div>
+            <div class="conf-soumis-label">{{ s.label }}</div>
+            <div class="conf-soumis-date">{{ s.date }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right sidebar -->
+    <div class="conf-sidebar">
+
+      <!-- Normes -->
+      <div class="conf-side-panel">
+        <div class="conf-side-panel__head">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span>Normes applicables</span>
+        </div>
+        <div *ngFor="let n of normes" class="conf-norme">
+          <div class="conf-norme__ico" [ngClass]="n.iconCls">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="conf-norme__body">
+            <div class="conf-norme__titre">{{ n.titre }}</div>
+            <div class="conf-norme__sous">{{ n.sous }}</div>
+            <div class="conf-norme__foot">
+              <span class="conf-norme__stt" [ngClass]="n.statutCls">{{ n.statutLabel }}</span>
+              <span class="conf-norme__note">{{ n.note }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modèles -->
+      <div class="conf-side-panel">
+        <div class="conf-side-panel__head">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Modèles de rapports</span>
+          <span class="conf-side-panel__count">{{ modeles.length }} modèles</span>
+        </div>
+        <div *ngFor="let m of modeles" class="conf-modele">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          <div class="conf-modele__body">
+            <div class="conf-modele__titre">{{ m.titre }}</div>
+            <div class="conf-modele__sous">{{ m.sous }}</div>
+          </div>
+          <span class="conf-modele__ver">{{ m.version }}</span>
+        </div>
+      </div>
+
+      <!-- Zones -->
+      <div class="conf-side-panel">
+        <div class="conf-side-panel__head">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+          <span>Conformité par zone</span>
+        </div>
+        <div class="conf-zones">
+          <div *ngFor="let z of zones" class="conf-zone">
+            <div class="conf-zone__lbl">
+              <span>{{ z.zone }}</span>
+              <span class="conf-zone__pct">{{ z.pct }}%</span>
+            </div>
+            <div class="conf-zone__bar"><div class="conf-zone__fill" [style.width.%]="z.pct"></div></div>
+          </div>
+          <div class="conf-zone conf-zone--nat">
+            <div class="conf-zone__lbl">
+              <span class="conf-zone__nat-lbl">National (couverture totale)</span>
+              <span class="conf-zone__pct conf-zone__pct--bold">{{ nationalPct }}%</span>
+            </div>
+            <div class="conf-zone__bar conf-zone__bar--lg"><div class="conf-zone__fill conf-zone__fill--grad" [style.width.%]="nationalPct"></div></div>
+            <div class="conf-zone__note">3 rapports en retard · 1 en non-conformité</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <app-generer-rapport-modal [visible]="showGenererModal()" (fermer)="showGenererModal.set(false)"></app-generer-rapport-modal>
+
+</app-gov-shell>

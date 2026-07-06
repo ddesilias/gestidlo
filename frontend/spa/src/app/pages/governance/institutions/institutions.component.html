@@ -1,0 +1,137 @@
+<app-gov-shell title="Institutions" [moduleNum]="2">
+
+  <!-- ── Header ── -->
+  <div class="ins-header">
+    <div class="ins-header__left">
+      <div class="ins-header__icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div>
+        <h2 class="ins-header__h2">Institutions &amp; supervision</h2>
+        <p class="ins-header__sub">DINEPA · 10 URD départementales · TEPAC par commune</p>
+      </div>
+    </div>
+    <div class="ins-header__actions">
+      <button class="ins-btn ins-btn--ghost" (click)="importer()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Importer
+      </button>
+      <button class="ins-btn ins-btn--ghost" (click)="exporter()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Exporter
+      </button>
+      <button class="ins-btn ins-btn--primary" (click)="showNouvelle.set(true)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Créer un rôle
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Filtres principaux ── -->
+  <div class="ins-filters" style="margin-bottom:16px">
+    <div class="ins-filters__types">
+      <button *ngFor="let f of filters"
+              class="ins-filter-pill"
+              [class.ins-filter-pill--active]="mainFilter()===f.id"
+              (click)="mainFilter.set(f.id)">
+        {{ f.label }}<span class="ins-filter-pill__count">{{ f.count }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── DINEPA siège ── -->
+  <div class="ins-dinepa-card" *ngIf="showDinepa()" (click)="openDetail(dinepa)">
+    <div class="ins-dinepa-card__icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    </div>
+    <div class="ins-dinepa-card__body">
+      <div class="ins-dinepa-card__title-row">
+        <span class="ins-dinepa-card__name">DINEPA</span>
+        <span class="ins-pill ins-pill--secondary">siège · national</span>
+        <span class="ins-pill ins-pill--success">active</span>
+      </div>
+      <div class="ins-dinepa-card__sub">Direction Nationale de l'Eau Potable et de l'Assainissement · admin</div>
+      <div class="ins-dinepa-card__stats">
+        <span>
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          {{ dinepa.users }} admins
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+          {{ dinepa.communes }} communes
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          10 URD
+        </span>
+      </div>
+    </div>
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:#6B7785;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>
+
+  <!-- ── Grille URD ── -->
+  <ng-container *ngIf="showUrds()">
+    <div class="ins-section-label">{{ urdList().length }} UNITÉ{{ urdList().length > 1 ? 'S' : '' }} RURALES DÉPARTEMENTALES (URD)</div>
+
+    <div class="ins-urd-grid">
+      <div *ngFor="let urd of urdList()"
+           class="ins-urd-card"
+           [class.ins-urd-card--active]="urd.statut==='active'"
+           (click)="openDetail(urd)">
+
+        <div class="ins-urd-card__head">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+               [style.color]="urd.statut==='active' ? '#60A5FA' : '#6B7785'">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+          </svg>
+          <span class="ins-urd-card__name">{{ urd.nom }}</span>
+          <span class="ins-pill ins-pill--success" *ngIf="urd.statut==='active'" style="margin-left:auto">déployée</span>
+          <span class="ins-pill ins-pill--warning" *ngIf="urd.statut==='adeployer'" style="margin-left:auto">à déployer</span>
+        </div>
+
+        <div class="ins-urd-card__city">{{ urd.city }} · département {{ urd.dept }}</div>
+
+        <div class="ins-urd-card__pills">
+          <span class="ins-pill ins-pill--secondary">{{ urd.communes }} communes</span>
+          <span class="ins-pill ins-pill--info" *ngIf="urd.tepacCount">{{ urd.tepacCount }} TEPAC</span>
+          <span class="ins-pill ins-pill--dim" *ngIf="!urd.tepacCount">0 TEPAC</span>
+          <span class="ins-pill ins-pill--secondary" *ngIf="urd.sla > 0">SLA {{ urd.sla }}%</span>
+        </div>
+
+        <div class="ins-urd-card__responsable" *ngIf="urd.statut==='active'">
+          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          {{ urd.responsable }}
+          <span class="ins-urd-card__resp-title">· responsable URD</span>
+        </div>
+
+        <!-- Bouton déployer si non déployée -->
+        <button *ngIf="urd.statut==='adeployer'"
+                class="ins-urd-card__deploy-btn"
+                (click)="$event.stopPropagation(); deployer(urd)">
+          Déployer →
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Note ── -->
+  <div class="ins-note">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>Cliquer une URD ouvre son détail : communes du département, TEPAC affectés à chacune, zones liées.</span>
+    <span style="margin-left:auto;color:var(--color-text-info);font-size:11px">Voir la documentation →</span>
+  </div>
+
+</app-gov-shell>
+
+<!-- ── Drawer détail ── -->
+<app-detail-institution-drawer
+  [institution]="detailInst()"
+  [visible]="showDetail()"
+  (fermer)="showDetail.set(false)">
+</app-detail-institution-drawer>
+
+<!-- ── Modal nouvelle institution ── -->
+<app-nouvelle-institution-modal
+  [visible]="showNouvelle()"
+  (fermer)="showNouvelle.set(false)">
+</app-nouvelle-institution-modal>

@@ -1,6 +1,11 @@
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
+
+### H2 file database (dev) ###
+data/
+*.mv.db
+*.trace.db
 !**/src/main/**/target/
 !**/src/test/**/target/
 

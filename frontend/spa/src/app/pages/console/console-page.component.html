@@ -1,0 +1,175 @@
+<div class="cp" [class.cp--salle]="state.vue() === 'salle'">
+
+  <!-- ── Overlays ─────────────────────────────────────────── -->
+  <app-console-filters-drawer *ngIf="state.filtresOuverts()"></app-console-filters-drawer>
+
+  <!-- ── Header ───────────────────────────────────────────── -->
+  <header class="cp-hdr">
+    <div class="cp-hdr-l">
+      <h1 class="cp-title">Console opérationnelle</h1>
+      <div class="cp-kpis">
+        <div class="kpi kpi--red">
+          <span class="kpi-v">{{ state.kpis().ouvertes }}</span>
+          <span class="kpi-l">Ouvertes</span>
+        </div>
+        <div class="kpi kpi--crit" [class.kpi--pulse]="state.kpis().critiques > 0">
+          <span class="kpi-v">{{ state.kpis().critiques }}</span>
+          <span class="kpi-l">Critiques</span>
+        </div>
+        <div class="kpi kpi--blue">
+          <span class="kpi-v">{{ state.kpis().enCours }}</span>
+          <span class="kpi-l">En cours</span>
+        </div>
+        <div class="kpi kpi--warn">
+          <span class="kpi-v">{{ state.kpis().sansAction }}</span>
+          <span class="kpi-l">Sans action</span>
+        </div>
+        <div class="kpi kpi--green">
+          <span class="kpi-v">{{ state.kpis().resolues }}</span>
+          <span class="kpi-l">Résolues</span>
+        </div>
+      </div>
+    </div>
+    <div class="cp-hdr-r">
+      <div class="cp-vtoggle">
+        <button class="vt" [class.vt--on]="state.vue() === 'tableau'"
+                (click)="state.setVue('tableau')">Tableau</button>
+        <button class="vt" [class.vt--on]="state.vue() === 'kanban'"
+                (click)="state.setVue('kanban')">Kanban</button>
+        <button class="vt" [class.vt--on]="state.vue() === 'salle'"
+                (click)="state.setVue('salle')">Salle</button>
+      </div>
+      <div class="cp-actions">
+        <button class="cp-btn" type="button" (click)="state.ouvrirFiltres()">
+          Filtres
+          <span class="cp-n" *ngIf="state.nombreFiltresActifs() > 0">{{ state.nombreFiltresActifs() }}</span>
+        </button>
+        <button class="cp-btn cp-btn--icon" type="button"
+                (click)="state.toggleSound()"
+                [title]="state.soundEnabled() ? 'Désactiver son' : 'Activer son'">
+          {{ state.soundEnabled() ? '🔊' : '🔇' }}
+        </button>
+        <button class="cp-btn cp-btn--icon" type="button"
+                (click)="state.refresh()" title="Actualiser">↻</button>
+        <span class="cp-time">{{ state.lastRefresh() | date:'HH:mm:ss' }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Timeline 24h ─────────────────────────────────────── -->
+  <div class="cp-tl">
+    <app-timeline-24h [timeline]="state.timeline()"></app-timeline-24h>
+  </div>
+
+  <!-- ── Body ─────────────────────────────────────────────── -->
+  <div class="cp-body">
+
+    <div class="cp-main" [class.cp-main--full]="!state.selection()">
+
+      <!-- TABLEAU -->
+      <div class="cp-tableau" *ngIf="state.vue() === 'tableau'">
+        <table class="cpt">
+          <thead>
+            <tr>
+              <th class="th-sv"></th>
+              <th>Code</th>
+              <th>Titre</th>
+              <th>Source</th>
+              <th>Lieu</th>
+              <th>Statut</th>
+              <th>Déclenché</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of state.alertesFiltrees()"
+                class="cpt-row"
+                [class.cpt-row--sel]="state.selection()?.id === a.id"
+                [class.cpt-row--crit]="a.severity === 'critique'"
+                (click)="state.selectionner(a)">
+              <td class="td-sv">
+                <span class="sv-bar" [style.background]="state.severityDot(a.severity)"></span>
+              </td>
+              <td class="td-code">{{ a.code }}</td>
+              <td class="td-ttl">{{ a.title }}</td>
+              <td class="td-src">
+                <span class="src-dot" [style.background]="state.sourceDot(a.source)"></span>
+                {{ state.sourceLabel(a.source) }}
+              </td>
+              <td class="td-loc">{{ a.commune || '—' }}</td>
+              <td class="td-stat">
+                <span class="stat-chip"
+                      [style.background]="state.statusBg(a.status)"
+                      [style.color]="state.statusDot(a.status)">
+                  {{ state.statusLabel(a.status) }}
+                </span>
+              </td>
+              <td class="td-dt">{{ state.dateLabel(a.createdAt) }} {{ state.timeLabel(a.createdAt) }}</td>
+            </tr>
+            <tr *ngIf="state.alertesFiltrees().length === 0">
+              <td colspan="7" class="td-empty">Aucune alerte correspondant aux filtres</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- KANBAN -->
+      <app-console-kanban *ngIf="state.vue() === 'kanban'"></app-console-kanban>
+
+      <!-- SALLE DE CONTRÔLE -->
+      <div class="cp-salle" *ngIf="state.vue() === 'salle'">
+        <div class="salle-kpis">
+          <div class="sk sk--red">
+            <div class="sk-v">{{ state.kpis().ouvertes }}</div>
+            <div class="sk-l">Alertes ouvertes</div>
+          </div>
+          <div class="sk sk--crit" [class.sk--pulse]="state.kpis().critiques > 0">
+            <div class="sk-v">{{ state.kpis().critiques }}</div>
+            <div class="sk-l">Critiques actives</div>
+          </div>
+          <div class="sk sk--blue">
+            <div class="sk-v">{{ state.kpis().enCours }}</div>
+            <div class="sk-l">En cours</div>
+          </div>
+          <div class="sk sk--green">
+            <div class="sk-v">{{ state.kpis().resolues }}</div>
+            <div class="sk-l">Résolues</div>
+          </div>
+          <div class="sk sk--neutral">
+            <div class="sk-v">{{ state.kpis().total }}</div>
+            <div class="sk-l">Total</div>
+          </div>
+        </div>
+
+        <div class="salle-crit" *ngIf="state.alertesCritiquesActives().length > 0">
+          <div class="salle-crit-hdr">
+            Alertes critiques actives
+            <span class="pulse-dot"></span>
+          </div>
+          <div class="salle-crit-grid">
+            <div class="scc" *ngFor="let a of state.alertesCritiquesActives()"
+                 (click)="state.selectionner(a); state.setVue('tableau')">
+              <div class="scc-top">
+                <span class="scc-code">{{ a.code }}</span>
+                <span class="scc-stat" [style.color]="state.statusDot(a.status)">
+                  {{ state.statusLabel(a.status) }}
+                </span>
+              </div>
+              <div class="scc-ttl">{{ a.title }}</div>
+              <div class="scc-meta">{{ a.commune }} · {{ state.timeLabel(a.createdAt) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="salle-ok" *ngIf="state.alertesCritiquesActives().length === 0">
+          <div class="salle-ok-icon">✓</div>
+          <div class="salle-ok-txt">Aucune alerte critique active</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Detail drawer (right) -->
+    <app-console-detail-drawer *ngIf="state.selection()"></app-console-detail-drawer>
+
+  </div>
+</div>

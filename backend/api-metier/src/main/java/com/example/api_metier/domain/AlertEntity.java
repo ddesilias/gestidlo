@@ -24,6 +24,14 @@ public class AlertEntity {
 	@Column(nullable = false)
 	private String sensorId;
 
+	/** Commune (dénormalisée du point) : périmètre fin du TEPAC, filtrable sans jointure. */
+	@Column(length = 80)
+	private String commune;
+
+	/** Ressource d'origine (lien dur) quand l'alerte naît d'une ressource menacée/polluée. */
+	@Column(length = 50)
+	private String ressourceId;
+
 	@Column(nullable = false)
 	private String type;
 
@@ -49,6 +57,11 @@ public class AlertEntity {
 
 	public AlertEntity(String pointId, String sensorId, String type, AlertSeverity severity,
 			AlertStatus status, String message, Instant openedAt, Instant updatedAt) {
+		this(pointId, sensorId, type, severity, status, message, openedAt, updatedAt, null);
+	}
+
+	public AlertEntity(String pointId, String sensorId, String type, AlertSeverity severity,
+			AlertStatus status, String message, Instant openedAt, Instant updatedAt, String commune) {
 		this.pointId = pointId;
 		this.sensorId = sensorId;
 		this.type = type;
@@ -57,6 +70,7 @@ public class AlertEntity {
 		this.message = message;
 		this.openedAt = openedAt;
 		this.updatedAt = updatedAt;
+		this.commune = commune;
 	}
 
 	public Long getId() {
@@ -69,6 +83,22 @@ public class AlertEntity {
 
 	public String getSensorId() {
 		return sensorId;
+	}
+
+	public String getCommune() {
+		return commune;
+	}
+
+	public void setCommune(String commune) {
+		this.commune = commune;
+	}
+
+	public String getRessourceId() {
+		return ressourceId;
+	}
+
+	public void setRessourceId(String ressourceId) {
+		this.ressourceId = ressourceId;
 	}
 
 	public String getType() {

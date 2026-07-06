@@ -1,0 +1,112 @@
+<div class="gov-dash">
+
+  <!-- ══ EN-TÊTE : scope commutable + synthèse (§2) ═══════════════════ -->
+  <header class="gov-dash__header">
+    <div class="gov-dash__lead">
+      <label class="gov-dash__scope">
+        {{ sig.scopeLabel() }}
+        <i class="ti ti-chevron-down" aria-hidden="true"></i>
+        <select class="gov-dash__scope-sel" [value]="sig.effectiveDept() || 'National'"
+          (change)="changerScope($any($event.target).value)" aria-label="Périmètre">
+          <option value="National">DINEPA · National</option>
+          <option *ngFor="let d of sig.departements()" [value]="d">URD {{ d }}</option>
+        </select>
+      </label>
+      <button type="button" class="gov-dash__launcher" [class.gov-dash__launcher--on]="sig.drawerOpen()"
+        (click)="sig.toggleDrawer()" [attr.aria-expanded]="sig.drawerOpen()" aria-haspopup="dialog"
+        aria-label="Ouvrir les domaines de gouvernance">
+        <i class="ti ti-apps" aria-hidden="true"></i> Domaines
+      </button>
+      <button type="button" class="gov-dash__reset" *ngIf="sig.effectiveDept()" (click)="reinitialiser()"
+        aria-label="Revenir à la vue nationale">
+        <i class="ti ti-arrow-back-up" aria-hidden="true"></i> Réinitialiser national
+      </button>
+    </div>
+    <div class="gov-dash__actions">
+      <span class="gov-dash__period"><i class="ti ti-calendar" aria-hidden="true"></i> 30 jours</span>
+      <button type="button" class="gov-dash__primary" (click)="nouveauReglement()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Nouveau règlement
+      </button>
+    </div>
+  </header>
+
+  <p class="gov-dash__synth">
+    <ng-container *ngIf="sig.scope() === 'national'; else vueUrd">Réseau national</ng-container>
+    <ng-template #vueUrd>Vue filtrée : <b>{{ sig.scopeLabel() }}</b> · responsable {{ sig.pilotage().synthese.responsable }} · {{ sig.pilotage().synthese.statut }}</ng-template>
+    ·
+    <span class="ok">{{ sig.synthese().conformite }}</span> ·
+    <span class="warn">{{ sig.synthese().surveillance }}</span> ·
+    <span [class.ok]="sig.synthese().tendanceUp" [class.warn]="!sig.synthese().tendanceUp">
+      {{ sig.synthese().tendance }} {{ sig.synthese().tendanceUp ? '▲' : '▼' }}
+    </span>
+  </p>
+
+  <!-- ══ ZONE A : signaux nationaux ═══════════════════════════════════ -->
+  <div class="gov-dash__signals">
+    <app-governance-signal-tile *ngFor="let t of sig.tiles()" [tile]="t"></app-governance-signal-tile>
+  </div>
+
+  <!-- ══ ZONE B : HÉROS — carte + classement (RESTENT NATIONAUX) ══════ -->
+  <div class="gov-dash__hero">
+    <app-governance-map
+      [sante]="sig.deptSante()" [selected]="sig.effectiveDept()"
+      (select)="drillDown($event)"></app-governance-map>
+    <app-dept-ranking
+      [rows]="sig.classement()" [nonDeployes]="sig.nbNonDeployes()" [selected]="sig.effectiveDept()"
+      (select)="drillDown($event)"></app-dept-ranking>
+  </div>
+
+  <!-- ══ PILOTAGE — suit le scope (national OU URD sélectionnée) ═══════ -->
+  <app-governance-pilotage [vue]="sig.pilotage()"></app-governance-pilotage>
+
+  <!-- ══ ZONE C : tendance + points d'attention ═══════════════════════ -->
+  <div class="gov-dash__analytics">
+    <app-compliance-trend
+      [points]="sig.serie30jPoints()"
+      [score]="sig.conformiteScore()" [cible]="sig.conformiteCible"></app-compliance-trend>
+
+    <div class="attn">
+      <div class="attn__title">Points d'attention</div>
+      <div class="attn__item" *ngFor="let p of sig.pointsAttention()">
+        <i class="ti {{ p.icon }}" [style.color]="p.couleur" aria-hidden="true"></i>
+        <div class="attn__txt">{{ p.texte }} <span class="attn__sub">{{ p.sub }}</span></div>
+      </div>
+      <p *ngIf="sig.pointsAttention().length === 0" class="attn__empty">
+        <i class="ti ti-circle-check" aria-hidden="true"></i> Rien de critique.
+      </p>
+      <button type="button" class="attn__more" (click)="ouvrirRapports()">Voir tout dans Rapports ›</button>
+    </div>
+  </div>
+
+  <!-- ══ BAS DE PAGE : santé système + activité ═══════════════════════ -->
+  <div class="gov-dash__foot">
+    <div class="foot-card">
+      <div class="foot-card__head">
+        <span class="foot-card__title">Santé du système</span>
+        <span class="foot-card__pct">{{ sig.santePct() }}%</span>
+      </div>
+      <div class="foot-svc" *ngFor="let s of sig.santeServices()">
+        <span class="foot-svc__dot"
+          [style.background]="s.statut === 'ok' ? 'var(--text-success)' : s.statut === 'attention' ? 'var(--text-warning)' : 'var(--text-danger)'"></span>
+        <span class="foot-svc__name">{{ s.name }}</span>
+        <span class="foot-svc__up">{{ s.uptime }}</span>
+      </div>
+    </div>
+
+    <div class="foot-card">
+      <div class="foot-card__title">Activité récente</div>
+      <div class="foot-act" *ngFor="let a of sig.activite()">
+        <i class="ti {{ a.icon }}" aria-hidden="true"></i>
+        <div class="foot-act__body">
+          <div class="foot-act__text">{{ a.text }}</div>
+          <div class="foot-act__detail">{{ a.detail }}</div>
+        </div>
+        <span class="foot-act__time">{{ a.time }}</span>
+      </div>
+      <p *ngIf="sig.activite().length === 0" class="foot-act__empty">
+        <i class="ti ti-history-off" aria-hidden="true"></i> Aucune activité récente sur ce périmètre.
+      </p>
+    </div>
+  </div>
+
+</div>

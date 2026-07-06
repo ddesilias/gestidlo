@@ -1,0 +1,815 @@
+// ── Dark palette (cohérent avec la plateforme) ───────────────────────────────
+$bg:       #0F1419;
+$bg-panel: #161E28;
+$bg-deep:  #0A1520;
+$bg-btn:   #1A2530;
+$bdr:      #1F2A33;
+$bdr-btn:  #2A3744;
+$text:     #E2E8EE;
+$text-h:   #F5F7FA;
+$text-sm:  #CBD5E1;
+$muted:    #8B9AAB;
+$vmuted:   #6B7785;
+$blue:     #3B82F6;
+$blue2:    #60A5FA;
+$blue3:    #93C5FD;
+$green:    #10B981;
+$green2:   #34D399;
+$red:      #EF4444;
+$red2:     #F87171;
+$amber:    #F59E0B;
+$amber2:   #FBBF24;
+
+// ── Backdrop ──────────────────────────────────────────────────────────────────
+.ac-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(5, 10, 20, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+// ── Panel ─────────────────────────────────────────────────────────────────────
+.ac-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  width: min(1100px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  margin: auto;
+  background: $bg-panel;
+  border: 1px solid $bdr;
+  border-radius: 12px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 4px 20px rgba(0,0,0,0.4);
+  overflow: hidden;
+  color: $text;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.ac-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: $bg;
+  border-bottom: 1px solid $bdr;
+  flex-shrink: 0;
+  gap: 12px;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  &__icon {
+    width: 34px;
+    height: 34px;
+    background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-h;
+    margin: 0 0 2px;
+    line-height: 1.2;
+  }
+
+  &__sub {
+    font-size: 11.5px;
+    color: $muted;
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────────
+.ac-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-sm;
+  background: $bg-btn;
+  border: 1px solid $bdr-btn;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: lighten($bg-btn, 6%);
+    border-color: lighten($bdr-btn, 10%);
+  }
+
+  &--icon {
+    padding: 6px;
+    color: $muted;
+    &:hover { color: $red2; background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+  }
+
+  &--primary {
+    background: $blue;
+    color: #fff;
+    border-color: $blue;
+    font-weight: 600;
+    &:hover { background: darken($blue, 8%); border-color: darken($blue, 8%); }
+  }
+
+  &--ghost {
+    background: transparent;
+    border-color: $bdr-btn;
+    color: $muted;
+    &:hover { background: $bg-btn; }
+  }
+
+  &--sm { padding: 4px 10px; font-size: 11px; }
+
+  &--block {
+    width: 100%;
+    justify-content: center;
+  }
+
+  &--add-rule {
+    margin-top: 8px;
+    color: $blue2;
+    border-color: rgba(59,130,246,0.3);
+    background: rgba(59,130,246,0.1);
+    font-size: 11.5px;
+    gap: 4px;
+    &:hover { background: rgba(59,130,246,0.18); }
+  }
+}
+
+// ── Stepper ───────────────────────────────────────────────────────────────────
+.ac-stepper {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  background: $bg;
+  border-bottom: 1px solid $bdr;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.ac-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-width: 0;
+
+  &__num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    background: $bg-btn;
+    color: $vmuted;
+    border: 1.5px solid $bdr-btn;
+    transition: all 0.2s;
+  }
+
+  &__lbl {
+    font-size: 10px;
+    color: $vmuted;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+
+  &__line {
+    flex: 1;
+    height: 2px;
+    background: $bdr-btn;
+    margin: 0 4px;
+    margin-bottom: 16px;
+    transition: background 0.2s;
+    min-width: 12px;
+    max-width: 60px;
+
+    &--done { background: $blue; }
+  }
+
+  &--active {
+    .ac-step__num { background: $blue; color: #fff; border-color: $blue; }
+    .ac-step__lbl { color: $blue2; font-weight: 600; }
+  }
+
+  &--done {
+    .ac-step__num { background: rgba(59,130,246,0.15); color: $blue2; border-color: $blue; }
+    .ac-step__lbl { color: $blue2; }
+  }
+}
+
+// ── Body ──────────────────────────────────────────────────────────────────────
+.ac-body {
+  display: grid;
+  grid-template-columns: 1fr 272px;
+  flex: 1;
+  overflow: hidden;
+}
+
+// ── Form (left) ───────────────────────────────────────────────────────────────
+.ac-form {
+  overflow-y: auto;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: $bdr-btn transparent;
+
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $bdr-btn; border-radius: 4px; }
+}
+
+// ── Sections ──────────────────────────────────────────────────────────────────
+.ac-section {
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid $bdr;
+
+  &--last { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  &__hd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  &__num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    background: $bg-btn;
+    color: $vmuted;
+    border: 1.5px solid $bdr-btn;
+    flex-shrink: 0;
+
+    &--active { background: $blue; color: #fff; border-color: $blue; }
+  }
+
+  &__title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $text-h;
+    margin: 0;
+  }
+
+  &__link {
+    font-size: 11px;
+    color: $vmuted;
+    margin-left: auto;
+  }
+}
+
+.ac-link {
+  color: $blue2;
+  text-decoration: none;
+  font-size: 11px;
+  &:hover { text-decoration: underline; }
+}
+
+// ── Grid layouts ─────────────────────────────────────────────────────────────
+.ac-row2     { display: grid; grid-template-columns: 1fr 1fr;       gap: 12px; margin-bottom: 12px; }
+.ac-row3     { display: grid; grid-template-columns: 1fr 1fr 1fr;   gap: 12px; margin-bottom: 12px; }
+.ac-row3-100 { display: grid; grid-template-columns: 1fr 1fr auto;  gap: 12px; margin-bottom: 12px; align-items: end; }
+
+// ── Fields ────────────────────────────────────────────────────────────────────
+.ac-field { display: flex; flex-direction: column; gap: 4px; }
+
+.ac-lbl {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $text-sm;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  &--sm { font-size: 11px; }
+}
+
+.ac-req { color: $red2; font-weight: 700; line-height: 1; }
+
+.ac-input {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  color: $text;
+  background: $bg-btn;
+  border: 1px solid $bdr-btn;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: $blue;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+  }
+
+  &::placeholder { color: $vmuted; }
+
+  &--mono {
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.3px;
+    color: $blue3;
+  }
+
+  &--sm { font-size: 11.5px; }
+}
+
+.ac-select {
+  height: 32px;
+  padding: 0 8px;
+  font-size: 12.5px;
+  color: $text;
+  background: $bg-btn;
+  border: 1px solid $bdr-btn;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+
+  &:focus { border-color: $blue; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+
+  option { background: $bg-panel; color: $text; }
+
+  &--unit { min-width: 64px; font-size: 11.5px; }
+}
+
+.ac-hint { font-size: 10.5px; color: $vmuted; margin: 0; }
+
+.ac-hint-link {
+  font-size: 10.5px; color: $blue2; margin: 0; cursor: pointer;
+  &:hover { text-decoration: underline; }
+}
+
+.ac-mono {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+  background: $bg;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: $green2;
+  border: 1px solid $bdr;
+}
+
+.ac-code {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+  color: $blue3;
+  background: rgba(59,130,246,0.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+// ── Type cards ────────────────────────────────────────────────────────────────
+.ac-types { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+.ac-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  background: $bg-btn;
+  border: 1.5px solid $bdr-btn;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+  color: $muted;
+
+  svg { transition: color 0.15s; }
+
+  &:hover {
+    border-color: rgba(59,130,246,0.5);
+    background: rgba(59,130,246,0.08);
+    color: $blue2;
+  }
+
+  &--active {
+    border-color: $blue;
+    background: rgba(59,130,246,0.15);
+    color: $blue2;
+    box-shadow: 0 0 0 1px rgba(59,130,246,0.3);
+
+    .ac-type-card__lbl { color: $blue2; font-weight: 700; }
+  }
+
+  &__lbl { font-size: 11.5px; font-weight: 600; color: $text-sm; transition: color 0.15s; }
+  &__sub { font-size: 10px; color: $vmuted; }
+}
+
+// ── Gateway card ──────────────────────────────────────────────────────────────
+.ac-gw-card {
+  background: $bg;
+  border: 1px solid $bdr;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+
+  &__hd { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  &__title { font-size: 11.5px; font-weight: 600; color: $text-sm; }
+}
+
+// ── Protocol pills ────────────────────────────────────────────────────────────
+.ac-protocols { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.ac-protocol {
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-sm;
+  background: $bg-btn;
+  border: 1.5px solid $bdr-btn;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { border-color: rgba(59,130,246,0.5); background: rgba(59,130,246,0.08); color: $blue2; }
+
+  &--active {
+    background: $blue;
+    color: #fff;
+    border-color: $blue;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.4);
+  }
+}
+
+// ── Input with unit ───────────────────────────────────────────────────────────
+.ac-input-unit {
+  display: flex;
+  gap: 4px;
+  .ac-input { flex: 1; min-width: 0; }
+}
+
+.ac-unit-lbl {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11.5px;
+  color: $muted;
+  background: $bg;
+  border: 1px solid $bdr-btn;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+// ── Warning banner ────────────────────────────────────────────────────────────
+.ac-warn-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 9px 12px;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 7px;
+  font-size: 11.5px;
+  color: $amber2;
+  margin-bottom: 12px;
+  line-height: 1.5;
+
+  strong { color: $amber; }
+}
+
+// ── Calibration block ─────────────────────────────────────────────────────────
+.ac-calib-block {
+  background: $bg;
+  border: 1px solid $bdr;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 4px;
+
+  &__hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  &__title { font-size: 11.5px; font-weight: 600; color: $text-sm; }
+}
+
+.ac-calib-lbl { font-size: 10.5px; font-weight: 600; color: $vmuted; display: block; margin-bottom: 4px; }
+
+.ac-calib-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: $text;
+  font-family: 'Fira Code', monospace;
+  padding: 5px 10px;
+  background: $bg-btn;
+  border: 1px solid $bdr-btn;
+  border-radius: 6px;
+
+  &--ok { color: $green2; background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25); }
+}
+
+// ── Alert rules table ─────────────────────────────────────────────────────────
+.ac-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+
+  &__row {
+    display: grid;
+    grid-template-columns: 86px 1fr 130px 90px 80px 28px;
+    gap: 6px;
+    align-items: center;
+
+    &--head {
+      font-size: 10px;
+      font-weight: 600;
+      color: $vmuted;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid $bdr;
+    }
+  }
+}
+
+.ac-sev {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  &--att  { background: rgba(245,158,11,0.15); color: $amber2; border: 1px solid rgba(245,158,11,0.3); }
+  &--crit { background: rgba(249,115,22,0.15); color: #FB923C; border: 1px solid rgba(249,115,22,0.3); }
+  &--urg  { background: rgba(239,68,68,0.15);  color: $red2;   border: 1px solid rgba(239,68,68,0.3); }
+}
+
+.ac-del-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  color: $vmuted;
+  transition: all 0.15s;
+
+  &:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: $red2; }
+}
+
+// ── Checkboxes ────────────────────────────────────────────────────────────────
+.ac-checks { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+
+.ac-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: $text-sm;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: $blue;
+    cursor: pointer;
+  }
+}
+
+// ── Preview (right) ───────────────────────────────────────────────────────────
+.ac-preview {
+  background: $bg;
+  border-left: 1px solid $bdr;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: $bdr-btn transparent;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: $bdr-btn; border-radius: 4px; }
+
+  &__block { display: flex; flex-direction: column; gap: 8px; }
+
+  &__hd { display: flex; align-items: center; gap: 6px; }
+
+  &__hd-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  &__card {
+    background: $bg-panel;
+    border: 1px solid $bdr;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  &__card-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: $vmuted;
+    flex-shrink: 0;
+  }
+
+  &__code {
+    font-family: 'Fira Code', monospace;
+    font-size: 10.5px;
+    color: $blue2;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  &__name {
+    font-size: 12px;
+    font-weight: 600;
+    color: $text-h;
+    margin: 0 0 7px;
+    line-height: 1.4;
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10.5px;
+    color: $muted;
+    margin-bottom: 8px;
+    > div { display: flex; align-items: center; gap: 4px; }
+  }
+
+  &__footer {
+    font-size: 10.5px;
+    color: $vmuted;
+    border-top: 1px solid $bdr;
+    padding-top: 6px;
+  }
+
+  &__state { color: $amber2; font-weight: 600; }
+}
+
+.ac-type-mini {
+  font-size: 10px;
+  font-weight: 600;
+  color: $blue2;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  padding: 1px 6px;
+  border-radius: 10px;
+  text-transform: capitalize;
+}
+
+// ── MQTT Payload ──────────────────────────────────────────────────────────────
+.ac-payload {
+  background: $bg-deep;
+  border: 1px solid $bdr;
+  border-radius: 7px;
+  padding: 12px 14px;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: #A9C4DF;
+  white-space: pre;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: $bdr-btn transparent;
+
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-thumb { background: $bdr-btn; border-radius: 4px; }
+
+  .ac-pl--comment { color: $vmuted; font-style: italic; }
+  .ac-pl--key     { color: #7DD3FC; }
+  .ac-pl--str     { color: #86EFAC; }
+  .ac-pl--num     { color: #FCA5A5; }
+}
+
+// ── Impact list ───────────────────────────────────────────────────────────────
+.ac-impact-list { display: flex; flex-direction: column; gap: 5px; }
+
+.ac-impact-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  padding: 3px 0;
+
+  &--ok   { color: $green2; }
+  &--wait { color: $amber2; }
+}
+
+// ── Conseil ───────────────────────────────────────────────────────────────────
+.ac-conseil {
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-left: 3px solid $amber;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  color: $amber2;
+  line-height: 1.55;
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+.ac-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 18px;
+  background: $bg;
+  border-top: 1px solid $bdr;
+  flex-shrink: 0;
+  gap: 12px;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    color: $muted;
+    flex-shrink: 0;
+  }
+
+  &__saved {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: $green2;
+    font-weight: 500;
+  }
+
+  &__sep { color: $bdr-btn; }
+
+  &__step { color: $muted; }
+
+  &__required { color: $amber2; font-weight: 600; }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+  }
+}
+
+.ac-shortcut {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 3px;
+  padding: 0 5px;
+  margin-left: 4px;
+  letter-spacing: 0.2px;
+}

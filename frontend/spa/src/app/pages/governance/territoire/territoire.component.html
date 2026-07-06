@@ -1,0 +1,836 @@
+<app-gov-shell title="Territoire" [moduleNum]="1">
+<div class="ter-page">
+
+  <!-- ══ Header ══════════════════════════════════════════════ -->
+  <div class="ter-header">
+    <div class="ter-header__left">
+      <div class="ter-header__breadcrumb">
+        <span>Gouvernance</span>
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="ter-header__breadcrumb--active">Territoire</span>
+      </div>
+      <div class="ter-header__title-row">
+        <h2 class="ter-header__h2">Référentiel territorial AEP</h2>
+        <span class="ter-badge-ihsi">
+          <span class="ter-dot ter-dot--green"></span>
+          IHSI · sync il y a 2 j
+        </span>
+        <span class="ter-badge-warn" *ngIf="kpiCritiques() > 0">
+          <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          {{ kpiCritiques() }} zones critiques
+        </span>
+      </div>
+      <p class="ter-header__sub">10 départements · 142 communes · 571 sections communales · périmètre national DINEPA</p>
+    </div>
+    <div class="ter-header__actions">
+      <button class="ter-btn ter-btn--ghost">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 3a3 3 0 00-3 3v12a3 3 0 003 3 3 3 0 003-3 3 3 0 00-3-3H6a3 3 0 00-3 3 3 3 0 003 3 3 3 0 003-3V6a3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3h12a3 3 0 003-3 3 3 0 00-3-3z"/></svg>
+        Comparer
+      </button>
+      <button class="ter-btn ter-btn--ghost">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter
+      </button>
+      <button class="ter-btn ter-btn--ghost">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import IHSI
+      </button>
+      <button class="ter-btn ter-btn--primary" (click)="openModal()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Activer une zone
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ KPI bar ══════════════════════════════════════════════ -->
+  <div class="ter-kpi-bar">
+    <div class="ter-kpi ter-kpi--accent-green">
+      <div class="ter-kpi__accent"></div>
+      <div class="ter-kpi__icon ter-kpi__icon--green">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="ter-kpi__body">
+        <div class="ter-kpi__label">Couverture périmètre supervisé</div>
+        <div class="ter-kpi__value-row">
+          <span class="ter-kpi__val">{{ kpiCovPerimsup() }}<span class="ter-kpi__unit">%</span></span>
+        </div>
+        <div class="ter-kpi__bar"><div class="ter-kpi__bar-fill ter-kpi__bar-fill--green" [style.width.%]="kpiCovPerimsup()"></div></div>
+        <div class="ter-kpi__sub">pondérée population · {{ fmtPop(kpiDesservie()) }} / {{ fmtPop(kpiPop()) }}</div>
+      </div>
+    </div>
+    <div class="ter-kpi ter-kpi--accent-blue">
+      <div class="ter-kpi__accent ter-kpi__accent--blue"></div>
+      <div class="ter-kpi__icon ter-kpi__icon--blue">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.25 7 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"/></svg>
+      </div>
+      <div class="ter-kpi__body">
+        <div class="ter-kpi__label">Communes supervisées</div>
+        <div class="ter-kpi__value-row">
+          <span class="ter-kpi__val">{{ kpiActives() }}<span class="ter-kpi__unit">/{{ kpiTotalCommunes() }} communes</span></span>
+        </div>
+        <div class="ter-kpi__sub">{{ fmtPct(kpiActives()/kpiTotalCommunes()*100) }} du territoire</div>
+      </div>
+    </div>
+    <div class="ter-kpi ter-kpi--accent-purple">
+      <div class="ter-kpi__accent ter-kpi__accent--purple"></div>
+      <div class="ter-kpi__icon ter-kpi__icon--purple">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div class="ter-kpi__body">
+        <div class="ter-kpi__label">Population desservie</div>
+        <div class="ter-kpi__value-row">
+          <span class="ter-kpi__val">{{ fmtPop(kpiDesservie()) }}</span>
+        </div>
+        <div class="ter-kpi__sub">sur {{ fmtPop(kpiPop()) }}</div>
+      </div>
+    </div>
+    <div class="ter-kpi ter-kpi--accent-red">
+      <div class="ter-kpi__accent ter-kpi__accent--red"></div>
+      <div class="ter-kpi__icon ter-kpi__icon--red">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="ter-kpi__body">
+        <div class="ter-kpi__label">Zones critiques (&lt;40%)</div>
+        <div class="ter-kpi__value-row">
+          <span class="ter-kpi__val ter-kpi__val--red">{{ kpiCritiques() }}<span class="ter-kpi__unit ter-kpi__unit--red"> zones</span></span>
+        </div>
+        <div class="ter-kpi__sub">couverture insuffisante</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 3-column grid ════════════════════════════════════════ -->
+  <div class="ter-grid">
+
+    <!-- ── Left: tree ──────────────────────────────────────── -->
+    <div class="ter-tree">
+      <div class="ter-tree__search-wrap">
+        <div class="ter-tree__search">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Département, commune, section…" [ngModel]="search()" (ngModelChange)="search.set($event)">
+          <kbd>/</kbd>
+        </div>
+        <div class="ter-tree__filters">
+          <span class="ter-tpill" [class.ter-tpill--green]="filterStatus()==='active'"
+                (click)="filterStatus.set(filterStatus()==='active' ? 'all' : 'active')">
+            <span class="ter-dot ter-dot--green"></span>actives
+          </span>
+          <span class="ter-tpill" [class.ter-tpill--muted]="filterStatus()==='inactive'"
+                (click)="filterStatus.set(filterStatus()==='inactive' ? 'all' : 'inactive')">
+            <span class="ter-dot ter-dot--gray"></span>à déployer
+          </span>
+        </div>
+      </div>
+
+      <div class="ter-tree__list">
+        <div class="ter-tree__section-head">
+          <span>10 départements</span>
+          <span>{{ cntActive }} sup.</span>
+        </div>
+
+        <ng-container *ngFor="let dept of filteredDepts()">
+
+          <!-- Dept row -->
+          <div class="ter-node ter-node--dept"
+               [class.ter-node--dept-selected]="isSelectedDept(dept.id)"
+               (click)="toggleDept(dept.id)">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                 [style.transform]="isDeptExpanded(dept.id) ? 'rotate(90deg)' : 'none'"
+                 style="transition:transform 150ms;flex-shrink:0">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;color:#6B7785">
+              <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.25 7 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"/>
+            </svg>
+            <span class="ter-node__label">{{ dept.nom }}</span>
+            <span class="ter-node__count ter-node__count--active" *ngIf="nbActiveInDept(dept) > 0">
+              {{ nbActiveInDept(dept) }} sup.
+            </span>
+            <div class="ter-node__dots" *ngIf="deptCoverage(dept.id) > 0">
+              <span class="ter-dot-sm" [style.background]="coverageColor(deptCoverage(dept.id))"></span>
+              <span class="ter-dot-sm" [style.background]="deptCoverage(dept.id) >= 60 ? coverageColor(deptCoverage(dept.id)) : '#2A3744'"></span>
+              <span class="ter-dot-sm" [style.background]="deptCoverage(dept.id) >= 70 ? coverageColor(deptCoverage(dept.id)) : '#2A3744'"></span>
+            </div>
+          </div>
+
+          <!-- Expanded dept -->
+          <div class="ter-indent" *ngIf="isDeptExpanded(dept.id)">
+            <ng-container *ngFor="let comm of dept.communes">
+
+              <!-- Commune active : supervisée ou à déployer -->
+              <ng-container *ngIf="comm.active">
+                <!-- Supervisée -->
+                <ng-container *ngIf="communeStatus(comm) === 'supervised'">
+                  <div class="ter-node ter-node--commune"
+                       [class.ter-node--comm-active]="isCommExpanded(comm.id)"
+                       (click)="toggleComm(comm.id)">
+                    <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                         [style.transform]="isCommExpanded(comm.id) ? 'rotate(90deg)' : 'none'"
+                         style="transition:transform 150ms;flex-shrink:0">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                    <span class="ter-dot ter-dot--green" style="flex-shrink:0"></span>
+                    <span class="ter-node__label ter-node__label--green">{{ comm.nom }}</span>
+                    <ng-container *ngIf="getFiche(comm.ficheId) as fiche">
+                      <span class="ter-node__cov" [style.color]="coverageColor(fiche.coverageAep)">{{ fiche.coverageAep }}%</span>
+                      <span class="ter-dot ter-dot--sm ter-dot--red" *ngIf="fiche.alertes > 0" style="flex-shrink:0"></span>
+                    </ng-container>
+                    <span class="ter-node__map-btn" *ngIf="comm.ficheId"
+                          (click)="$event.stopPropagation(); selectFiche(comm.ficheId!)">
+                      <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.25 7 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"/></svg>
+                    </span>
+                  </div>
+                  <!-- Sections -->
+                  <div class="ter-indent" *ngIf="isCommExpanded(comm.id)">
+                    <div *ngFor="let sec of comm.sections"
+                         class="ter-node ter-node--section"
+                         [class.ter-node--section-sel]="isSectionSelected(sec)"
+                         (click)="selectSection(sec)">
+                      <span class="ter-sect-bullet">›</span>
+                      <span class="ter-node__label" [class.ter-node__label--blue]="isSectionSelected(sec)">{{ sec.nom }}</span>
+                      <span class="ter-dot ter-dot--green" *ngIf="sec.ficheId" style="flex-shrink:0"></span>
+                      <span class="ter-mono-xs" *ngIf="getFiche(sec.ficheId) as sf">{{ sf.codeIhsi }}</span>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- À déployer -->
+                <ng-container *ngIf="communeStatus(comm) === 'deploying'">
+                  <div class="ter-node ter-node--commune ter-node--deploying"
+                       (click)="comm.ficheId ? selectFiche(comm.ficheId!) : null">
+                    <span class="ter-dot ter-dot--blue" style="flex-shrink:0"></span>
+                    <span class="ter-node__label ter-node__label--blue">{{ comm.nom }}</span>
+                    <span class="ter-node__deploy-tag">à déployer</span>
+                  </div>
+                </ng-container>
+              </ng-container>
+
+              <!-- Inactive commune : cliquable → recadrage carte + « non déployée » (pas de zone à ouvrir) -->
+              <div class="ter-node ter-node--commune ter-node--inactive" *ngIf="!comm.active"
+                   [class.ter-node--comm-focused]="focusedCommune() === comm.id"
+                   (click)="focusCommune(comm, dept)">
+                <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;color:#4B5563"><polyline points="9 18 15 12 9 6"/></svg>
+                <span class="ter-dot ter-dot--gray" style="flex-shrink:0"></span>
+                <span class="ter-node__label ter-node__label--muted">{{ comm.nom }}</span>
+              </div>
+
+            </ng-container>
+
+            <div class="ter-node__more" *ngIf="nbInactiveHidden(dept) > 0">
+              + {{ nbInactiveHidden(dept) }} communes non renseignées dans le périmètre
+            </div>
+          </div>
+
+        </ng-container>
+      </div>
+
+      <div class="ter-tree__foot">
+        <span><kbd>↑↓</kbd> naviguer · <kbd>↵</kbd> ouvrir</span>
+        <span>{{ cntActive + cntInactive }} communes</span>
+      </div>
+    </div>
+
+    <!-- ── Center: choropleth map ──────────────────────────── -->
+    <div class="ter-choropleth">
+      <div class="ter-choropleth__head">
+        <div class="ter-choropleth__title">
+          <span>Carte choroplèthe nationale</span>
+          <span class="ter-choropleth__hint">· cliquer pour zoomer</span>
+        </div>
+        <div class="ter-map-toggle">
+          <button class="ter-map-toggle__btn" [class.ter-map-toggle__btn--active]="mapMode()==='coverage'" (click)="mapMode.set('coverage')">Couverture AEP</button>
+          <button class="ter-map-toggle__btn" [class.ter-map-toggle__btn--active]="mapMode()==='status'" (click)="mapMode.set('status')">Statut GEstiDlo</button>
+          <button class="ter-map-toggle__btn" [class.ter-map-toggle__btn--active]="mapMode()==='alerts'" (click)="mapMode.set('alerts')">Alertes</button>
+          <button class="ter-map-toggle__btn" [class.ter-map-toggle__btn--active]="mapMode()==='ouvrages'" (click)="mapMode.set('ouvrages')">Ouvrages</button>
+        </div>
+      </div>
+
+      <!-- Leaflet map -->
+      <div class="ter-map-area">
+        <div #terMapEl style="width:100%;height:100%"></div>
+
+        <!-- Legend -->
+        <div class="ter-map-legend">
+          <div class="ter-map-legend__title">Couverture AEP</div>
+          <div class="ter-map-legend__item"><span class="ter-map-legend__dot" style="background:#4ADE80"></span><span>&gt; 70%</span></div>
+          <div class="ter-map-legend__item"><span class="ter-map-legend__dot" style="background:#FBBF24"></span><span>40 – 70%</span></div>
+          <div class="ter-map-legend__item"><span class="ter-map-legend__dot" style="background:#FB7185"></span><span>&lt; 40%</span></div>
+          <div class="ter-map-legend__item"><span class="ter-map-legend__dot" style="background:rgba(148,163,184,.25)"></span><span>Non recensé</span></div>
+        </div>
+      </div>
+
+      <div class="ter-choropleth__foot">
+        <div class="ter-fresh-clocks">
+          <span class="ter-fresh-clock" title="Données géographiques et démographiques IHSI, mise à jour manuelle">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Référentiel IHSI 2024 · sync il y a 2j
+          </span>
+          <span class="ter-fresh-clock" title="Rollup de couverture calculé en batch quotidien">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            Indicateurs · agrégés le 14 mai
+          </span>
+          <span class="ter-fresh-clock ter-fresh-clock--live" title="Flux capteurs ESP32, dernière valeur reçue">
+            <span class="ter-dot ter-dot--green ter-dot--pulse"></span>
+            Télémétrie live · 12s
+          </span>
+        </div>
+        <ng-container *ngIf="selectedFiche() as f">
+          <span class="ter-choropleth__sel">
+            Sélection : <span class="ter-choropleth__sel-path">{{ f.dept }} › {{ f.commune }} › {{ f.nom }}</span>
+          </span>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- ── Right: fiche detail ─────────────────────────────── -->
+    <div class="ter-fiche" *ngIf="selectedFiche() as f">
+
+      <!-- Identity header -->
+      <div class="ter-fiche__head">
+        <div class="ter-fiche__breadcrumb">
+          <span (click)="toggleDept(getDeptIdByName(f.dept))" class="ter-fiche__bc-link">{{ f.dept }}</span>
+          <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="ter-fiche__bc-link">{{ f.commune }}</span>
+          <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="ter-fiche__bc-active">{{ f.nom }}</span>
+          <button class="ter-fiche__star" (click)="toggleFavorite(f.id)" [class.ter-fiche__star--on]="isFavorite(f.id)">
+            <svg width="12" height="12" fill="currentColor" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+        </div>
+        <div class="ter-fiche__badges">
+          <span class="ter-badge-section">Section communale</span>
+          <ng-container *ngIf="(f.status ?? 'supervised') === 'supervised'">
+            <span class="ter-badge-active">
+              <span class="ter-dot ter-dot--green ter-dot--pulse"></span>supervisée
+            </span>
+          </ng-container>
+          <ng-container *ngIf="(f.status ?? 'supervised') === 'deploying'">
+            <span class="ter-badge-deploying">
+              <span class="ter-dot ter-dot--blue"></span>à déployer
+            </span>
+          </ng-container>
+        </div>
+        <div class="ter-fiche__title">{{ f.nom }}</div>
+        <div class="ter-fiche__meta-row">
+          <span class="ter-fiche__code"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>{{ f.codeIhsi }}</span>
+          <span>·</span><span>{{ f.superficie }} km²</span>
+        </div>
+      </div>
+
+      <!-- AEP KPIs : masqués si zone à déployer (données non renseignées) -->
+      <div class="ter-fiche__kpis" *ngIf="(f.status ?? 'supervised') === 'supervised'">
+        <div class="ter-fiche__kpi-head">
+          <svg width="12" height="12" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Indicateurs AEP</span>
+          <span class="ter-fiche__kpi-date">maj. 14 mai</span>
+        </div>
+        <div class="ter-fiche__kpi-item">
+          <div class="ter-fiche__kpi-row">
+            <span class="ter-fiche__kpi-label">Couverture</span>
+            <span class="ter-fiche__kpi-val" [style.color]="coverageColor(f.coverageAep)">{{ f.coverageAep }}%</span>
+          </div>
+          <div class="ter-prog"><div class="ter-prog__fill" [style.width.%]="f.coverageAep" [style.background]="'linear-gradient(90deg,'+coverageColor(f.coverageAep)+','+coverageColor(f.coverageAep)+'88)'"></div></div>
+        </div>
+        <div class="ter-fiche__kpi-item">
+          <div class="ter-fiche__kpi-row">
+            <span class="ter-fiche__kpi-label">Population desservie</span>
+            <span class="ter-fiche__kpi-val">{{ fmtPop(f.population * f.coverageAep / 100) }}<span style="color:#6B7785;font-size:10px"> / {{ fmtPop(f.population) }}</span></span>
+          </div>
+          <div class="ter-prog"><div class="ter-prog__fill ter-prog__fill--purple" [style.width.%]="f.coverageAep"></div></div>
+        </div>
+        <div class="ter-fiche__kpi-item">
+          <div class="ter-fiche__kpi-row">
+            <span class="ter-fiche__kpi-label">Continuité service (30j)</span>
+            <span class="ter-fiche__kpi-val" [style.color]="coverageColor(f.continuiteService)">{{ f.continuiteService }}%</span>
+          </div>
+          <div class="ter-prog"><div class="ter-prog__fill ter-prog__fill--amber" [style.width.%]="f.continuiteService"></div></div>
+        </div>
+      </div>
+
+      <!-- KPI placeholder pour zones à déployer -->
+      <div class="ter-fiche__kpis ter-fiche__kpis--pending" *ngIf="(f.status ?? 'supervised') === 'deploying'">
+        <div class="ter-fiche__kpi-head">
+          <svg width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span style="color:#93C5FD">En attente de recensement</span>
+        </div>
+        <div class="ter-fiche__kpis-hint">
+          Couverture, population et continuité seront calculés après validation du recensement.
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="ter-fiche__tabs">
+        <button class="ter-tab" [class.ter-tab--active]="activeTab()==='overview'" (click)="activeTab.set('overview')">Vue d'ensemble</button>
+        <button class="ter-tab" [class.ter-tab--active]="activeTab()==='liens'" (click)="activeTab.set('liens')">Liens</button>
+        <button class="ter-tab" [class.ter-tab--active]="activeTab()==='actifs'" (click)="activeTab.set('actifs')">Actifs</button>
+        <button class="ter-tab" [class.ter-tab--active]="activeTab()==='journal'" (click)="activeTab.set('journal')">Journal</button>
+      </div>
+
+      <!-- Tab: Vue d'ensemble -->
+      <div class="ter-fiche__tab-body" *ngIf="activeTab()==='overview'">
+
+        <!-- Bannière état à déployer -->
+        <ng-container *ngIf="(f.status ?? 'supervised') === 'deploying'">
+          <div class="ter-deploy-banner">
+            <div class="ter-deploy-banner__icon">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            </div>
+            <div class="ter-deploy-banner__body">
+              <div class="ter-deploy-banner__title">Recensement non démarré</div>
+              <div class="ter-deploy-banner__sub">Tracez le périmètre, recensez la population et renseignez les ouvrages pour passer en supervision.</div>
+            </div>
+          </div>
+          <button class="ter-btn ter-btn--primary" style="width:100%;justify-content:center;margin-bottom:10px"
+                  (click)="demarrerRecensement(f.id)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            Démarrer le recensement
+          </button>
+          <div style="font-size:10px;color:#6B7785;text-align:center;margin-bottom:12px">
+            La zone est enregistrée · vous pouvez revenir plus tard
+          </div>
+        </ng-container>
+
+        <!-- Données opérationnelles -->
+        <ng-container *ngIf="f.debitSourceLs || f.reservoirM3 || f.reseauKm">
+          <div class="ter-fiche__section-title">Données opérationnelles</div>
+          <div class="ter-opsdata">
+            <div class="ter-opsdata__row" *ngIf="f.debitSourceLs">
+              <svg width="12" height="12" fill="none" stroke="#22D3EE" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+              <div class="ter-opsdata__body">
+                <span class="ter-opsdata__label">{{ f.typeSource || 'Source captée' }}</span>
+                <span class="ter-opsdata__sub">débit disponible</span>
+              </div>
+              <span class="ter-opsdata__val">{{ f.debitSourceLs }} l/s</span>
+            </div>
+            <div class="ter-opsdata__row" *ngIf="f.reservoirM3">
+              <svg width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+              <div class="ter-opsdata__body">
+                <span class="ter-opsdata__label">Réservoir</span>
+                <span class="ter-opsdata__sub">{{ f.typeReservoir || '' }}</span>
+              </div>
+              <span class="ter-opsdata__val">{{ f.reservoirM3 }} m³</span>
+            </div>
+            <div class="ter-opsdata__row" *ngIf="f.reseauKm">
+              <svg width="12" height="12" fill="none" stroke="#A78BFA" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 12 8 4 12 12 16 4 20 12"/></svg>
+              <div class="ter-opsdata__body">
+                <span class="ter-opsdata__label">Réseau distribution</span>
+                <span class="ter-opsdata__sub">{{ f.typeReseau || '' }}</span>
+              </div>
+              <span class="ter-opsdata__val">{{ f.reseauKm }} km</span>
+            </div>
+            <div class="ter-opsdata__row" *ngIf="f.qmj || f.qpj">
+              <svg width="12" height="12" fill="none" stroke="#FBBF24" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v4M6.34 6.34l-2.83 2.83M2 12h4M18 12h4M19.66 6.34l-2.83 2.83"/><circle cx="12" cy="12" r="4"/></svg>
+              <div class="ter-opsdata__body">
+                <span class="ter-opsdata__label">Débits de dimensionnement</span>
+                <span class="ter-opsdata__sub" *ngIf="f.horizonRef">horizon {{ f.horizonRef }}</span>
+              </div>
+              <div class="ter-opsdata__debits">
+                <span *ngIf="f.qmj">Qmj {{ f.qmj }} l/s</span>
+                <span *ngIf="f.qpj" class="ter-opsdata__qpj">Qpj {{ f.qpj }} l/s</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Liens institutionnels -->
+        <div class="ter-fiche__section-title" [style.margin-top]="(f.debitSourceLs || f.reservoirM3 || f.reseauKm) ? '10px' : null">Liens institutionnels</div>
+        <div class="ter-inst-links">
+          <div class="ter-inst-card" *ngIf="f.orepa">
+            <div class="ter-inst-card__icon ter-inst-card__icon--purple">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div class="ter-inst-card__body">
+              <div class="ter-inst-card__type">OREPA</div>
+              <div class="ter-inst-card__name">{{ f.orepa }}</div>
+            </div>
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#6B7785;flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </div>
+          <div class="ter-inst-card" *ngIf="f.caepa">
+            <div class="ter-inst-card__icon ter-inst-card__icon--cyan">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div class="ter-inst-card__body">
+              <div class="ter-inst-card__type">CAEPA</div>
+              <div class="ter-inst-card__name">{{ f.caepa }}</div>
+            </div>
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#6B7785;flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </div>
+          <div class="ter-inst-card" *ngIf="f.responsable">
+            <div class="ter-inst-card__icon ter-inst-card__icon--blue ter-inst-card__icon--initials">{{ f.responsableInitiales || '—' }}</div>
+            <div class="ter-inst-card__body">
+              <div class="ter-inst-card__type">Responsable terrain</div>
+              <div class="ter-inst-card__name">{{ f.responsable }}</div>
+            </div>
+            <span class="ter-dot-online">
+              <span class="ter-dot ter-dot--green" style="width:5px;height:5px"></span>online
+            </span>
+          </div>
+          <div class="ter-inst-card" *ngIf="f.mairie">
+            <div class="ter-inst-card__icon ter-inst-card__icon--amber">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div class="ter-inst-card__body">
+              <div class="ter-inst-card__type">Mairie de tutelle</div>
+              <div class="ter-inst-card__name">{{ f.mairie }}</div>
+            </div>
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#6B7785;flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Actifs -->
+      <div class="ter-fiche__tab-body" *ngIf="activeTab()==='actifs'">
+        <div class="ter-fiche__section-title">Actifs sur la zone <span style="font-size:9px;color:#6B7785;font-weight:400">· cliquer pour filtrer</span></div>
+        <div class="ter-assets">
+          <div class="ter-asset-card">
+            <div class="ter-asset-card__top">
+              <svg width="12" height="12" fill="none" stroke="#22D3EE" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="10"/><line x1="12" y1="2" x2="12" y2="22"/><path d="M2 12h20"/></svg>
+              <span class="ter-asset-card__type">Ressources</span>
+            </div>
+            <div class="ter-asset-card__count">{{ f.resources }}</div>
+            <div class="ter-asset-card__status" [style.color]="f.resources > 0 ? '#4ADE80' : '#6B7785'">{{ f.resources > 0 ? 'tous actifs' : 'aucune' }}</div>
+          </div>
+          <div class="ter-asset-card" (click)="naviguerLiaison(f.id)" style="cursor:pointer" title="Gérer les liaisons">
+            <div class="ter-asset-card__top">
+              <svg width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <span class="ter-asset-card__type">Ouvrages</span>
+            </div>
+            <div class="ter-asset-card__count">{{ selectedFicheLiens().length || f.infras }}</div>
+            <div class="ter-asset-card__status" [style.color]="selectedFicheLiens().length > 0 ? '#4ADE80' : '#6B7785'">
+              {{ selectedFicheLiens().length > 0 ? selectedFicheLiens().length + ' rattaché(s)' : 'aucun' }}
+            </div>
+          </div>
+          <div class="ter-asset-card">
+            <div class="ter-asset-card__top">
+              <svg width="12" height="12" fill="none" stroke="#A78BFA" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+              <span class="ter-asset-card__type">Capteurs IoT</span>
+            </div>
+            <div class="ter-asset-card__count">{{ f.capteurs }}</div>
+            <div class="ter-asset-card__status" [style.color]="f.capteurs > 0 ? '#4ADE80' : '#6B7785'">{{ f.capteurs > 0 ? 'tous online' : 'aucun' }}</div>
+          </div>
+          <div class="ter-asset-card" [class.ter-asset-card--alert]="f.alertes > 0">
+            <div class="ter-asset-card__top">
+              <svg width="12" height="12" fill="none" [attr.stroke]="f.alertes > 0 ? '#FB7185' : '#6B7785'" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              <span class="ter-asset-card__type" [style.color]="f.alertes > 0 ? '#FB7185' : null">Alertes</span>
+            </div>
+            <div class="ter-asset-card__count" [style.color]="f.alertes > 0 ? '#FB7185' : null">{{ f.alertes }}</div>
+            <div class="ter-asset-card__status" [style.color]="f.alertes > 0 ? '#FB7185' : '#6B7785'">{{ f.alertes > 0 ? '1 critique' : 'aucune' }}</div>
+          </div>
+        </div>
+
+        <!-- Liste des ouvrages rattachés -->
+        <div *ngIf="selectedFicheLiens().length > 0" style="margin-top:9px">
+          <div style="font-size:9px;color:#6B7785;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Ouvrages rattachés</div>
+          <div *ngFor="let item of selectedFicheLiens()"
+               style="display:flex;align-items:center;gap:7px;padding:5px 8px;background:#1A2530;border-radius:6px;margin-bottom:4px;font-size:11px">
+            <svg width="10" height="10" fill="none" stroke="#4ADE80" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="color:#F5F7FA">{{ item.infra.name }}</span>
+            <span style="color:#6B7785;font-size:9px">{{ item.lien.role }}</span>
+            <span *ngIf="item.lien.noeudAncrageId" style="color:#60A5FA;font-size:9px">→ nœud {{ item.lien.noeudAncrageId }}</span>
+            <span *ngIf="item.lien.quotePartDebit" style="color:#6B7785;font-size:9px">{{ item.lien.quotePartDebit }}%</span>
+          </div>
+        </div>
+
+        <!-- Bouton liaison pour zones supervisées -->
+        <div *ngIf="(f.status ?? 'supervised') === 'supervised'" style="margin-top:8px">
+          <button class="ter-btn ter-btn--outline-blue ter-btn--sm" (click)="naviguerLiaison(f.id)">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+            Lier les ouvrages →
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab: Journal -->
+      <div class="ter-fiche__tab-body" *ngIf="activeTab()==='journal'">
+        <div class="ter-fiche__section-title">
+          Journal des événements
+          <span class="ter-fiche__journal-link">tout voir →</span>
+        </div>
+        <div class="ter-timeline">
+          <div class="ter-timeline__line"></div>
+          <div class="ter-timeline__entry" *ngFor="let entry of f.journal">
+            <span class="ter-timeline__dot" [style.background]="journalDot(entry.type)"></span>
+            <div class="ter-timeline__content">
+              <div class="ter-timeline__label">{{ entry.label }}</div>
+              <div class="ter-timeline__meta">{{ entry.date }} · {{ entry.author }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Liens -->
+      <div class="ter-fiche__tab-body" *ngIf="activeTab()==='liens'">
+        <div class="ter-fiche__section-title">Hiérarchie administrative</div>
+        <div class="ter-hier-chain">
+          <div class="ter-hier-node ter-hier-node--green">
+            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            Haïti <small>Pays</small>
+          </div>
+          <svg width="9" height="9" fill="none" stroke="#374151" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="ter-hier-node ter-hier-node--green">{{ f.dept }} <small>Dépt.</small></div>
+          <svg width="9" height="9" fill="none" stroke="#374151" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="ter-hier-node ter-hier-node--green">{{ f.commune }} <small>Commune</small></div>
+          <svg width="9" height="9" fill="none" stroke="#374151" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="ter-hier-node ter-hier-node--blue">{{ f.nom }} <small>Section</small></div>
+        </div>
+        <!-- Acteurs institutionnels -->
+        <div class="ter-fiche__section-title" style="margin-top:12px">
+          Acteurs institutionnels
+          <button class="ter-btn ter-btn--ghost ter-btn--sm" style="font-size:9px;padding:1px 6px;margin-left:6px"
+                  (click)="showAddActeur.set(!showAddActeur())">
+            {{ showAddActeur() ? '✕' : '+ Lier' }}
+          </button>
+        </div>
+
+        <!-- Acteurs rattachés -->
+        <div *ngFor="let item of selectedActeurLiens()"
+             style="display:flex;align-items:center;gap:7px;padding:4px 7px;background:#1A2530;border-radius:6px;margin-bottom:3px;font-size:11px">
+          <span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(29,158,117,.15);color:#5DCAA5">
+            {{ item.lien.role | uppercase }}
+          </span>
+          <span style="color:#F5F7FA">{{ item.inst.nom }}</span>
+          <span style="color:#6B7785;font-size:9px;margin-left:auto">{{ item.lien.dateLien }}</span>
+          <button style="background:transparent;border:0;color:#6B7785;cursor:pointer;padding:2px;font-size:10px"
+                  (click)="detachActeur(f.id, item.lien.id, item.inst.nom)"
+                  title="Détacher">✕</button>
+        </div>
+
+        <!-- Fallback depuis ZoneFiche si aucun lien dynamique -->
+        <div *ngIf="selectedActeurLiens().length === 0" class="ter-sys-chips">
+          <span class="ter-chip ter-chip--green" *ngIf="f.orepa">{{ f.orepa }}</span>
+          <span class="ter-chip ter-chip--blue"  *ngIf="f.caepa">{{ f.caepa }}</span>
+          <span class="ter-chip"                 *ngIf="f.mairie">{{ f.mairie }}</span>
+          <span class="ter-chip"                 *ngIf="f.tepac">{{ f.tepac }}</span>
+          <span style="font-size:10px;color:#6B7785" *ngIf="!f.orepa && !f.caepa && !f.mairie && !f.tepac">
+            Aucun acteur lié — utiliser « + Lier »
+          </span>
+        </div>
+
+        <!-- Formulaire inline ajout acteur -->
+        <div *ngIf="showAddActeur()"
+             style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px;padding:7px 8px;background:#13202B;border-radius:7px;border:0.5px solid #1F2A33">
+          <select style="background:#0F1419;border:0.5px solid #2A3744;border-radius:4px;padding:3px 6px;font-size:10px;color:#E2E8EE;outline:none"
+                  [(ngModel)]="addActeurInstId">
+            <option value="">Institution…</option>
+            <option *ngFor="let inst of acteursDisponibles()" [value]="inst.id">{{ inst.nom }}</option>
+          </select>
+          <select style="background:#0F1419;border:0.5px solid #2A3744;border-radius:4px;padding:3px 6px;font-size:10px;color:#E2E8EE;outline:none"
+                  [(ngModel)]="addActeurRole">
+            <option *ngFor="let r of acteurRoles" [value]="r.value">{{ r.label }}</option>
+          </select>
+          <button class="ter-btn ter-btn--outline-blue ter-btn--sm" style="font-size:10px;padding:3px 8px"
+                  [disabled]="!addActeurInstId"
+                  (click)="confirmAddActeur(f.id)">Rattacher</button>
+        </div>
+
+        <!-- Liaisons système (chips) -->
+        <div class="ter-fiche__section-title" style="margin-top:10px">Liaisons système</div>
+        <div class="ter-sys-chips">
+          <span class="ter-chip ter-chip--green" *ngIf="f.resources > 0">
+            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="10"/><line x1="12" y1="2" x2="12" y2="22"/><path d="M2 12h20"/></svg>
+            {{ f.resources }} ressource{{ f.resources>1?'s':'' }}
+          </span>
+          <span class="ter-chip ter-chip--blue" *ngIf="selectedFicheLiens().length > 0">
+            {{ selectedFicheLiens().length }} ouvrage{{ selectedFicheLiens().length>1?'s':'' }} liés
+          </span>
+          <span class="ter-chip ter-chip--blue" *ngIf="selectedFicheLiens().length === 0 && f.infras > 0">
+            {{ f.infras }} infra{{ f.infras>1?'s':'' }}
+          </span>
+          <span class="ter-chip ter-chip--purple" *ngIf="f.capteurs > 0">{{ f.capteurs }} capteur{{ f.capteurs>1?'s':'' }}</span>
+          <span class="ter-chip ter-chip--red" *ngIf="f.alertes > 0">⚠ {{ f.alertes }} alerte{{ f.alertes>1?'s':'' }}</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="ter-fiche__actions">
+        <button class="ter-btn ter-btn--ghost ter-btn--sm">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Fiche PDF
+        </button>
+        <button class="ter-btn ter-btn--ghost ter-btn--sm">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Excel
+        </button>
+        <button class="ter-btn ter-btn--outline-blue ter-btn--sm" (click)="centerMap()">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+          Centrer carte
+        </button>
+        <!-- Archive — jamais supprimer une zone supervisée -->
+        <button *ngIf="(f.status ?? 'supervised') === 'supervised'"
+                class="ter-btn ter-btn--ghost ter-btn--sm"
+                style="color:#6B7785;margin-left:auto"
+                title="Archive la zone — historique et liaisons conservés"
+                (click)="archiveZone(f.id)">
+          <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+          Archiver
+        </button>
+        <span *ngIf="(f.status ?? 'supervised') === 'archivee'"
+              style="font-size:9px;color:#6B7785;margin-left:auto;padding:3px 8px;background:#1A2530;border-radius:5px">
+          archivée · lecture seule
+        </span>
+      </div>
+
+    </div><!-- /ter-fiche -->
+
+  </div><!-- /ter-grid -->
+
+</div><!-- /ter-page -->
+
+<!-- ══ Modal activation ═════════════════════════════════════ -->
+<div class="ter-modal-overlay" *ngIf="showActModal()" (click)="closeModal()">
+  <div class="ter-modal" (click)="$event.stopPropagation()">
+
+    <div class="ter-modal__header">
+      <div>
+        <h3>Activer une zone</h3>
+        <p>Étape {{ actStep }} sur 3 · {{ actStep === 1 ? 'enregistrement' : actStep === 2 ? 'responsabilité & gouvernance' : 'récapitulatif' }}</p>
+      </div>
+      <button class="ter-modal__close" (click)="closeModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="ter-modal__steps">
+      <div class="ter-modal__step" [class.ter-modal__step--done]="actStep>1" [class.ter-modal__step--active]="actStep===1">1</div>
+      <div class="ter-modal__step-line" [class.ter-modal__step-line--done]="actStep>1"></div>
+      <div class="ter-modal__step" [class.ter-modal__step--done]="actStep>2" [class.ter-modal__step--active]="actStep===2">2</div>
+      <div class="ter-modal__step-line" [class.ter-modal__step-line--done]="actStep>2"></div>
+      <div class="ter-modal__step" [class.ter-modal__step--active]="actStep===3">3</div>
+    </div>
+
+    <div class="ter-modal__body" *ngIf="actStep===1">
+      <div class="ter-modal__section-title">Identité &amp; localisation</div>
+
+      <!-- Nom requis -->
+      <div class="ter-form-row">
+        <label class="ter-label">Nom de la zone <span style="color:#60A5FA">*</span></label>
+        <input type="text" class="ter-select" [(ngModel)]="actNom"
+               placeholder="Ex : Soisson, Plaine Nord, Section Fermathe…"
+               [class.ter-select--err]="actErr && !actNom.trim()">
+        <span class="ter-form-hint">Identité de la zone dans l'arbre territorial</span>
+      </div>
+
+      <!-- Département -->
+      <div class="ter-form-row">
+        <label class="ter-label">Département <span style="color:#60A5FA">*</span></label>
+        <select class="ter-select" [(ngModel)]="actDept" (ngModelChange)="actCommune=''; actSection=''">
+          <option value="">Sélectionner un département…</option>
+          <option *ngFor="let n of deptNames" [value]="n">{{ n }}</option>
+        </select>
+      </div>
+
+      <!-- Commune : TOUTES les communes du département (active + inactive) -->
+      <div class="ter-form-row" *ngIf="actDept">
+        <label class="ter-label">Commune <span style="color:#60A5FA">*</span></label>
+        <select class="ter-select" [(ngModel)]="actCommune" (ngModelChange)="actSection=''">
+          <option value="">Sélectionner une commune…</option>
+          <option *ngFor="let n of modalCommunes" [value]="n">{{ n }}</option>
+        </select>
+        <span class="ter-form-hint">{{ modalCommunes.length }} communes dans {{ actDept }}</span>
+      </div>
+
+      <!-- Section communale : point d'accroche dans l'arbre -->
+      <div class="ter-form-row" *ngIf="actCommune && modalSections.length > 0">
+        <label class="ter-label">Section communale</label>
+        <select class="ter-select" [(ngModel)]="actSection">
+          <option value="">Sélectionner une section…</option>
+          <option *ngFor="let n of modalSections" [value]="n">{{ n }}</option>
+        </select>
+        <span class="ter-form-hint">Rattachement fin dans l'arbre — optionnel à ce stade</span>
+      </div>
+
+      <!-- Code zone : lecture seule, auto-généré -->
+      <div class="ter-form-row" *ngIf="actCommune">
+        <label class="ter-label">Code zone <span class="ter-label-sub">· généré automatiquement</span></label>
+        <div class="ter-select ter-select--readonly">
+          <span style="flex:1;font-family:'Courier New',monospace;color:#CBD5E1">{{ actCodePreview }}</span>
+          <span style="font-size:9px;color:#60A5FA">éditable après création</span>
+        </div>
+      </div>
+
+      <p class="ter-modal__err" *ngIf="actErr">{{ actErr }}</p>
+    </div>
+
+    <div class="ter-modal__body" *ngIf="actStep===2">
+      <!-- Gouvernance : URD dérivée + responsable URD + TEPAC existant (un seul nom : l'URD) -->
+      <app-zone-etape2
+        [departement]="actDept"
+        [commune]="actCommune"
+        [urdId]="actUrdId"
+        (tepacChange)="responsableTepac = $event"
+        (designerResponsable)="designerResponsableUrd()" />
+    </div>
+
+    <div class="ter-modal__body" *ngIf="actStep===3">
+      <div class="ter-modal__section-title">Récapitulatif · vérifier avant enregistrement</div>
+      <div class="ter-modal__recap">
+        <div class="ter-modal__recap-row">
+          <span>Nom de la zone</span><strong>{{ actNom }}</strong>
+        </div>
+        <div class="ter-modal__recap-row">
+          <span>Code zone</span>
+          <strong style="font-family:'Courier New',monospace;font-size:11px">{{ actCodePreview }}</strong>
+        </div>
+        <div class="ter-modal__recap-row">
+          <span>Chemin territorial</span>
+          <strong>{{ actDept }}{{ actCommune ? ' › ' + actCommune : '' }}{{ actSection ? ' › ' + actSection : '' }}</strong>
+        </div>
+        <div class="ter-modal__recap-row" *ngIf="actDept">
+          <span>URD</span><strong>URD {{ actDept }}</strong>
+        </div>
+        <div class="ter-modal__recap-row" *ngIf="responsableTepac as t">
+          <span>Responsable terrain (TEPAC)</span>
+          <strong>{{ t.nomComplet || 'Poste à pourvoir' }} · {{ t.commune }}</strong>
+        </div>
+        <div class="ter-modal__recap-row">
+          <span>État initial</span>
+          <strong style="display:inline-flex;align-items:center;gap:5px">
+            <span style="width:6px;height:6px;border-radius:50%;background:#60A5FA;display:inline-block"></span>
+            à déployer
+          </strong>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:6px;font-size:10px;color:#93C5FD">
+        La zone apparaîtra dans l'arbre avec le statut <strong>« à déployer »</strong>.
+        Elle ne sera comptée dans les KPI qu'après validation du recensement.
+      </div>
+      <p class="ter-modal__err" *ngIf="actErr">{{ actErr }}</p>
+    </div>
+
+    <div class="ter-modal__footer">
+      <button class="ter-btn ter-btn--ghost" (click)="actStep>1 ? actStep=actStep-1 : closeModal()">
+        {{ actStep===1 ? 'Annuler' : '← Retour' }}
+      </button>
+      <span style="flex:1"></span>
+      <button class="ter-btn ter-btn--primary" *ngIf="actStep<3"
+              [disabled]="actStep===1 && !step1Valid"
+              (click)="actStep=actStep+1; actErr=''">Continuer →</button>
+      <ng-container *ngIf="actStep===3">
+        <button class="ter-btn ter-btn--ghost" (click)="activerZone(false)">
+          Enregistrer comme brouillon
+        </button>
+        <button class="ter-btn ter-btn--primary" (click)="activerZone(true)">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Enregistrer &amp; recenser
+        </button>
+      </ng-container>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ Toast de confirmation ══════════════════════════════════ -->
+<div class="ter-toast" *ngIf="toastVisible()" role="status" aria-live="polite">
+  <div class="ter-toast__icon">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <span class="ter-toast__msg">{{ toastMsg() }}</span>
+  <button class="ter-toast__action" type="button" (click)="demarrerRecensement()">
+    Démarrer le recensement →
+  </button>
+  <button class="ter-toast__dismiss" type="button" (click)="dismissToast()" aria-label="Fermer">
+    <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
+
+</app-gov-shell>

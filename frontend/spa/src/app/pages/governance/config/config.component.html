@@ -1,0 +1,141 @@
+<app-gov-shell title="Configuration" [moduleNum]="8">
+
+  <div class="cfg-header">
+    <div class="cfg-header__icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    </div>
+    <div>
+      <h2 class="cfg-header__h2">Configuration système</h2>
+      <p class="cfg-header__sub">Paramètres globaux · notifications · sessions · licences</p>
+    </div>
+    <div class="cfg-header__actions">
+      <span *ngIf="saved()" class="cfg-saved">✓ Sauvegardé</span>
+      <button class="cfg-btn" (click)="save()">Enregistrer les modifications</button>
+    </div>
+  </div>
+
+  <div class="cfg-grid">
+
+    <!-- Système -->
+    <div class="cfg-section">
+      <div class="cfg-section__title">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Système
+      </div>
+      <div class="cfg-field">
+        <label class="cfg-lbl">Nom du système</label>
+        <input class="cfg-input" [(ngModel)]="nomSysteme"/>
+      </div>
+      <div class="cfg-field">
+        <label class="cfg-lbl">Version API</label>
+        <input class="cfg-input cfg-input--mono" [(ngModel)]="versionApi" readonly/>
+      </div>
+      <div class="cfg-field">
+        <label class="cfg-lbl">Environnement</label>
+        <select class="cfg-input">
+          <option>production</option>
+          <option>staging</option>
+        </select>
+      </div>
+      <div class="cfg-field">
+        <label class="cfg-lbl">Fuseau horaire</label>
+        <select class="cfg-input">
+          <option>America/Port-au-Prince</option>
+          <option>UTC</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="cfg-section">
+      <div class="cfg-section__title">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Notifications
+      </div>
+      <div class="cfg-toggle-row">
+        <span class="cfg-toggle-lbl">Email</span>
+        <label class="cfg-toggle">
+          <input type="checkbox" [(ngModel)]="emailNotif"/>
+          <span class="cfg-toggle__slider"></span>
+        </label>
+      </div>
+      <div class="cfg-toggle-row">
+        <span class="cfg-toggle-lbl">SMS</span>
+        <label class="cfg-toggle">
+          <input type="checkbox" [(ngModel)]="smsNotif"/>
+          <span class="cfg-toggle__slider"></span>
+        </label>
+      </div>
+      <div class="cfg-toggle-row">
+        <span class="cfg-toggle-lbl">Push (navigateur)</span>
+        <label class="cfg-toggle">
+          <input type="checkbox" [(ngModel)]="pushNotif"/>
+          <span class="cfg-toggle__slider"></span>
+        </label>
+      </div>
+      <div class="cfg-field">
+        <label class="cfg-lbl">Seuil alertes critiques (min)</label>
+        <input class="cfg-input" type="number" [(ngModel)]="seuilNotifCritique"/>
+      </div>
+    </div>
+
+    <!-- Sécurité -->
+    <div class="cfg-section">
+      <div class="cfg-section__title">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Sécurité & Sessions
+      </div>
+      <div class="cfg-field">
+        <label class="cfg-lbl">Durée session (minutes)</label>
+        <input class="cfg-input" type="number" [(ngModel)]="dureeSession"/>
+      </div>
+      <div class="cfg-toggle-row">
+        <span class="cfg-toggle-lbl">MFA obligatoire</span>
+        <label class="cfg-toggle">
+          <input type="checkbox" [(ngModel)]="mfa"/>
+          <span class="cfg-toggle__slider"></span>
+        </label>
+      </div>
+      <div class="cfg-field">
+        <label class="cfg-lbl">Tentatives max. connexion</label>
+        <input class="cfg-input" type="number" [(ngModel)]="tentativesMax"/>
+      </div>
+    </div>
+
+    <!-- Licences -->
+    <div class="cfg-section">
+      <div class="cfg-section__title">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Licences
+      </div>
+      <div class="cfg-lic-row">
+        <span class="cfg-lic-val">{{ licencesActives }}</span>
+        <span class="cfg-lic-of">/ {{ maxLicences }}</span>
+        <span class="cfg-lic-lbl">utilisateurs actifs</span>
+      </div>
+      <div class="cfg-bar"><div class="cfg-bar-fill" [style.width.%]="(licencesActives/maxLicences)*100"></div></div>
+      <div class="cfg-lic-pct">{{ licencesPct }}% · {{ maxLicences - licencesActives }} licences disponibles</div>
+      <button class="cfg-lic-btn">Demander des licences supplémentaires</button>
+    </div>
+
+  </div>
+
+  <div class="cfg-danger-zone">
+    <div class="cfg-danger__title">Zone sensible</div>
+    <div class="cfg-danger__row">
+      <div>
+        <div class="cfg-danger__action">Réinitialiser les paramètres par défaut</div>
+        <div class="cfg-danger__sub">Remet toutes les configurations système à leurs valeurs initiales.</div>
+      </div>
+      <button class="cfg-danger-btn">Réinitialiser</button>
+    </div>
+    <div class="cfg-danger__row">
+      <div>
+        <div class="cfg-danger__action">Purger les journaux d'audit anciens</div>
+        <div class="cfg-danger__sub">Supprime les événements antérieurs à 90 jours (irréversible).</div>
+      </div>
+      <button class="cfg-danger-btn">Purger</button>
+    </div>
+  </div>
+
+</app-gov-shell>

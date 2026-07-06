@@ -1,0 +1,81 @@
+<aside class="cdd" *ngIf="state.selection() as a">
+  <div class="cdd-hdr">
+    <div class="cdd-hdr-row">
+      <span class="cdd-code">{{ a.code }}</span>
+      <button class="cdd-x" type="button" (click)="state.selectionner(null)">✕</button>
+    </div>
+    <h2 class="cdd-ttl">{{ a.title }}</h2>
+    <div class="cdd-tags">
+      <span class="tag" [style.background]="state.severityBg(a.severity)"
+            [style.color]="state.severityDot(a.severity)">
+        <i class="dot" [style.background]="state.severityDot(a.severity)"></i>
+        {{ state.severityLabel(a.severity) }}
+      </span>
+      <span class="tag" [style.background]="state.statusBg(a.status)"
+            [style.color]="state.statusDot(a.status)">
+        <i class="dot" [style.background]="state.statusDot(a.status)"></i>
+        {{ state.statusLabel(a.status) }}
+      </span>
+      <span class="tag tag--src" [style.color]="state.sourceDot(a.source)">
+        <i class="dot" [style.background]="state.sourceDot(a.source)"></i>
+        {{ state.sourceLabel(a.source) }}
+      </span>
+    </div>
+  </div>
+
+  <div class="cdd-meta">
+    <div class="meta-cell" *ngIf="a.commune">
+      <span class="meta-k">Commune</span>
+      <span class="meta-v">{{ a.commune }}</span>
+    </div>
+    <div class="meta-cell" *ngIf="a.department">
+      <span class="meta-k">Département</span>
+      <span class="meta-v">{{ a.department }}</span>
+    </div>
+    <div class="meta-cell" *ngIf="a.section">
+      <span class="meta-k">Section</span>
+      <span class="meta-v">{{ a.section }}</span>
+    </div>
+    <div class="meta-cell" *ngIf="a.infrastructureName">
+      <span class="meta-k">Infrastructure</span>
+      <span class="meta-v">{{ a.infrastructureName }}</span>
+    </div>
+    <div class="meta-cell">
+      <span class="meta-k">Déclenché</span>
+      <span class="meta-v">{{ state.dateLabel(a.createdAt) }} {{ state.timeLabel(a.createdAt) }}</span>
+    </div>
+  </div>
+
+  <div class="cdd-section" *ngIf="a.description">
+    <div class="sec-ttl">Description</div>
+    <p class="cdd-desc">{{ a.description }}</p>
+  </div>
+
+  <div class="cdd-section" *ngIf="state.nextStatuses(a.status).length">
+    <div class="sec-ttl">Changer de statut</div>
+    <div class="stat-btns">
+      <button class="stat-btn" type="button"
+              *ngFor="let ns of state.nextStatuses(a.status)"
+              [style.border-color]="state.statusDot(ns)"
+              [style.color]="state.statusDot(ns)"
+              (click)="setStatus(a.id, ns)">
+        <i class="dot" [style.background]="state.statusDot(ns)"></i>
+        {{ state.statusLabel(ns) }}
+      </button>
+    </div>
+  </div>
+
+  <div class="cdd-section" *ngIf="state.isActive(a.status) && !a.interventionId">
+    <button class="btn-interv" type="button" (click)="state.ouvrirIntervention(a)">
+      + Créer une intervention
+    </button>
+  </div>
+
+  <div class="cdd-section" *ngIf="a.interventionId">
+    <div class="sec-ttl">Intervention liée</div>
+    <div class="linked">
+      <span class="linked-icon">🔧</span>
+      <span>{{ a.interventionId }}</span>
+    </div>
+  </div>
+</aside>

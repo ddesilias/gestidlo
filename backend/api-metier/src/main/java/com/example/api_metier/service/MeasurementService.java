@@ -4,11 +4,14 @@ import com.example.api_metier.domain.AlertEntity;
 import com.example.api_metier.domain.AlertSeverity;
 import com.example.api_metier.domain.AlertStatus;
 import com.example.api_metier.domain.MeasurementEntity;
+import com.example.api_metier.domain.PointRefEntity;
 import com.example.api_metier.domain.ReferenceCodeItemEntity;
 import com.example.api_metier.domain.ReferenceCodeItemId;
 import com.example.api_metier.domain.ThresholdConfigEntity;
 import com.example.api_metier.repo.AlertRepository;
+import com.example.api_metier.repo.CapteurRepository;
 import com.example.api_metier.repo.MeasurementRepository;
+import com.example.api_metier.repo.PointRefRepository;
 import com.example.api_metier.repo.ReferenceCodeItemRepository;
 import com.example.api_metier.repo.ThresholdConfigRepository;
 import java.time.Instant;
@@ -27,6 +30,8 @@ public class MeasurementService {
 
 	private final MeasurementRepository measurements;
 	private final AlertRepository alerts;
+	private final PointRefRepository points;
+	private final CapteurRepository capteurs;
 	private final ThresholdConfigRepository thresholdConfigs;
 	private final ReferenceCodeItemRepository codeItems;
 	private final double defaultMinPressureWarn;
@@ -36,6 +41,8 @@ public class MeasurementService {
 	public MeasurementService(
 			MeasurementRepository measurements,
 			AlertRepository alerts,
+			PointRefRepository points,
+			CapteurRepository capteurs,
 			ThresholdConfigRepository thresholdConfigs,
 			ReferenceCodeItemRepository codeItems,
 			@Value("${gestidlo.threshold.pressure.minWarn}") double minPressureWarn,
@@ -43,6 +50,8 @@ public class MeasurementService {
 			@Value("${gestidlo.threshold.level.minCrit}") double minLevelCrit) {
 		this.measurements = measurements;
 		this.alerts = alerts;
+		this.points = points;
+		this.capteurs = capteurs;
 		this.thresholdConfigs = thresholdConfigs;
 		this.codeItems = codeItems;
 		this.defaultMinPressureWarn = minPressureWarn;
@@ -73,6 +82,10 @@ public class MeasurementService {
 					.orElse(null);
 			Instant now = Instant.now();
 			if (alert == null) {
+				// Dénormalisation : commune recopiée du point sur l'alerte à la création,
+				// pour un scope TEPAC sans jointure (un TEPAC ne voit que sa commune).
+				String commune = points.findById(request.pointId())
+						.map(PointRefEntity::getCommune).orElse(null);
 				alert = new AlertEntity(
 						request.pointId(),
 						request.sensorId(),
@@ -81,7 +94,8 @@ public class MeasurementService {
 						AlertStatus.ACTIVE,
 						decision.message(),
 						now,
-						now);
+						now,
+						commune);
 			} else {
 				alert.setSeverity(decision.severity());
 				alert.setMessage(decision.message());
@@ -89,6 +103,17 @@ public class MeasurementService {
 			}
 			alert = alerts.save(alert);
 			createdOrUpdatedAlerts.add(alert.getId());
+		}
+
+		// Temps réel : mise à jour live du capteur du registre, corrélé par sensorCode (à défaut sensorId).
+		// Alimente l'état dérivé (en-ligne/attention/critique) + batterie/signal de la page Capteurs IoT.
+		String capteurCode = (request.sensorCode() != null && !request.sensorCode().isBlank())
+				? request.sensorCode() : request.sensorId();
+		if (capteurCode != null && !capteurCode.isBlank()) {
+			capteurs.findByCodeIgnoreCase(capteurCode.trim()).ifPresent(c -> {
+				c.onMeasure(request.value(), request.unit(), request.battery(), request.signal(), ts);
+				capteurs.save(c);
+			});
 		}
 
 		return new IngestResult(measurement.getId(), createdOrUpdatedAlerts);
@@ -175,10 +200,18 @@ public class MeasurementService {
 	public record IngestRequest(
 			String pointId,
 			String sensorId,
+			String sensorCode,
 			String type,
 			double value,
 			String unit,
+			Integer battery,
+			Integer signal,
 			Instant timestamp) {
+
+		/** Surcharge rétro-compatible (ancien format à 6 champs, sans sensorCode/batterie/signal). */
+		public IngestRequest(String pointId, String sensorId, String type, double value, String unit, Instant timestamp) {
+			this(pointId, sensorId, null, type, value, unit, null, null, timestamp);
+		}
 	}
 
 	public record IngestResult(Long measurementId, List<Long> alertIds) {

@@ -1,0 +1,255 @@
+<!-- Backdrop -->
+<div class="sqr-backdrop" (click)="fermer.emit()"></div>
+
+<!-- Modal -->
+<div class="sqr-modal" role="dialog" aria-modal="true" aria-label="Scanner un capteur">
+
+  <!-- Header -->
+  <div class="sqr-head">
+    <div class="sqr-head__left">
+      <div class="sqr-head__icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="sqr-head__title">Scanner un capteur</h3>
+        <p class="sqr-head__sub">QR Code · code-barres · NFC · saisie manuelle</p>
+      </div>
+    </div>
+    <button class="sqr-close" type="button" (click)="fermer.emit()" title="Fermer">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="sqr-tabs">
+    <button *ngFor="let t of TABS" class="sqr-tab"
+      [class.sqr-tab--active]="onglet() === t.id"
+      type="button" (click)="setTab(t.id)">{{ t.label }}</button>
+  </div>
+
+  <!-- Body -->
+  <div class="sqr-body">
+
+    <!-- ─── Caméra ─── -->
+    <ng-container *ngIf="onglet() === 'camera'">
+
+      <!-- Zone de scan -->
+      <div class="sqr-viewport">
+        <!-- Fond "caméra" simulé -->
+        <svg viewBox="0 0 400 400" class="sqr-cam-bg">
+          <defs>
+            <radialGradient id="camBg" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stop-color="#1a2a3a"/>
+              <stop offset="100%" stop-color="#000"/>
+            </radialGradient>
+          </defs>
+          <rect width="400" height="400" fill="url(#camBg)"/>
+          <rect x="40" y="60" width="320" height="200" fill="#3B4A5B" opacity="0.4" rx="6"/>
+          <text x="200" y="170" font-size="13" fill="#8B9AAB" text-anchor="middle" opacity="0.6">Capteur Danfoss MBS 3000</text>
+          <!-- QR code simulé -->
+          <rect x="168" y="282" width="64" height="64" fill="#fff" rx="2"/>
+          <g transform="translate(172, 286)">
+            <rect width="56" height="56" fill="#fff"/>
+            <rect x="2" y="2" width="16" height="16" fill="#000"/>
+            <rect x="4" y="4" width="12" height="12" fill="#fff"/>
+            <rect x="6" y="6" width="4" height="4" fill="#000"/>
+            <rect x="38" y="2" width="16" height="16" fill="#000"/>
+            <rect x="40" y="4" width="12" height="12" fill="#fff"/>
+            <rect x="42" y="6" width="4" height="4" fill="#000"/>
+            <rect x="2" y="38" width="16" height="16" fill="#000"/>
+            <rect x="4" y="40" width="12" height="12" fill="#fff"/>
+            <rect x="6" y="42" width="4" height="4" fill="#000"/>
+            <rect x="22" y="4" width="4" height="4" fill="#000"/>
+            <rect x="28" y="4" width="4" height="4" fill="#000"/>
+            <rect x="22" y="10" width="4" height="4" fill="#000"/>
+            <rect x="22" y="22" width="4" height="4" fill="#000"/>
+            <rect x="28" y="28" width="4" height="4" fill="#000"/>
+            <rect x="38" y="28" width="4" height="4" fill="#000"/>
+            <rect x="28" y="38" width="4" height="4" fill="#000"/>
+            <rect x="34" y="44" width="4" height="4" fill="#000"/>
+            <rect x="42" y="38" width="4" height="4" fill="#000"/>
+          </g>
+        </svg>
+
+        <!-- Overlay masque + frame -->
+        <svg viewBox="0 0 400 400" class="sqr-cam-overlay">
+          <rect width="400" height="400" fill="#000" opacity="0.55"/>
+          <mask id="sqr-cutout">
+            <rect width="400" height="400" fill="white"/>
+            <rect x="100" y="100" width="200" height="200" rx="12" fill="black"/>
+          </mask>
+          <rect width="400" height="400" fill="#000" opacity="0.42" mask="url(#sqr-cutout)"/>
+
+          <!-- Coins du cadre -->
+          <path d="M 100 130 L 100 100 L 130 100" stroke="#60A5FA" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M 270 100 L 300 100 L 300 130" stroke="#60A5FA" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M 100 270 L 100 300 L 130 300" stroke="#60A5FA" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M 270 300 L 300 300 L 300 270" stroke="#60A5FA" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+          <!-- Rayon laser -->
+          <line x1="100" y1="200" x2="300" y2="200" stroke="#60A5FA" stroke-width="2" opacity="0.8">
+            <animate attributeName="y1" values="100;300;100" dur="2.5s" repeatCount="indefinite"/>
+            <animate attributeName="y2" values="100;300;100" dur="2.5s" repeatCount="indefinite"/>
+          </line>
+
+          <!-- Labels -->
+          <text x="200" y="340" font-size="11" fill="#CBD5E1" text-anchor="middle" font-weight="500">Centrez le QR Code dans le cadre</text>
+          <text x="200" y="358" font-size="9" fill="#8B9AAB" text-anchor="middle">Détection automatique</text>
+        </svg>
+
+        <!-- Badge caméra active -->
+        <div class="sqr-cam-badge sqr-cam-badge--active">
+          <span class="sqr-cam-badge__dot"></span>
+          Caméra active
+        </div>
+
+        <!-- Contrôles caméra -->
+        <div class="sqr-cam-controls">
+          <button class="sqr-cam-btn" type="button" title="Lampe">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+          </button>
+          <button class="sqr-cam-btn" type="button" title="Retourner">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+          <button class="sqr-cam-btn" type="button" title="Zoom">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+        </div>
+
+        <!-- Badge détection -->
+        <div class="sqr-cam-badge sqr-cam-badge--detect">
+          <span class="sqr-detect-dot"></span>
+          Détection en cours...
+        </div>
+      </div>
+
+      <!-- Alternatives -->
+      <div class="sqr-alts">
+        <button class="sqr-alt-btn" type="button" (click)="setTab('image')">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Importer image</span>
+          <span class="sqr-alt-btn__sub">PNG · JPG · PDF</span>
+        </button>
+        <button class="sqr-alt-btn" type="button" (click)="setTab('manuel')">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span>Saisie manuelle</span>
+          <span class="sqr-alt-btn__sub">Code · N° série</span>
+        </button>
+        <button class="sqr-alt-btn" type="button" (click)="setTab('nfc')">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          <span>Lecture NFC</span>
+          <span class="sqr-alt-btn__sub">Approcher tag</span>
+        </button>
+      </div>
+
+    </ng-container>
+
+    <!-- ─── Image ─── -->
+    <ng-container *ngIf="onglet() === 'image'">
+      <div class="sqr-drop-zone">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#60A5FA" stroke-width="1.5" stroke-linecap="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        <p class="sqr-drop-zone__title">Glissez une image ici</p>
+        <p class="sqr-drop-zone__sub">PNG · JPG · PDF · ou <span class="sqr-link">cliquez pour sélectionner</span></p>
+      </div>
+    </ng-container>
+
+    <!-- ─── NFC ─── -->
+    <ng-container *ngIf="onglet() === 'nfc'">
+      <div class="sqr-nfc-zone">
+        <div class="sqr-nfc-anim">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#60A5FA" stroke-width="1.5" stroke-linecap="round">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <line x1="12" y1="20" x2="12.01" y2="20"/>
+          </svg>
+        </div>
+        <p class="sqr-nfc-title">Approchez le tag NFC</p>
+        <p class="sqr-nfc-sub">Placez votre téléphone près de l'étiquette NFC du capteur</p>
+      </div>
+    </ng-container>
+
+    <!-- ─── Saisie manuelle ─── -->
+    <ng-container *ngIf="onglet() === 'manuel'">
+      <div class="sqr-manuel">
+        <label class="sqr-lbl" for="sqr-code">Code capteur ou N° de série</label>
+        <div class="sqr-input-row">
+          <input id="sqr-code" class="sqr-input" type="text" placeholder="CPT-PR-018 ou SN-2026-A12F4"
+            [(ngModel)]="saisiCode" (keyup.enter)="onSaisirCode()"/>
+          <button class="sqr-search-btn" type="button" (click)="onSaisirCode()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Rechercher
+          </button>
+        </div>
+        <p class="sqr-hint">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Le code se trouve sur l'étiquette collée sur le boîtier du capteur
+        </p>
+      </div>
+    </ng-container>
+
+    <!-- ─── Résultat de scan (partagé) ─── -->
+    <div class="sqr-result" *ngIf="detected()">
+      <div class="sqr-result__header">
+        <div class="sqr-result__ok">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Capteur identifié
+        </div>
+        <span class="sqr-result__time">il y a 2s</span>
+      </div>
+      <div class="sqr-result__body">
+        <div class="sqr-result__field">
+          <div class="sqr-result__lbl">Code détecté</div>
+          <code class="sqr-result__code">{{ detected()!.code }}</code>
+        </div>
+        <div class="sqr-result__field">
+          <div class="sqr-result__lbl">N° série</div>
+          <code class="sqr-result__mono">{{ detected()!.numSerie }}</code>
+        </div>
+        <div class="sqr-result__field">
+          <div class="sqr-result__lbl">Modèle</div>
+          <div class="sqr-result__val">{{ detected()!.modele }}</div>
+        </div>
+        <div class="sqr-result__field">
+          <div class="sqr-result__lbl">Statut DB</div>
+          <div class="sqr-result__val" [style.color]="detected()!.statut === 'exists' ? '#FBBF24' : '#34D399'">
+            {{ detected()!.statut === 'exists' ? '🗄 Existe · enregistré' : '✨ Nouveau capteur' }}
+          </div>
+        </div>
+      </div>
+      <div class="sqr-result__actions">
+        <button class="sqr-result__btn sqr-result__btn--primary" type="button" (click)="onOuvrirFiche()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Ouvrir la fiche
+        </button>
+        <button class="sqr-result__btn" type="button">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Créer intervention
+        </button>
+        <button class="sqr-result__btn" type="button" (click)="resetScan()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.89-6.56"/></svg>
+          Re-scanner
+        </button>
+      </div>
+    </div>
+
+    <!-- Astuce terrain -->
+    <div class="sqr-tip">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span><strong>Astuce terrain :</strong> Si le QR Code est endommagé, utiliser la lecture NFC ou la saisie du n° de série gravé sur le boîtier.</span>
+    </div>
+
+  </div><!-- /sqr-body -->
+
+  <!-- Footer -->
+  <div class="sqr-foot">
+    <span class="sqr-foot__info">3 scans aujourd'hui · <span class="sqr-link">historique</span></span>
+    <button class="sqr-foot__btn" type="button" (click)="fermer.emit()">Fermer</button>
+  </div>
+
+</div><!-- /sqr-modal -->

@@ -1,0 +1,510 @@
+<!-- Overlay -->
+<div class="na-overlay" (click)="state.fermerModalCreer()"></div>
+
+<!-- Panel -->
+<div class="na-panel" (click)="$event.stopPropagation()">
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+  <div class="na-header">
+    <div class="na-header__left">
+      <div class="na-header__icon">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="na-header__title">Créer une alerte</h3>
+        <p class="na-header__sub">
+          Code auto-généré ·
+          <span class="na-mono">{{ nextCode }}</span>
+          · Brouillon sauvé {{ draftSavedLabel }}
+        </p>
+      </div>
+    </div>
+    <div class="na-header__right">
+      <!-- Mode toggle -->
+      <div class="na-mode-toggle">
+        <button class="na-mode-btn" [class.na-mode-btn--on]="mode === 'rapide'" (click)="mode = 'rapide'" type="button">Mode rapide</button>
+        <button class="na-mode-btn" [class.na-mode-btn--on]="mode === 'complet'" (click)="mode = 'complet'" type="button">Mode complet</button>
+      </div>
+      <button class="na-close" type="button" (click)="state.fermerModalCreer()" title="Fermer (Échap)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ BANNER IoT pré-rempli ═══════════════════════════════════════════════ -->
+  <div class="na-banner na-banner--iot" *ngIf="showIotBanner">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/>
+      <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+    </svg>
+    <div class="na-banner__text">
+      <span class="na-banner__strong">Pré-rempli depuis capteur IoT</span>
+      <span class="na-mono na-banner__code">{{ capteurCode }}</span>
+      · {{ capteurSelected?.name ?? '' }} · valeur, infrastructure, commune, gravité suggérée
+    </div>
+    <button class="na-banner__link" type="button">Voir capteur</button>
+    <button class="na-banner__close" type="button" (click)="iotBannerIgnore = true">×</button>
+  </div>
+
+  <!-- ══ BANNER doublon ══════════════════════════════════════════════════════ -->
+  <div class="na-banner na-banner--warn" *ngIf="doublonAlerte">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <div class="na-banner__text">
+      <span class="na-banner__strong">Doublon possible :</span>
+      <span class="na-mono na-banner__code">{{ doublonAlerte!.code }}</span>
+      ouverte sur la même infrastructure ·
+      <button class="na-banner__link" type="button">fusionner</button>
+      ou
+      <button class="na-banner__link" type="button" (click)="doublonIgnore = true">ignorer</button>
+    </div>
+  </div>
+
+  <!-- ══ BODY (form left + aside right) ══════════════════════════════════════ -->
+  <div class="na-body">
+
+    <!-- ── LEFT: scrollable form ──────────────────────────────────────────── -->
+    <div class="na-form">
+
+      <!-- §1 Identification -->
+      <div class="na-section">
+        <div class="na-section__hdr">
+          <span class="na-section__num">1</span>
+          <h4 class="na-section__title">Identification</h4>
+        </div>
+
+        <!-- Titre -->
+        <div class="na-field na-field--full">
+          <label class="na-label">Titre de l'alerte <span class="na-req">*</span></label>
+          <input class="na-input" type="text" [(ngModel)]="titre" autocomplete="off"
+            placeholder="Ex: Niveau réservoir R-01 critique — chute rapide détectée">
+        </div>
+
+        <!-- Type + Gravité -->
+        <div class="na-row2">
+          <div class="na-field">
+            <label class="na-label">Type d'anomalie <span class="na-req">*</span></label>
+            <select class="na-select" [(ngModel)]="typeAnomalie">
+              <option value="">Sélectionner…</option>
+              <option *ngFor="let t of TYPES_ANOMALIE" [value]="t">{{ t }}</option>
+            </select>
+          </div>
+          <div class="na-field">
+            <label class="na-label">Gravité <span class="na-req">*</span></label>
+            <div class="na-sev-group">
+              <button class="na-sev-btn na-sev-btn--crit" type="button"
+                [class.na-sev-btn--active]="severite === 'critique'"
+                (click)="severite = 'critique'">CRITIQUE</button>
+              <button class="na-sev-btn na-sev-btn--haute" type="button"
+                [class.na-sev-btn--active]="severite === 'haute'"
+                (click)="severite = 'haute'">HAUTE</button>
+              <button class="na-sev-btn na-sev-btn--moy" type="button"
+                [class.na-sev-btn--active]="severite === 'moyenne'"
+                (click)="severite = 'moyenne'">MOY.</button>
+              <button class="na-sev-btn na-sev-btn--basse" type="button"
+                [class.na-sev-btn--active]="severite === 'basse'"
+                (click)="severite = 'basse'">BASSE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="na-field na-field--full">
+          <label class="na-label">Description</label>
+          <textarea class="na-textarea" [(ngModel)]="description" rows="2"
+            placeholder="Contexte, observations terrain, impact estimé sur la population…"></textarea>
+        </div>
+      </div>
+
+      <!-- §2 Localisation & infrastructure -->
+      <div class="na-section">
+        <div class="na-section__hdr">
+          <span class="na-section__num">2</span>
+          <h4 class="na-section__title">Localisation &amp; infrastructure</h4>
+          <span class="na-section__links">→ lié à <a class="na-link">Infrastructures</a>, <a class="na-link">Gouvernance</a></span>
+        </div>
+
+        <!-- Infrastructure + sous-élément -->
+        <div class="na-row2">
+          <div class="na-field">
+            <label class="na-label">Infrastructure <span class="na-req">*</span></label>
+            <div class="na-select-ext">
+              <select class="na-select" [(ngModel)]="infraId" (ngModelChange)="onInfraChange()">
+                <option value="">Aucune</option>
+                <option *ngFor="let i of infraOptions" [value]="i.id">{{ i.name }} ({{ i.commune }})</option>
+              </select>
+              <button class="na-ext-btn" type="button" title="Voir la fiche infrastructure">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              </button>
+            </div>
+            <span class="na-field__hint" *ngIf="aucunOuvrageDansPerimetre">
+              Aucun ouvrage ni capteur référencé dans votre commune ({{ commune }}) — alerte manuelle.
+            </span>
+          </div>
+          <div class="na-field">
+            <label class="na-label">Sous-élément</label>
+            <input class="na-input" type="text" [(ngModel)]="sousElement" placeholder="Ex: vanne V-12, cuve principale…">
+          </div>
+        </div>
+
+        <!-- Commune + Section + Population -->
+        <div class="na-row3">
+          <div class="na-field">
+            <label class="na-label">Commune <span class="na-req">*</span></label>
+            <select class="na-select" [(ngModel)]="commune" [disabled]="communeLocked">
+              <option value="">Sélectionner…</option>
+              <option *ngFor="let c of communeOptions" [value]="c">{{ c }}</option>
+            </select>
+          </div>
+          <div class="na-field">
+            <label class="na-label">Section</label>
+            <select class="na-select" [(ngModel)]="section">
+              <option value="">—</option>
+              <option *ngFor="let s of sectionOptions" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+          <div class="na-field">
+            <label class="na-label">Pop. impactée</label>
+            <div class="na-auto-val">
+              <span *ngIf="infraSelected?.population">~{{ infraSelected!.population!.toLocaleString('fr') }}</span>
+              <span *ngIf="!infraSelected?.population" class="na-auto-val__empty">—</span>
+              <span class="na-auto-tag">auto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- §3 Source & mesure -->
+      <div class="na-section">
+        <div class="na-section__hdr">
+          <span class="na-section__num">3</span>
+          <h4 class="na-section__title">Source &amp; mesure</h4>
+          <span class="na-section__links">→ lié à <a class="na-link">Capteurs IoT</a></span>
+        </div>
+
+        <!-- Source pills -->
+        <div class="na-source-group">
+          <button class="na-src-pill" type="button"
+            [class.na-src-pill--on]="source === 'iot'"
+            (click)="source = 'iot'; onSourceChange()">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/>
+            </svg>
+            Capteur IoT
+          </button>
+          <button class="na-src-pill" type="button"
+            [class.na-src-pill--on]="source === 'technicien'"
+            (click)="source = 'technicien'; onSourceChange()">Technicien</button>
+          <button class="na-src-pill" type="button"
+            [class.na-src-pill--on]="source === 'citoyen'"
+            (click)="source = 'citoyen'; onSourceChange()">Citoyen</button>
+          <button class="na-src-pill" type="button"
+            [class.na-src-pill--on]="source === 'supervision'"
+            (click)="source = 'supervision'; onSourceChange()">Supervision</button>
+          <button class="na-src-pill" type="button"
+            [class.na-src-pill--on]="source === 'systeme'"
+            (click)="source = 'systeme'; onSourceChange()">Système</button>
+        </div>
+
+        <!-- IoT block (conditionally shown) -->
+        <div class="na-iot-block" *ngIf="source === 'iot'">
+          <div class="na-row3">
+            <div class="na-field">
+              <label class="na-label">Capteur déclencheur</label>
+              <div class="na-select-ext">
+                <select class="na-select" [(ngModel)]="capteurCode" (ngModelChange)="onCapteurChange()">
+                  <option value="">—</option>
+                  <option *ngFor="let s of capteurOptions" [value]="s.code">{{ s.code }}</option>
+                </select>
+                <button class="na-ext-btn" type="button" title="Voir la fiche capteur" *ngIf="capteurCode">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                </button>
+              </div>
+              <span class="na-field__hint" *ngIf="capteurSelected">
+                <span class="na-status-dot" [class.na-status-dot--on]="capteurSelected!.status === 'connecte'"></span>
+                {{ capteurSelected!.name }} · {{ capteurSelected!.status === 'connecte' ? 'En ligne' : 'Hors ligne' }}
+              </span>
+            </div>
+            <div class="na-field">
+              <label class="na-label">Valeur mesurée</label>
+              <div class="na-measure-input">
+                <input class="na-input na-input--val" type="number" [(ngModel)]="valeurMesuree" placeholder="0">
+                <span class="na-measure-unit">{{ unite || '—' }}</span>
+              </div>
+            </div>
+            <div class="na-field">
+              <label class="na-label">Seuil dépassé</label>
+              <div class="na-measure-input">
+                <input class="na-input na-input--val" type="number" [(ngModel)]="seuilDepasse" placeholder="0">
+                <span class="na-measure-unit">{{ unite || '—' }}</span>
+                <button class="na-ext-btn" type="button" title="Modifier le seuil">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pièces jointes -->
+        <div class="na-field na-field--full" *ngIf="mode === 'complet'">
+          <label class="na-label">Pièces jointes</label>
+          <div class="na-upload-zone">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+            Photos, audio, vidéo terrain
+          </div>
+        </div>
+      </div>
+
+      <!-- §4 Traitement & SLA -->
+      <div class="na-section">
+        <div class="na-section__hdr">
+          <span class="na-section__num">4</span>
+          <h4 class="na-section__title">Traitement &amp; SLA</h4>
+          <span class="na-section__links">→ lié à <a class="na-link">Interventions</a>, <a class="na-link">Gouvernance</a></span>
+        </div>
+
+        <!-- Date + SLA -->
+        <div class="na-row2">
+          <div class="na-field">
+            <label class="na-label">Date / heure constat</label>
+            <input class="na-input" type="text" [(ngModel)]="dateConstat">
+          </div>
+          <div class="na-field">
+            <label class="na-label">SLA (matrice gouvernance)</label>
+            <div class="na-sla-badge" [class.na-sla-badge--crit]="severite === 'critique'">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {{ slaLabel }} — échéance {{ slaEcheance }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Assigner + Priorité -->
+        <div class="na-row2">
+          <div class="na-field">
+            <label class="na-label">Assigner à</label>
+            <select class="na-select" [(ngModel)]="technicienId">
+              <option value="">Non assigné</option>
+              <option *ngFor="let t of techniciens" [value]="t.id">
+                {{ t.name }} · {{ t.specialty }} · {{ t.zone }}
+              </option>
+            </select>
+          </div>
+          <div class="na-field">
+            <label class="na-label">Priorité file</label>
+            <select class="na-select" [(ngModel)]="priorite">
+              <option [value]="1">1 — Urgent</option>
+              <option [value]="2">2 — Haute</option>
+              <option [value]="3">3 — Normale</option>
+              <option [value]="4">4 — Basse</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Créer intervention -->
+        <label class="na-check-row">
+          <input type="checkbox" class="na-check" [(ngModel)]="creerIntervention">
+          <div>
+            <span class="na-check-label">Créer une intervention liée</span>
+            <span class="na-check-hint">génère automatiquement le dossier d'intervention pré-rempli</span>
+          </div>
+          <span class="na-check-auto" *ngIf="creerIntervention">génère automatiquement</span>
+        </label>
+      </div>
+
+      <!-- §5 Liaisons croisées (mode complet seulement) -->
+      <div class="na-section" *ngIf="mode === 'complet'">
+        <div class="na-section__hdr">
+          <span class="na-section__num">5</span>
+          <h4 class="na-section__title">Liaisons croisées</h4>
+          <span class="na-section__tag">avancé</span>
+        </div>
+
+        <div class="na-row2">
+          <div class="na-field">
+            <label class="na-label">Ressource impactée</label>
+            <select class="na-select" [(ngModel)]="ressourceId">
+              <option value="">—</option>
+              <option *ngIf="infraSelected?.resourceName" [value]="infraSelected!.resourceId ?? ''">{{ infraSelected!.resourceName }}</option>
+            </select>
+          </div>
+          <div class="na-field">
+            <label class="na-label">Alertes liées</label>
+            <div class="na-linked-badges">
+              <span class="na-mono-tag" *ngIf="doublonAlerte">{{ doublonAlerte!.code }}</span>
+              <button class="na-add-link" type="button">+ ajouter</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="na-toggles">
+          <label class="na-toggle-item">
+            <input type="checkbox" [(ngModel)]="impactQualite">
+            <span>Impact qualité eau</span>
+          </label>
+          <label class="na-toggle-item">
+            <input type="checkbox" [(ngModel)]="conformiteReg">
+            <span>Conformité réglementaire</span>
+          </label>
+          <label class="na-toggle-item">
+            <input type="checkbox" [(ngModel)]="notifierCitoyens">
+            <span>Notifier citoyens</span>
+          </label>
+        </div>
+      </div>
+
+    </div><!-- /na-form -->
+
+    <!-- ── RIGHT: live preview + intelligence ─────────────────────────────── -->
+    <div class="na-aside">
+
+      <!-- Aperçu live -->
+      <div class="na-aside-block">
+        <div class="na-aside-block__hdr">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          Aperçu live
+        </div>
+        <div class="na-preview-card" [class.na-preview-card--crit]="severite === 'critique'">
+          <div class="na-preview-card__top">
+            <span class="na-mono" style="font-size:.67rem;color:#64748b">{{ apercu.code }}</span>
+            <span class="na-preview-sev" [class.na-preview-sev--crit]="severite === 'critique'"
+              [class.na-preview-sev--haute]="severite === 'haute'"
+              [class.na-preview-sev--moy]="severite === 'moyenne'"
+              [class.na-preview-sev--basse]="severite === 'basse'">
+              {{ severiteLabels[severite] | uppercase }}
+            </span>
+          </div>
+          <p class="na-preview-card__title">{{ apercu.titre }}</p>
+          <div class="na-preview-card__meta">
+            <span *ngIf="apercu.commune !== '—'">
+              <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ apercu.commune }}<span *ngIf="apercu.section"> · {{ apercu.section }}</span>
+            </span>
+            <span *ngIf="apercu.capteurCode">
+              <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+              {{ apercu.capteurCode }}<span *ngIf="apercu.valeur !== null"> · {{ apercu.valeur }} {{ apercu.unite }} / {{ apercu.seuil ?? '?' }} {{ apercu.unite }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intelligence -->
+      <div class="na-aside-block">
+        <div class="na-aside-block__hdr na-aside-block__hdr--ai">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          Intelligence
+        </div>
+
+        <!-- Technicien recommandé -->
+        <div class="na-intel-card" *ngIf="techRecommande">
+          <p class="na-intel-card__lbl">Technicien recommandé</p>
+          <p class="na-intel-card__val">
+            {{ techRecommande!.name }}
+            <span class="na-intel-card__sub">· {{ techRecommande!.specialty }} · {{ techRecommande!.zone }}</span>
+          </p>
+        </div>
+
+        <!-- Coût estimé -->
+        <div class="na-intel-card">
+          <p class="na-intel-card__lbl">Coût estimé</p>
+          <p class="na-intel-card__val">
+            ~2 400 HTG
+            <span class="na-intel-card__sub">· basé sur historique</span>
+          </p>
+        </div>
+
+        <!-- Pièces probables -->
+        <div class="na-intel-card" *ngIf="infraSelected?.type === 'reservoir'">
+          <p class="na-intel-card__lbl">Pièces probables</p>
+          <p class="na-intel-card__val">
+            Vanne V-12 · Joint étanchéité
+            <a class="na-link" style="font-size:.68rem">stock OK</a>
+          </p>
+        </div>
+
+        <!-- Interventions similaires -->
+        <div class="na-intel-card">
+          <p class="na-intel-card__lbl">Interventions similaires</p>
+          <p class="na-intel-card__hist">
+            <span class="na-mono" style="font-size:.67rem">INT-2025-148</span> · résolue 3h12
+          </p>
+          <p class="na-intel-card__hist">
+            <span class="na-mono" style="font-size:.67rem">INT-2025-092</span> · résolue 2h45
+          </p>
+        </div>
+      </div>
+
+      <!-- Impact à la création -->
+      <div class="na-aside-block">
+        <div class="na-aside-block__hdr">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          Impact à la création
+        </div>
+        <div class="na-impact-list">
+          <div class="na-impact-item" *ngFor="let imp of impacts">
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            {{ imp }}
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /na-aside -->
+
+  </div><!-- /na-body -->
+
+  <!-- ══ FOOTER ════════════════════════════════════════════════════════════ -->
+  <div class="na-footer">
+    <div class="na-footer__left">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+      </svg>
+      Brouillon auto-sauvé {{ draftSavedLabel }}
+      <span class="na-footer__sep">·</span>
+      Champs requis :
+      <span class="na-footer__count" [class.na-footer__count--ok]="allRequiredFilled">
+        {{ champsRemplis }}/{{ champsTotal }}
+        <svg *ngIf="allRequiredFilled" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+    </div>
+    <div class="na-footer__right">
+      <button class="na-btn na-btn--ghost" type="button" (click)="state.fermerModalCreer()">Annuler</button>
+      <button class="na-btn na-btn--ghost" type="button">Sauver brouillon</button>
+      <button class="na-btn na-btn--primary" type="button"
+        [disabled]="!canSubmit" (click)="soumettre()">
+        Créer l'alerte
+        <kbd class="na-kbd">Ctrl+S</kbd>
+      </button>
+    </div>
+  </div>
+
+</div><!-- /na-panel -->

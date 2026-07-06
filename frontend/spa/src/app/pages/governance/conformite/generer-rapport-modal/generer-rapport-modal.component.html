@@ -1,0 +1,143 @@
+<div *ngIf="visible" class="rpt-overlay" (click)="fermer.emit()">
+  <div class="rpt-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="rpt-head">
+      <div class="rpt-head__icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div>
+        <h3 class="rpt-head__h3">Générer un rapport de conformité</h3>
+        <p class="rpt-head__sub">Rapport mensuel DINEPA — Avril 2026 · RPT-MENS-2026-05</p>
+      </div>
+      <button class="rpt-close" (click)="fermer.emit()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="rpt-body">
+
+      <!-- Section list sidebar -->
+      <div class="rpt-sec-list">
+        <div class="rpt-sec-list__title">Sections du rapport</div>
+        <div *ngFor="let s of sections" class="rpt-sec-item" [ngClass]="sectionCls(s)">
+          <svg *ngIf="s.statut==='ok'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg *ngIf="s.statut==='active'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/></svg>
+          <svg *ngIf="s.statut==='warning'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <svg *ngIf="s.statut==='pending'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>
+          <span class="rpt-sec-item__lbl">{{ s.num }}. {{ s.titre }}</span>
+          <span *ngIf="s.statut==='active'" class="rpt-sec-item__tag">en cours</span>
+          <span *ngIf="s.count" class="rpt-sec-item__cnt">{{ s.count }}</span>
+        </div>
+        <div class="rpt-sec-prog">
+          <div class="rpt-sec-prog__lbl">Progression globale</div>
+          <div class="rpt-sec-prog__bar"><div class="rpt-sec-prog__fill" [style.width.%]="progressPct"></div></div>
+          <div class="rpt-sec-prog__txt">{{ doneCount }} sur {{ sections.length }} sections validées</div>
+        </div>
+      </div>
+
+      <!-- Main content -->
+      <div class="rpt-content">
+
+        <!-- Config -->
+        <div class="rpt-config">
+          <div class="rpt-config__row">
+            <div class="rpt-field">
+              <label class="rpt-lbl">Type de rapport</label>
+              <select class="rpt-select"><option>Mensuel DINEPA · v2.3</option></select>
+            </div>
+            <div class="rpt-field">
+              <label class="rpt-lbl">Période couverte</label>
+              <select class="rpt-select"><option>Avril 2026</option></select>
+            </div>
+            <div class="rpt-field">
+              <label class="rpt-lbl">Périmètre</label>
+              <select class="rpt-select"><option>OREPA Ouest · Léogâne + Petit-Goâve</option></select>
+            </div>
+            <div class="rpt-field">
+              <label class="rpt-lbl">Destinataire</label>
+              <select class="rpt-select rpt-select--violet"><option>DINEPA national + OREPA Ouest</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Qualité eau -->
+        <div class="rpt-section">
+          <div class="rpt-section__head">
+            <div class="rpt-section__num">4</div>
+            <span class="rpt-section__titre">Qualité de l'eau · données collectées automatiquement</span>
+            <span class="rpt-kpi-badge">947 mesures · 32 capteurs</span>
+          </div>
+          <div class="rpt-kpis">
+            <div class="rpt-kpi rpt-kpi--green">
+              <div class="rpt-kpi__lbl">pH moyen</div>
+              <div class="rpt-kpi__val">7.2</div>
+              <div class="rpt-kpi__note">norme OMS : 6.5 - 8.5 · conforme</div>
+            </div>
+            <div class="rpt-kpi rpt-kpi--amber">
+              <div class="rpt-kpi__lbl">Turbidité moy.</div>
+              <div class="rpt-kpi__val">4.8 <span class="rpt-kpi__unit">NTU</span></div>
+              <div class="rpt-kpi__note rpt-kpi__note--amber">norme : &lt;5 NTU · limite atteinte</div>
+            </div>
+            <div class="rpt-kpi rpt-kpi--green">
+              <div class="rpt-kpi__lbl">Chlore libre</div>
+              <div class="rpt-kpi__val">0.4 <span class="rpt-kpi__unit">mg/L</span></div>
+              <div class="rpt-kpi__note">norme : 0.2-1.0 mg/L · conforme</div>
+            </div>
+          </div>
+          <div class="rpt-chart-box">
+            <div class="rpt-chart-title">Évolution turbidité (30 jours)</div>
+            <svg viewBox="0 0 500 80" class="rpt-chart">
+              <line x1="0" y1="30" x2="500" y2="30" stroke="#F59E0B" stroke-width="0.5" stroke-dasharray="3,2" opacity="0.4"/>
+              <text x="3" y="27" font-size="8" fill="#FBBF24">5 NTU max</text>
+              <polyline points="0,55 40,52 80,50 120,48 160,52 200,55 240,50 280,45 320,42 360,38 400,42 440,38 500,32" fill="none" stroke="#FBBF24" stroke-width="1.5"/>
+              <polyline points="0,55 40,52 80,50 120,48 160,52 200,55 240,50 280,45 320,42 360,38 400,42 440,38 500,32 500,80 0,80" fill="#FBBF24" opacity="0.08"/>
+              <circle cx="500" cy="32" r="3" fill="#FBBF24"/>
+              <text x="4" y="78" font-size="8" fill="#6B7785">15 mars</text>
+              <text x="450" y="78" font-size="8" fill="#6B7785">14 avr</text>
+            </svg>
+          </div>
+          <div class="rpt-warn-note">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Turbidité tendance à la hausse · à surveiller · 1 dépassement (capteur QA-007 le 11/04)
+          </div>
+        </div>
+
+        <!-- Section 8: Non-conformités -->
+        <div class="rpt-section">
+          <div class="rpt-section__head">
+            <div class="rpt-section__num rpt-section__num--amber">8</div>
+            <span class="rpt-section__titre">Non-conformités détectées</span>
+            <span class="rpt-kpi-badge rpt-kpi-badge--amber">{{ nonConformites.length }} à justifier</span>
+          </div>
+          <div class="rpt-nc-list">
+            <div *ngFor="let nc of nonConformites" class="rpt-nc">
+              <div class="rpt-nc__head">
+                <span class="rpt-nc__badge">{{ nc.badge }}</span>
+                <span class="rpt-nc__titre">{{ nc.titre }}</span>
+              </div>
+              <div class="rpt-nc__sous">{{ nc.sous }}</div>
+              <textarea class="rpt-nc__textarea" placeholder="Justification (obligatoire pour soumission)..." [(ngModel)]="nc.justification"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="rpt-foot">
+      <div class="rpt-foot__info">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Données collectées automatiquement · validation par Maria Romain requise avant envoi
+      </div>
+      <div class="rpt-foot__actions">
+        <button class="rpt-foot__btn">Prévisualiser PDF</button>
+        <button class="rpt-foot__btn">Enregistrer brouillon</button>
+        <button class="rpt-foot__btn rpt-foot__btn--green">Soumettre à DINEPA</button>
+      </div>
+    </div>
+
+  </div>
+</div>

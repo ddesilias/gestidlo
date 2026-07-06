@@ -1,0 +1,60 @@
+/* Aligné sur les tokens du modal territoire (thème sombre) :
+   $bg #0F1419 · $bg-card #13202B · $bg-in #1A2530 · $bdr #1F2A33 · $bdr-btn #2A3744
+   $text #E2E8EE · $muted #8B9AAB · $vmuted #6B7785 · blue #60A5FA · green #4ADE80 · amber #FBBF24 · red #FB7185 */
+:host { display:block; color:#E2E8EE; }
+
+.field-label { display:block; font-size:11px; color:#8B9AAB; margin:14px 0 5px; }
+.field-label:first-child { margin-top:0; }
+.field-label .muted { color:#6B7785; font-weight:400; font-size:10px; }
+.muted { color:#6B7785; font-weight:400; }
+
+.filter-pill {
+  display:flex; align-items:center; gap:7px; padding:7px 10px; border-radius:6px;
+  background:#0F1419; border:1px solid #1F2A33; font-size:11px; color:#8B9AAB; margin-bottom:14px;
+}
+.filter-pill strong { color:#F5F7FA; }
+.filter-pill .ico { color:#60A5FA; }
+
+.field {
+  display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:6px;
+  background:#1A2530; border:1px solid #2A3744; font-size:12px; color:#E2E8EE;
+}
+.field.locked { opacity:.85; }
+.field.locked .value { font-weight:500; }
+.field.locked .lock { margin-left:auto; opacity:.6; }
+.field.empty { justify-content:space-between; color:#6B7785; }
+
+.hint { margin:5px 0 0; font-size:10px; color:#6B7785; }
+
+.resp-card {
+  display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:6px;
+  background:#1A2530; border:1px solid #2A3744;
+}
+.avatar {
+  width:32px; height:32px; border-radius:6px; display:grid; place-items:center; flex-shrink:0;
+  background:rgba(96,165,250,.14); color:#60A5FA; font-weight:600; font-size:12px;
+}
+.resp-info { display:flex; flex-direction:column; min-width:0; }
+.resp-role { font-size:9px; letter-spacing:.04em; color:#6B7785; }
+.resp-name { font-weight:500; font-size:13px; color:#E2E8EE; }
+.status { margin-left:auto; font-size:11px; color:#6B7785; white-space:nowrap; }
+.status.online { color:#4ADE80; }
+
+.btn-inline {
+  background:rgba(96,165,250,.12); color:#60A5FA; border:1px solid rgba(96,165,250,.3); border-radius:6px;
+  padding:6px 10px; font-size:11px; cursor:pointer;
+}
+.btn-inline:hover { background:rgba(96,165,250,.2); }
+
+/* ── Sélecteur TEPAC ────────────────────────────────────────────── */
+.picker { width:100%; justify-content:flex-start; cursor:pointer; text-align:left; }
+.picker .chevron { margin-left:auto; opacity:.6; }
+.picker-panel { margin-top:6px; border:1px solid #2A3744; border-radius:6px; background:#13202B; max-height:260px; overflow-y:auto; }
+.picker-search { width:100%; box-sizing:border-box; background:#1A2530; border:0; border-bottom:1px solid #1F2A33; color:#E2E8EE; padding:9px 12px; outline:none; font-size:12px; }
+.picker-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 12px; background:transparent; border:0; cursor:pointer; text-align:left; color:#E2E8EE; }
+.picker-item:hover { background:#1A2530; }
+.pill { margin-left:auto; font-size:10px; padding:2px 8px; border-radius:999px; border:1px solid; white-space:nowrap; }
+.pill.actif { color:#4ADE80; border-color:rgba(74,222,128,.35); background:rgba(74,222,128,.1); }
+.pill.vacant { color:#FBBF24; border-color:rgba(251,191,36,.35); background:rgba(251,191,36,.1); }
+.pill.suspendu { color:#FB7185; border-color:rgba(251,113,133,.35); background:rgba(251,113,133,.1); }
+.hint.center { text-align:center; padding:14px; }

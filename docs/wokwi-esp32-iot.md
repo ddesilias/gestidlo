@@ -70,3 +70,34 @@ Dans le SPA : `http://localhost:4200` → login `operator/operator` → page **A
 1. Page **Alertes** : sélectionner une alerte ACTIVE
 2. Cliquer **Créer un ticket** : lance le process Camunda `gestidlo_intervention`
 3. Cockpit : `http://localhost:9080/camunda/app/cockpit/default/` (admin/admin)
+
+## 7) Capteurs IoT — registre live (page Capteurs IoT)
+
+Le payload `POST /api/iot/measurements` accepte désormais `sensorCode`, `battery`, `signal`.
+Quand `sensorCode` (ou à défaut `sensorId`) correspond au **code d'un capteur du registre**
+(table `capteur`), l'ingestion met à jour son état live (dernière valeur, batterie, signal,
+horodatage). La page **Capteurs IoT** (terrain = commune, superviseur = département) recalcule
+l'état (`en-ligne` / `attention` / `critique` / `hors-ligne`) selon les seuils par type et
+rafraîchit toutes les 5 s.
+
+Le firmware Wokwi envoie déjà les `sensorCode` des capteurs seedés à Carrefour :
+`CPT-PR-CAR-001` (pression, validé), `CPT-NV-CAR-002` (niveau, validé),
+`CPT-DB-CAR-003` (débit, **EN ATTENTE** → reste hors-ligne tant que le superviseur Ouest ne l'a pas validé).
+
+Test sans matériel (curl, après login) :
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:9083/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"operator@dinepa.ht","password":"operator"}' | jq -r .token)
+
+curl -X POST http://localhost:9083/api/iot/measurements \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"pointId":"POINT-001","sensorId":"CPT-PR-CAR-001","sensorCode":"CPT-PR-CAR-001",
+       "type":"PRESSURE","value":0.6,"unit":"bar","battery":82,"signal":-61}'
+```
+
+Cycle complet de validation : le TEPAC déclare un capteur (page Capteurs IoT → **Déclarer un
+capteur**, statut EN ATTENTE) → le superviseur Ouest (`doune`) le **Valide/Rejette** → notification
+au TEPAC. Tant qu'un capteur est en attente, ses mesures live sont stockées mais l'état reste
+« En attente » jusqu'à validation.

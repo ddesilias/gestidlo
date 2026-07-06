@@ -43,6 +43,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       GESTIDLO_JWT_SECRET: ${GESTIDLO_JWT_SECRET:-change-me-please-change-me-please-change-me-32bytes}
+    # Base H2 fichier persistée hors du conteneur : survit au restart ET à la recréation.
+    volumes:
+      - api-metier-data:/app/data
     depends_on:
       camunda-api:
         condition: service_healthy
@@ -87,8 +90,14 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost/ >/dev/null 2>&1 || exit 1"]
+      # 127.0.0.1 et non localhost : dans l'image alpine, localhost résout d'abord en IPv6 [::1],
+      # or nginx n'écoute qu'en IPv4 (listen 80) → connexion refusée → conteneur marqué unhealthy à tort.
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
       start_period: 10s
+
+# Volume nommé pour la base H2 d'api-metier (persistance durable).
+volumes:
+  api-metier-data:

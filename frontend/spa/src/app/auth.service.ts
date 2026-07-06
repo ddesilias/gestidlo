@@ -4,7 +4,14 @@ import { HttpClient } from '@angular/common/http';
 
 export type AuthUser = {
   username: string;
+  email?: string;
+  nom?: string;
   roles: string[];
+  /** Périmètre dérivé du token — null pour un compte hors URD (ex. admin DINEPA). */
+  urdId?: string | null;
+  dept?: string | null;
+  /** Commune du TEPAC (périmètre fin) — null pour superviseur/admin. */
+  commune?: string | null;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -51,16 +58,21 @@ export class AuthService {
     return !!this.token$.value;
   }
 
-  login(username: string, password: string) {
-    return this.http.post<any>(`${this.baseUrl}/login`, { username, password }).pipe(
+  login(email: string, password: string) {
+    return this.http.post<any>(`${this.baseUrl}/login`, { email, password }).pipe(
       tap((res) => {
         const token = String(res.token ?? '');
         if (!token) {
           throw new Error('Missing token');
         }
         const user: AuthUser = {
-          username: String(res.username ?? username),
-          roles: Array.isArray(res.roles) ? (res.roles as string[]) : []
+          username: String(res.username ?? ''),
+          email: res.email ?? email,
+          nom: res.nom ?? undefined,
+          roles: Array.isArray(res.roles) ? (res.roles as string[]) : [],
+          urdId: res.urdId ?? null,
+          dept: res.dept ?? null,
+          commune: res.commune ?? null
         };
         localStorage.setItem(this.tokenKey, token);
         localStorage.setItem(this.userKey, JSON.stringify(user));

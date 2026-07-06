@@ -1,0 +1,785 @@
+<app-gov-shell title="URD" [moduleNum]="2">
+<div class="ud-page" *ngIf="urd() as u; else notFound">
+
+  <!-- ══ Fil d'Ariane ══ -->
+  <div class="ud-breadcrumb">
+    <button class="ud-btn ud-btn--ghost" (click)="retour()">
+      <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Institutions
+    </button>
+    <svg width="9" height="9" fill="none" stroke="#6B7785" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <span style="color:#6B7785;font-size:10px">URD</span>
+    <svg width="9" height="9" fill="none" stroke="#6B7785" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <span style="color:#F5F7FA;font-size:10px;font-weight:500">{{ u.nom }}</span>
+  </div>
+
+  <!-- ══ En-tête persistant ══ -->
+  <div class="ud-header">
+    <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+      <span class="ud-title">{{ u.nom }}</span>
+      <span class="ud-pill ud-pill--success" *ngIf="statutDerive()==='deployee'">déployée</span>
+      <span class="ud-pill ud-pill--info" *ngIf="statutDerive()==='en-deploiement'">en déploiement</span>
+      <span class="ud-pill ud-pill--warning" *ngIf="statutDerive()==='adeployer'">à déployer</span>
+      <span class="ud-pill ud-pill--muted">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        milieu rural
+      </span>
+      <span style="font-size:11px;color:#6B7785">· département {{ u.dept }} · chef-lieu {{ u.city }}</span>
+    </div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="ud-btn ud-btn--ghost" (click)="activeTab.set('acteurs')">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Affecter TEPAC
+      </button>
+      <button class="ud-btn ud-btn--outline-info" (click)="voirAlertesDepart(u.dept)">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Alertes
+      </button>
+      <button class="ud-btn ud-btn--ghost" (click)="activeTab.set('conformite')">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Rapport
+      </button>
+      <button class="ud-btn ud-btn--ghost" (click)="activeTab.set('territoire')">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+        Carte
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ Bandeau KPI — 8 indicateurs (agrégats live, jamais stockés) ══ -->
+  <div class="ud-kpi-band">
+    <div class="ud-kpi">
+      <div class="ud-kpi__label">Communes couvertes</div>
+      <div class="ud-kpi__val">{{ kpiCommunesCouvertes() }}<span class="ud-kpi__total">/{{ u.communes }}</span></div>
+    </div>
+    <div class="ud-kpi">
+      <div class="ud-kpi__label">TEPAC affectés</div>
+      <div class="ud-kpi__val">{{ kpiTepacAssignes() }}</div>
+    </div>
+    <div class="ud-kpi">
+      <div class="ud-kpi__label">Zones supervisées</div>
+      <div class="ud-kpi__val">{{ kpiZonesSupervisees() }}</div>
+    </div>
+    <div class="ud-kpi" [class.ud-kpi--danger-active]="kpiCritiques() > 0">
+      <div class="ud-kpi__label">Communes critiques</div>
+      <div class="ud-kpi__val" [style.color]="kpiCritiques() > 0 ? '#FB7185' : null">{{ kpiCritiques() }}</div>
+    </div>
+    <div class="ud-kpi">
+      <div class="ud-kpi__label">Conformité</div>
+      <div class="ud-kpi__val" [style.color]="conformiteColor(kpiConformite())">{{ kpiConformite() }}%</div>
+    </div>
+    <div class="ud-kpi">
+      <div class="ud-kpi__label">Infrastructures</div>
+      <div class="ud-kpi__val">{{ kpiInfrastructures() }}</div>
+    </div>
+    <div class="ud-kpi">
+      <div class="ud-kpi__label">Réactivité 30j</div>
+      <div class="ud-kpi__val" [style.color]="conformiteColor(kpiReactivite())">{{ kpiReactivite() }}%</div>
+    </div>
+    <div class="ud-kpi" [class.ud-kpi--danger-active]="kpiValidations() > 0">
+      <div class="ud-kpi__label">Validations</div>
+      <div class="ud-kpi__val" [style.color]="kpiValidations() > 0 ? '#FBBF24' : null">{{ kpiValidations() }}</div>
+    </div>
+  </div>
+
+  <!-- ══ Barre d'onglets ══ -->
+  <div class="ud-tab-bar">
+    <button *ngFor="let t of pageTabs"
+            class="ud-page-tab"
+            [class.ud-page-tab--active]="activeTab() === t.id"
+            (click)="activeTab.set(t.id)">
+      {{ t.label }}
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 1 — Vue d'ensemble
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'overview'" class="ud-tab-content">
+    <div class="ud-overview-grid">
+
+      <!-- ── Colonne gauche : carte + équipe ── -->
+      <div class="ud-col">
+
+        <!-- Mini-carte -->
+        <div class="ud-card" style="padding:0;overflow:hidden">
+          <div class="ud-card__head" style="padding:9px 12px;margin-bottom:0">
+            <svg width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+            Carte du département
+          </div>
+          <div class="ud-map-ph">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            <span style="font-size:10px">communes · zones AEP · ouvrages</span>
+            <button class="ud-btn ud-btn--ghost" style="font-size:10px;margin-top:2px" (click)="activeTab.set('territoire')">
+              Voir la carte →
+            </button>
+          </div>
+        </div>
+
+        <!-- Équipe URD -->
+        <div class="ud-card">
+          <div class="ud-card__head">
+            <svg width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Équipe URD
+            <span style="margin-left:auto;font-size:9px;color:#6B7785">{{ u.users }} resp. · 15 pers.</span>
+          </div>
+          <div class="ud-member">
+            <span class="ud-avatar">{{ u.responsableInitiales }}</span>
+            <div style="flex:1">
+              <div style="font-size:11px;color:#F5F7FA">{{ u.responsable }}</div>
+              <div style="font-size:9px;color:#6B7785">responsable principal</div>
+            </div>
+            <span class="ud-online" *ngIf="u.statut==='active'"></span>
+          </div>
+          <div style="font-size:9px;color:#6B7785;padding:4px 0 2px 34px">
+            resp. social · resp. admin/commercial
+          </div>
+          <button class="ud-add-member" (click)="activeTab.set('equipe')">
+            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            Voir l'équipe complète →
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Colonne droite : tableau communes + activité ── -->
+      <div class="ud-col">
+
+        <!-- Tableau communes -->
+        <div class="ud-table-card">
+          <div class="ud-table-card__head">
+            <svg width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Communes du département
+            <div style="margin-left:auto;display:flex;gap:6px">
+              <button class="ud-filter-pill" [class.ud-filter-pill--active]="communeFilter()==='toutes'"
+                      (click)="communeFilter.set('toutes')">Toutes</button>
+              <button class="ud-filter-pill" [class.ud-filter-pill--active]="communeFilter()==='sans-tepac'"
+                      (click)="communeFilter.set('sans-tepac')">sans TEPAC</button>
+              <button class="ud-filter-pill" [class.ud-filter-pill--active]="communeFilter()==='sans-suite'"
+                      (click)="communeFilter.set('sans-suite')"
+                      [style.borderColor]="kpiSansSuite() > 0 ? 'rgba(251,113,133,.5)' : null">
+                alertes sans suite
+              </button>
+            </div>
+          </div>
+          <div class="ud-table">
+            <div class="ud-thead">
+              <div>Commune</div><div>TEPAC</div><div>Zones</div><div>Couv.</div><div>Alertes</div><div>Sans suite</div>
+            </div>
+            <div *ngFor="let row of filteredRows()"
+                 class="ud-tr" [ngClass]="rowClass(row)"
+                 (click)="openCommune(row)">
+              <div class="ud-tc ud-tc--name">{{ row.nom }}</div>
+              <div class="ud-tc">
+                <ng-container *ngIf="row.tepac">
+                  <svg width="10" height="10" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  {{ row.tepac }}
+                </ng-container>
+                <ng-container *ngIf="!row.tepac">
+                  <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  aucun
+                </ng-container>
+              </div>
+              <div class="ud-tc">{{ row.zonesCount || '—' }}</div>
+              <div class="ud-tc" [style.color]="coverageColor(row.coveragePct)">
+                {{ row.coveragePct !== null ? row.coveragePct + '%' : '—' }}
+              </div>
+              <div class="ud-tc">{{ row.alertesOuvertes.length || '—' }}</div>
+              <div class="ud-tc" [style.fontWeight]="row.sansSuiteCount > 0 ? '600' : null"
+                   [style.color]="row.sansSuiteCount > 0 ? '#FB7185' : '#4ADE80'">
+                {{ row.sansSuiteCount }}
+              </div>
+            </div>
+            <div *ngIf="filteredRows().length === 0" class="ud-empty">
+              Aucune commune ne correspond au filtre
+            </div>
+          </div>
+        </div>
+
+        <!-- Activité récente -->
+        <div class="ud-card">
+          <div class="ud-card__head">
+            <svg width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Activité récente
+          </div>
+          <div *ngFor="let a of activiteRecente()" class="ud-activity-row">
+            <div class="ud-activity-dot" [style.background]="activityColor(a.status)"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11px;color:#E2E8EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.title }}</div>
+              <div style="font-size:9px;color:#6B7785;margin-top:1px">{{ a.commune }} · {{ timeSince(a.updatedAt) }}</div>
+            </div>
+            <span class="ud-pill"
+                  [class.ud-pill--success]="a.status==='resolue'"
+                  [class.ud-pill--info]="a.status==='assignee'||a.status==='en-cours'"
+                  [class.ud-pill--warning]="a.status==='ouverte'"
+                  [class.ud-pill--danger]="a.status==='archivee'">
+              {{ a.status }}
+            </span>
+          </div>
+          <div *ngIf="activiteRecente().length === 0"
+               style="padding:14px;text-align:center;font-size:11px;color:#6B7785">
+            Aucune activité récente pour ce département
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bandeau priorité -->
+    <div class="ud-priority-banner" *ngIf="communesPrioritaires().length > 0">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span *ngFor="let c of communesPrioritaires(); let last = last">
+        <strong>{{ c.nom }}</strong> : {{ c.sansSuiteCount }} alerte{{ c.sansSuiteCount > 1 ? 's' : '' }} sans intervention, aucun TEPAC
+        <span *ngIf="!last"> · </span>
+      </span>
+      <span style="color:#FB7185"> — affecter un TEPAC débloquerait le traitement.</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 2 — Territoire & carte
+  ═════════════════════════════════════════════════════════════════ -->
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 2 — Territoire & carte (scopé au département)
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'territoire'" class="ud-tab-content">
+    <ng-container *ngIf="deptScope() as scope">
+
+      <!-- Toast succès zone activée -->
+      <div *ngIf="actZoneSuccessMsg()" class="ud-ter-success-toast">
+        <svg width="13" height="13" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        {{ actZoneSuccessMsg() }}
+      </div>
+
+      <div class="ud-ter-grid">
+
+        <!-- ── Colonne gauche : périmètre + filtres + arbre ── -->
+        <div class="ud-ter-sidebar">
+
+          <!-- Périmètre verrouillé -->
+          <div class="ud-ter-perimetre">
+            <div class="ud-ter-perimetre__label">Périmètre</div>
+            <div class="ud-ter-perimetre__val">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Département {{ scope.dept }}
+            </div>
+            <div class="ud-ter-perimetre__hint">verrouillé · les filtres raffinent dedans</div>
+          </div>
+
+          <!-- Filtres internes -->
+          <div class="ud-ter-filters ud-card">
+            <div class="ud-ter-section-label">Commune</div>
+            <select class="ud-ter-select" [value]="territoireCommune()" (change)="onCommuneFilterChange($event)">
+              <option value="">Toutes les communes ({{ scope.dept }})</option>
+              <option *ngFor="let c of scope.communeIds" [value]="c">{{ c }}</option>
+            </select>
+
+            <div class="ud-ter-section-label" style="margin-top:10px">Statut</div>
+            <div class="ud-ter-chips">
+              <span class="ud-ter-chip ud-ter-chip--actif"
+                    [class.ud-ter-chip--off]="!territoireStatuts().has('actif')"
+                    (click)="toggleTerritoireStatut('actif')">Actif</span>
+              <span class="ud-ter-chip ud-ter-chip--panne"
+                    [class.ud-ter-chip--off]="!territoireStatuts().has('panne')"
+                    (click)="toggleTerritoireStatut('panne')">En panne</span>
+              <span class="ud-ter-chip ud-ter-chip--maintenance"
+                    [class.ud-ter-chip--off]="!territoireStatuts().has('maintenance')"
+                    (click)="toggleTerritoireStatut('maintenance')">Maintenance</span>
+            </div>
+          </div>
+
+          <!-- Arbre territorial -->
+          <div class="ud-ter-tree ud-card">
+            <div class="ud-ter-section-label" style="margin-bottom:8px">Arbre territorial</div>
+
+            <!-- Nœud racine : département -->
+            <div class="ud-ter-tree-dept">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              {{ scope.dept }}
+            </div>
+
+            <!-- Communes -->
+            <div *ngFor="let node of territoireTreeNodes()">
+              <div class="ud-ter-tree-commune" (click)="toggleTreeCommune(node.commune)">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <polyline *ngIf="treeExpandedComms().has(node.commune)" points="6 9 12 15 18 9"/>
+                  <polyline *ngIf="!treeExpandedComms().has(node.commune)" points="9 18 15 12 9 6"/>
+                </svg>
+                <span>{{ node.commune }}</span>
+                <span class="ud-ter-tree-badge">{{ node.zoneCount }}</span>
+              </div>
+
+              <!-- Zones de la commune (si expandée) -->
+              <div *ngIf="treeExpandedComms().has(node.commune)">
+                <div *ngIf="node.zones.length === 0" class="ud-ter-tree-zone ud-ter-tree-zone--empty">
+                  Aucune zone active
+                </div>
+                <div *ngFor="let z of node.zones" class="ud-ter-tree-zone">
+                  <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span class="ud-ter-tree-zone-name">{{ z.nom }}</span>
+                  <span class="ud-ter-tree-zone-status"
+                        [style.color]="zoneStatusLabel(z) === 'actif' ? '#4ADE80' : '#FBBF24'">
+                    {{ zoneStatusLabel(z) === 'actif' ? 'supervisée' : 'à déployer' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /arbre -->
+        </div><!-- /sidebar -->
+
+        <!-- ── Colonne droite : carte Leaflet ── -->
+        <div class="ud-ter-map-wrap">
+          <div id="urd-ter-map" class="ud-ter-map"></div>
+
+          <button class="ud-ter-activer-btn" (click)="ouvrirActiverZone()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+            Activer une zone
+          </button>
+
+          <div class="ud-ter-map-caption">
+            <span *ngIf="!territoireCommune()">centrée sur le département {{ scope.dept }}</span>
+            <span *ngIf="territoireCommune()">recentrée sur {{ territoireCommune() }}</span>
+          </div>
+
+          <button class="ud-ter-nat-link" (click)="voirTerritoire()">
+            Voir carte nationale →
+          </button>
+        </div><!-- /map -->
+
+      </div><!-- /grid -->
+    </ng-container>
+  </div>
+
+  <!-- ══ Modal : Activer une zone ══ -->
+  <div *ngIf="showActiverZone()" class="ud-modal-backdrop" (click)="showActiverZone.set(false)" role="dialog" aria-modal="true" aria-label="Activer une zone">
+    <div class="ud-modal" (click)="$event.stopPropagation()">
+      <div class="ud-modal-head">
+        <div class="ud-modal-head__title">Activer une zone</div>
+        <button class="ud-modal-head__close" (click)="showActiverZone.set(false)" aria-label="Fermer">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Périmètre figé -->
+      <div class="ud-modal-scope-badge" *ngIf="deptScope() as sc">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Département {{ sc.dept }} · verrouillé
+      </div>
+
+      <div class="ud-modal-body">
+        <div class="ud-modal-field">
+          <label class="ud-modal-label">Nom de la zone <span style="color:#FB7185">*</span></label>
+          <input class="ud-modal-input" type="text" [(ngModel)]="actZoneNom"
+                 placeholder="ex : Zone Momance – 1ère section" maxlength="80" />
+        </div>
+
+        <div class="ud-modal-field">
+          <label class="ud-modal-label">Commune <span style="color:#FB7185">*</span></label>
+          <select class="ud-modal-select" [(ngModel)]="actZoneCommune">
+            <option value="">Sélectionner une commune…</option>
+            <option *ngFor="let c of deptScope()?.communeIds" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+
+        <div class="ud-modal-field">
+          <label class="ud-modal-label">Responsable (optionnel)</label>
+          <input class="ud-modal-input" type="text" [(ngModel)]="actZoneResponsable"
+                 placeholder="Nom du responsable de la zone" maxlength="60" />
+        </div>
+
+        <div *ngIf="actZoneErr" class="ud-modal-err">{{ actZoneErr }}</div>
+      </div>
+
+      <div class="ud-modal-foot">
+        <button class="ud-btn ud-btn--ghost" (click)="showActiverZone.set(false)">Annuler</button>
+        <button class="ud-btn ud-btn--confirm" (click)="activerZoneSoumission()">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 3 — Infrastructures
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'infrastructures'" class="ud-tab-content">
+    <app-infrastructures-page [scope]="{ dept: u.dept ?? '' }"></app-infrastructures-page>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET — Ressources naturelles (patrimoine hydrique du département)
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'ressources'" class="ud-tab-content">
+    <app-resources-page [scope]="{ dept: u.dept ?? '' }"></app-resources-page>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 4 — Acteurs & institutions
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'acteurs'" class="ud-tab-content">
+    <app-acteurs-page [scope]="{ dept: u.dept ?? '', urdId: u.id }"></app-acteurs-page>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 5 — Équipe
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'equipe'" class="ud-tab-content">
+    <div class="ud-overview-grid">
+      <div class="ud-col">
+        <div class="ud-card">
+          <div class="ud-card__head">
+            <svg width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Responsables
+            <span style="margin-left:auto;font-size:9px;color:#6B7785">{{ u.users }} pers.</span>
+          </div>
+          <div class="ud-member">
+            <span class="ud-avatar">{{ u.responsableInitiales }}</span>
+            <div style="flex:1">
+              <div style="font-size:11px;color:#F5F7FA">{{ u.responsable }}</div>
+              <div style="font-size:9px;color:#6B7785">responsable principal</div>
+            </div>
+            <span class="ud-pill ud-pill--success">actif</span>
+          </div>
+          <div style="font-size:9px;color:#6B7785;text-transform:uppercase;letter-spacing:.05em;padding:10px 0 4px;border-top:0.5px solid #1F2A33;margin-top:6px">
+            Postes à compléter
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:11px;color:#8B9AAB">Responsable social</span>
+              <span class="ud-pill ud-pill--warning">vacant</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:11px;color:#8B9AAB">Resp. admin/commercial</span>
+              <span class="ud-pill ud-pill--warning">vacant</span>
+            </div>
+          </div>
+          <button class="ud-add-member" style="margin-top:10px"
+                  (click)="showCreerSuperviseur.set(true); activeTab.set('equipe')">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Activer un superviseur
+          </button>
+        </div>
+      </div>
+      <div class="ud-col">
+        <div class="ud-tab-stub" style="padding:40px 24px">
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <div class="ud-tab-stub__title" style="font-size:13px">Personnel de terrain</div>
+          <div class="ud-tab-stub__desc">Enquêteurs, animateurs, techniciens. Affectations territoriales, rôles et statut des comptes.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 6 — Supervision
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'supervision'" class="ud-tab-content">
+    <app-alertes-page [scope]="{ dept: u.dept ?? '' }"></app-alertes-page>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 7 — Conformité & rapports
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'conformite'" class="ud-tab-content">
+    <div class="ud-overview-grid">
+      <div class="ud-col">
+        <div class="ud-card">
+          <div class="ud-card__head">
+            <svg width="12" height="12" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Score conformité URD
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-size:36px;font-weight:500;line-height:1"
+                 [style.color]="conformiteColor(kpiConformite())">{{ kpiConformite() }}%</div>
+            <div style="font-size:10px;color:#6B7785;margin-top:5px">Score dérivé — jamais stocké</div>
+          </div>
+          <div style="font-size:9px;color:#6B7785;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Dimensions</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="ud-conf-dim">
+              <span style="flex:1;font-size:11px;color:#E2E8EE">Réactivité alertes (30j)</span>
+              <div class="ud-conf-bar">
+                <div class="ud-conf-bar__fill" [style.width.%]="kpiReactivite()" [style.background]="conformiteColor(kpiReactivite())"></div>
+              </div>
+              <span style="font-size:11px;font-weight:500;width:34px;text-align:right" [style.color]="conformiteColor(kpiReactivite())">{{ kpiReactivite() }}%</span>
+            </div>
+            <div class="ud-conf-dim">
+              <span style="flex:1;font-size:11px;color:#E2E8EE">Couverture TEPAC</span>
+              <div class="ud-conf-bar">
+                <div class="ud-conf-bar__fill"
+                     [style.width.%]="kpiTepacRatePct()"
+                     [style.background]="conformiteColor(kpiTepacRatePct())"></div>
+              </div>
+              <span style="font-size:11px;font-weight:500;width:34px;text-align:right"
+                    [style.color]="conformiteColor(kpiTepacRatePct())">
+                {{ kpiTepacRatePct() }}%
+              </span>
+            </div>
+            <div class="ud-conf-dim">
+              <span style="flex:1;font-size:11px;color:#E2E8EE">Communes au seuil AEP (≥40%)</span>
+              <div class="ud-conf-bar">
+                <div class="ud-conf-bar__fill"
+                     [style.width.%]="kpiCoverageThresholdPct()"
+                     [style.background]="conformiteColor(kpiCoverageThresholdPct())"></div>
+              </div>
+              <span style="font-size:11px;font-weight:500;width:34px;text-align:right"
+                    [style.color]="conformiteColor(kpiCoverageThresholdPct())">
+                {{ kpiCoverageThresholdPct() }}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ud-col">
+        <app-rapports-page [scope]="{ dept: u.dept ?? '' }"></app-rapports-page>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ONGLET 8 — Journal
+  ═════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab() === 'journal'" class="ud-tab-content">
+    <div class="ud-tab-stub">
+      <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <div class="ud-tab-stub__title">Journal & audit</div>
+      <div class="ud-tab-stub__desc">Historique complet : validations, modifications, créations, clôtures, changements de statut. Qui a fait quoi, quand, sur quelle donnée.</div>
+    </div>
+  </div>
+
+</div><!-- /ud-page -->
+
+<!-- ══ Tiroir commune (overlay fixe, indépendant des onglets) ══ -->
+<div class="ud-drawer-overlay" *ngIf="selectedCommune() as c" (click)="closeDrawer()">
+  <div class="ud-drawer" (click)="$event.stopPropagation()">
+    <div class="ud-drawer__head">
+      <div>
+        <div style="font-size:14px;font-weight:500;color:#F5F7FA">{{ c.nom }}</div>
+        <div style="font-size:10px;color:#6B7785;margin-top:1px">
+          {{ c.tepac ? c.tepac + ' · TEPAC' : 'aucun TEPAC' }} ·
+          {{ c.coveragePct !== null ? c.coveragePct + '% couverture' : 'couverture inconnue' }}
+        </div>
+      </div>
+      <span class="ud-pill ud-pill--danger" *ngIf="c.sansSuiteCount > 0" style="flex-shrink:0">
+        {{ c.sansSuiteCount }} sans suite
+      </span>
+      <button class="ud-drawer__close" (click)="closeDrawer()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="ud-drawer__tabs">
+      <button class="ud-tab" [class.ud-tab--active]="drawerTab()==='zones'" (click)="drawerTab.set('zones')">
+        Zones
+        <span class="ud-tab__badge">{{ c.zonesCount }}</span>
+      </button>
+      <button class="ud-tab" [class.ud-tab--active]="drawerTab()==='alertes'" (click)="drawerTab.set('alertes')">
+        Alertes ouvertes
+        <span class="ud-tab__badge"
+              [style.background]="c.sansSuiteCount > 0 ? 'rgba(251,113,133,.2)' : null"
+              [style.color]="c.sansSuiteCount > 0 ? '#FB7185' : null">
+          {{ c.alertesOuvertes.length }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Zones tab -->
+    <div *ngIf="drawerTab()==='zones'" class="ud-drawer__body">
+      <div class="ud-drawer__section">
+        <div class="ud-drawer__section-title">TEPAC affecté</div>
+        <div *ngIf="c.tepac" class="ud-tepac-row">
+          <span class="ud-avatar">{{ c.tepac[0] }}</span>
+          <div>
+            <div style="font-size:11px;color:#F5F7FA">{{ c.tepac }}</div>
+            <div style="font-size:9px;color:#6B7785">technicien · {{ c.nom }}</div>
+          </div>
+          <span class="ud-pill ud-pill--success" style="margin-left:auto">actif</span>
+        </div>
+        <div *ngIf="!c.tepac" class="ud-tepac-empty">
+          <svg width="11" height="11" fill="none" stroke="#FB7185" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Aucun TEPAC affecté à cette commune
+          <button class="ud-btn ud-btn--outline-info" style="font-size:10px;padding:3px 9px;margin-left:auto">Affecter →</button>
+        </div>
+      </div>
+
+      <div class="ud-drawer__section">
+        <div class="ud-drawer__section-title">
+          Zones supervisées
+          <span style="color:#6B7785;font-weight:400;font-size:9px">· {{ c.zonesCount || 0 }}</span>
+        </div>
+        <div *ngIf="c.zonesCount === 0" class="ud-zones-empty">
+          <svg width="14" height="14" fill="none" stroke="#6B7785" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+          Aucune zone supervisée dans {{ c.nom }}
+          <button class="ud-btn ud-btn--ghost" style="font-size:10px;margin-top:6px;width:100%" (click)="voirTerritoire()">
+            Démarrer un recensement →
+          </button>
+        </div>
+        <div *ngFor="let z of c.zones" class="ud-zone-row" style="cursor:pointer" (click)="voirZone(z)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:#F5F7FA;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ z.nom }}</div>
+            <div style="font-size:9px;color:#6B7785;margin-top:1px">{{ z.code }} · {{ z.population | number }} hab.</div>
+          </div>
+          <div class="ud-zone-cov" [style.color]="coverageColor(z.coverageAep)">{{ z.coverageAep }}%</div>
+          <span class="ud-pill" [class.ud-pill--success]="(z.status ?? 'supervised')==='supervised'"
+                [class.ud-pill--warning]="(z.status ?? 'supervised')==='recensement-en-cours'">
+            {{ (z.status ?? 'supervised') === 'supervised' ? 'supervisée' : 'recensement' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="ud-drawer__section" *ngIf="c.zonesCount > 0">
+        <div class="ud-drawer__section-title">Couverture AEP moyenne</div>
+        <div style="font-size:16px;font-weight:500;margin-bottom:5px" [style.color]="coverageColor(c.coveragePct)">
+          {{ c.coveragePct }}%
+        </div>
+        <div style="height:5px;background:#1A2530;border-radius:3px;overflow:hidden">
+          <div style="height:100%;border-radius:3px;transition:width .3s"
+               [style.width.%]="c.coveragePct"
+               [style.background]="coverageColor(c.coveragePct)"></div>
+        </div>
+        <div *ngIf="c.coveragePct !== null && c.coveragePct < 40" style="font-size:9px;color:#FB7185;margin-top:4px">
+          ⚠ En dessous du seuil de 40% — commune critique
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertes tab -->
+    <div *ngIf="drawerTab()==='alertes'" class="ud-drawer__body">
+      <div class="ud-drawer__section" style="padding-bottom:6px" *ngIf="c.alertesOuvertes.length > 0">
+        <button class="ud-btn ud-btn--outline-info" style="width:100%;justify-content:center;font-size:10px"
+                (click)="voirAlertesCommune(c.nom)">
+          Voir toutes les alertes de {{ c.nom }} →
+        </button>
+      </div>
+
+      <div class="ud-drawer__section" *ngIf="c.alertesOuvertes.length > 0">
+        <div class="ud-alert-summary">
+          <div class="ud-alert-summary__item" [class.ud-alert-summary__item--red]="c.sansSuiteCount > 0">
+            <div class="ud-alert-summary__n" [style.color]="c.sansSuiteCount > 0 ? '#FB7185' : '#4ADE80'">{{ c.sansSuiteCount }}</div>
+            <div class="ud-alert-summary__label">sans suite</div>
+          </div>
+          <div class="ud-alert-summary__item">
+            <div class="ud-alert-summary__n">{{ c.alertesOuvertes.length - c.sansSuiteCount }}</div>
+            <div class="ud-alert-summary__label">en traitement</div>
+          </div>
+          <div class="ud-alert-summary__item">
+            <div class="ud-alert-summary__n">{{ c.alertesOuvertes.length }}</div>
+            <div class="ud-alert-summary__label">total ouvertes</div>
+          </div>
+        </div>
+        <div *ngIf="!c.tepac && c.sansSuiteCount > 0" class="ud-no-tepac-warning">
+          <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Aucun TEPAC — les alertes sans suite ne peuvent pas être traitées
+          <button class="ud-btn ud-btn--outline-info" style="font-size:9px;padding:2px 7px;margin-left:auto">Affecter →</button>
+        </div>
+      </div>
+
+      <div *ngIf="c.alertesOuvertes.length === 0"
+           style="padding:24px;text-align:center;color:#4ADE80;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:7px">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Aucune alerte ouverte sur {{ c.nom }}
+      </div>
+
+      <div *ngFor="let item of c.alertesOuvertes" class="ud-alerte-card"
+           [class.ud-alerte-card--critical]="item.sansSuite"
+           style="cursor:pointer" (click)="ouvrirAlerte(item.alert)">
+        <div class="ud-alerte-card__top">
+          <span class="ud-sev-dot" [style.background]="severityColor(item.alert.severity)"></span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:#F5F7FA;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.alert.title }}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
+              <span style="font-size:9px;color:#6B7785">{{ item.alert.code }}</span>
+              <span style="font-size:9px" [style.color]="severityColor(item.alert.severity)">{{ item.alert.severity }}</span>
+              <span style="font-size:9px;color:#6B7785">{{ timeSince(item.alert.createdAt) }}</span>
+              <span class="ud-sla-badge"
+                    [style.background]="slaColor(item.slaStatus) + '22'"
+                    [style.color]="slaColor(item.slaStatus)"
+                    [style.borderColor]="slaColor(item.slaStatus) + '55'">
+                {{ item.slaStatus === 'breach' ? '⚠ SLA ' : 'SLA ' }}{{ item.slaLabel }}
+              </span>
+              <span *ngIf="item.alert.escaladeNiveau > 0"
+                    class="ud-escalade-badge"
+                    [class.ud-escalade-badge--auto]="item.alert.escaladeType==='automatique'"
+                    [class.ud-escalade-badge--manuel]="item.alert.escaladeType==='manuelle'">
+                {{ item.alert.escaladeType === 'automatique' ? '↑ auto' : '↑ manuel' }}
+                · {{ palierLabel(item.alert.escaladeNiveau) }}
+              </span>
+            </div>
+          </div>
+          <span class="ud-pill ud-pill--danger" *ngIf="item.sansSuite">sans suite</span>
+          <span class="ud-pill ud-pill--info"   *ngIf="!item.sansSuite">en cours</span>
+        </div>
+
+        <div *ngIf="item.alert.infrastructureName" class="ud-alerte-card__infra">
+          <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          {{ item.alert.infrastructureName }}
+        </div>
+
+        <div *ngIf="item.intervention" class="ud-alerte-card__inter"
+             style="cursor:pointer" (click)="$event.stopPropagation(); voirIntervention(item.intervention!)">
+          <svg width="9" height="9" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span style="color:#4ADE80">{{ item.intervention.code }}</span>
+          <span style="color:#8B9AAB">{{ item.intervention.technicianName }}</span>
+          <span class="ud-pill ud-pill--info" style="margin-left:auto">{{ item.intervention.status }}</span>
+          <svg width="9" height="9" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <div *ngIf="item.sansSuite" class="ud-alerte-card__action" (click)="$event.stopPropagation()">
+          <button class="ud-btn ud-btn--outline-info" style="font-size:10px;flex:1"
+                  (click)="creerInterventionSurAlerte(item.alert)">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Créer une intervention →
+          </button>
+          <button *ngIf="item.alert.escaladeNiveau < 2"
+                  class="ud-btn ud-btn--ghost" style="font-size:10px"
+                  (click)="openEscalade(item.alert.id)">
+            ↑ Escalader
+          </button>
+        </div>
+
+        <div *ngIf="escaladeAlertId() === item.alert.id" class="ud-escalade-form" (click)="$event.stopPropagation()">
+          <div style="font-size:10px;color:#FBBF24;margin-bottom:5px">
+            Escalade manuelle : {{ palierLabel(item.alert.escaladeNiveau) }} → {{ palierLabel(item.alert.escaladeNiveau + 1) }}
+          </div>
+          <select class="ud-escalade-select"
+                  [ngModel]="escaladeMotif()"
+                  (ngModelChange)="escaladeMotif.set($event)">
+            <option value="">Choisir un motif…</option>
+            <option *ngFor="let m of motifsPredefined" [value]="m">{{ m }}</option>
+          </select>
+          <input *ngIf="escaladeMotif() === '' || !motifsPredefined.includes(escaladeMotif())"
+                 class="ud-escalade-input"
+                 type="text" placeholder="Autre motif…"
+                 [ngModel]="escaladeMotif()"
+                 (ngModelChange)="escaladeMotif.set($event)">
+          <div style="display:flex;gap:5px;margin-top:5px">
+            <button class="ud-btn ud-btn--confirm" style="font-size:10px;flex:1"
+                    [disabled]="!escaladeMotif().trim()"
+                    (click)="confirmEscalade()">Confirmer l'escalade</button>
+            <button class="ud-btn ud-btn--ghost" style="font-size:10px" (click)="cancelEscalade()">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ud-drawer__note" *ngIf="c.sansSuiteCount > 0" style="color:#FB7185;border-top:0.5px solid rgba(251,113,133,.2)">
+        {{ c.sansSuiteCount }}/{{ c.alertesOuvertes.length }} alerte(s) sans intervention active
+        <span *ngIf="!c.tepac"> — affecter un TEPAC débloquerait le traitement</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modale création superviseur URD (URD pré-remplie et verrouillée) ══ -->
+<app-creer-superviseur-urd-modal
+  [visible]="showCreerSuperviseur()"
+  [urdId]="urd()?.id ?? null"
+  (fermer)="showCreerSuperviseur.set(false)"
+  (compteCree)="onSuperviseurCree($event)">
+</app-creer-superviseur-urd-modal>
+
+<ng-template #notFound>
+  <div style="padding:40px;text-align:center;color:#6B7785;font-size:12px">
+    URD introuvable
+    <button class="ud-btn ud-btn--ghost" style="margin-top:12px;display:block;margin:12px auto 0" (click)="retour()">← Institutions</button>
+  </div>
+</ng-template>
+</app-gov-shell>

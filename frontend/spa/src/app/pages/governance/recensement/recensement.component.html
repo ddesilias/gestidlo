@@ -1,0 +1,1040 @@
+<div class="rec-page" *ngIf="zone() as z; else notFound">
+
+  <!-- ══ En-tête ══ -->
+  <div class="rec-header">
+    <div class="rec-header__top">
+      <button class="rec-btn rec-btn--ghost" (click)="retourTerritoire()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Territoire
+      </button>
+      <span class="rec-header__bc">
+        {{ z.dept }} <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        {{ z.commune }} <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="rec-header__bc--zone">{{ z.nom }}</span>
+      </span>
+      <span class="rec-status-badge"><span class="rec-dot rec-dot--amber"></span>recensement en cours</span>
+      <span class="rec-header__autosave">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        brouillon enregistré auto
+      </span>
+    </div>
+    <div class="rec-header__title-row">
+      <h2 class="rec-header__h2">Recensement · {{ z.nom }}</h2>
+      <span class="rec-header__meta">réf. {{ refYear(z) }} · horizon 20 ans</span>
+    </div>
+  </div>
+
+  <!-- ══ Stepper ══ -->
+  <div class="rec-stepper">
+    <ng-container *ngFor="let ph of phases; let i = index">
+      <div class="rec-stepper__step"
+           [class.rec-stepper__step--done]="phaseStatus(i+1)==='done'"
+           [class.rec-stepper__step--active]="phaseStatus(i+1)==='active'"
+           (click)="goToPhase(i+1)">
+        <div class="rec-stepper__dot">
+          <svg *ngIf="phaseStatus(i+1)==='done'" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg *ngIf="phaseStatus(i+1)==='locked'" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <ng-container *ngIf="phaseStatus(i+1)==='active'">{{ i+1 }}</ng-container>
+        </div>
+        <span class="rec-stepper__label">{{ ph.short }}</span>
+      </div>
+      <div class="rec-stepper__line" *ngIf="i < 4" [class.rec-stepper__line--done]="phaseStatus(i+1)==='done'"></div>
+    </ng-container>
+  </div>
+
+  <!-- ══ Corps ══ -->
+  <div class="rec-body">
+    <div class="rec-phase-panel">
+
+      <!-- ═══════════ PHASE 1 ═══════════ -->
+      <ng-container *ngIf="phase()===1">
+
+        <!-- Sous-onglets Périmètre | Réseau -->
+        <div class="rec-p1-subnav">
+          <button class="rec-p1-tab" [class.rec-p1-tab--active]="p1Tab()==='perimetre'"
+                  (click)="p1Tab.set('perimetre')">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+            Périmètre
+            <span class="rec-p1-badge" *ngIf="sommets()>0" style="color:#4ADE80">{{ sommets() }} pts</span>
+          </button>
+          <button class="rec-p1-tab" [class.rec-p1-tab--active]="p1Tab()==='reseau'"
+                  [disabled]="!periIsValid()"
+                  (click)="p1Tab.set('reseau')">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><line x1="7" y1="12" x2="17" y2="6"/><line x1="7" y1="12" x2="17" y2="18"/></svg>
+            Réseau
+            <span class="rec-p1-badge" *ngIf="troncons().length>0" style="color:#60A5FA">{{ troncons().length }} tr.</span>
+            <svg *ngIf="!periIsValid()" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#6B7785"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </button>
+        </div>
+
+        <!-- ─── Sous-onglet PÉRIMÈTRE ─── -->
+        <ng-container *ngIf="p1Tab()==='perimetre'">
+          <div class="rec-phase-panel__head">
+            <div>
+              <div class="rec-phase-panel__title">Phase 1a — Périmètre</div>
+              <div class="rec-phase-panel__sub">définit le contour de la zone · les deux modes partagent la même liste</div>
+            </div>
+            <div class="rec-mode-toggle">
+              <button class="rec-mode-toggle__btn" [class.rec-mode-toggle__btn--active]="tableMode()==='carte'" (click)="tableMode.set('carte')">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>Carte
+              </button>
+              <button class="rec-mode-toggle__btn" [class.rec-mode-toggle__btn--active]="tableMode()==='tableau'" (click)="tableMode.set('tableau')">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Tableau
+              </button>
+            </div>
+          </div>
+
+          <!-- MODE CARTE -->
+          <ng-container *ngIf="tableMode()==='carte'">
+            <div class="rec-tools">
+              <button class="rec-btn rec-btn--primary-sm" (click)="tableMode.set('tableau')">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>Tracer
+              </button>
+              <button class="rec-btn rec-btn--ghost" (click)="tableMode.set('tableau')">Importer GPS / tableau</button>
+            </div>
+            <div class="rec-map-empty">
+              <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:#4B5563"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+              <div class="rec-map-empty__title">{{ sommets() === 0 ? 'Aucun périmètre tracé' : sommets() + ' sommets saisis' }}</div>
+              <div class="rec-map-empty__hint" *ngIf="sommets()===0">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 9l3-3 3 3"/><path d="M12 6v10"/></svg>
+                Utilisez le mode « Tableau » pour coller vos coordonnées GPS
+              </div>
+              <div *ngIf="sommets()>0" style="color:#4ADE80;font-size:11px">✓ {{ sommets() }} sommets · {{ fmtNum(superficieKm2()) }} km²</div>
+            </div>
+          </ng-container>
+
+          <!-- MODE TABLEAU -->
+          <ng-container *ngIf="tableMode()==='tableau'">
+            <div class="rec-topo-header">
+              <span class="rec-topo-header__title">Points du périmètre</span>
+              <span class="rec-topo-header__sub">lat/lng décimaux WGS84 · cote en mètres (optionnel)</span>
+              <div class="rec-topo-actions">
+                <button class="rec-btn rec-btn--primary-sm" (click)="pasteFromClipboard()">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+                  Coller depuis Excel
+                </button>
+                <label class="rec-btn rec-btn--ghost rec-csv-label">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Importer CSV
+                  <input type="file" accept=".csv,.txt" style="display:none" (change)="onCsvFile($event)">
+                </label>
+              </div>
+            </div>
+            <div class="rec-paste-info" *ngIf="pasteInfo()">✓ {{ pasteInfo() }}</div>
+            <div class="rec-paste-err"  *ngIf="pasteErr()">⚠ {{ pasteErr() }}</div>
+            <div class="rec-paste-zone" (paste)="onPasteArea($event)">
+              <span *ngIf="sommets()===0">Ctrl+V ici pour coller depuis Excel</span>
+              <span *ngIf="sommets()>0">{{ sommets() }} points · Ctrl+V pour en ajouter</span>
+            </div>
+            <div class="rec-topo-table-wrap">
+              <table class="rec-topo-table">
+                <thead><tr><th>Point</th><th>Latitude</th><th>Longitude</th><th>Cote (m)</th><th>Type</th><th></th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let pt of points(); let i = index">
+                    <td class="rec-topo-table__id">{{ pt.id }}</td>
+                    <td><input class="rec-topo-input" type="number" step="0.0001" [value]="pt.lat||''" placeholder="18.573" (change)="updatePointField(i,'lat',$any($event.target).value)"></td>
+                    <td><input class="rec-topo-input" type="number" step="0.0001" [value]="pt.lng||''" placeholder="-72.268" (change)="updatePointField(i,'lng',$any($event.target).value)"></td>
+                    <td><input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.1" [value]="pt.cote??''" placeholder="150" (change)="updatePointField(i,'cote',$any($event.target).value)"></td>
+                    <td><span class="rec-type-badge">sommet</span></td>
+                    <td><button class="rec-del-btn" (click)="removePoint(i)"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></td>
+                  </tr>
+                  <tr class="rec-topo-table__add-row" (click)="addPoint()"><td colspan="6"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ajouter un point</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rec-svg-preview" *ngIf="sommets()>=2">
+              <div class="rec-svg-preview__head">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#60A5FA"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+                Aperçu synchronisé <span class="rec-svg-preview__live">reconstruit depuis le tableau</span>
+              </div>
+              <svg viewBox="0 0 520 150" width="100%" style="display:block">
+                <rect width="520" height="150" fill="#1A2530" rx="6"/>
+                <polygon *ngIf="sommets()>=3" [attr.points]="svgPolyPoints()" fill="rgba(96,165,250,0.15)" stroke="#60A5FA" stroke-width="2"/>
+                <polyline *ngIf="sommets()===2" [attr.points]="svgPolyPoints()" fill="none" stroke="#60A5FA" stroke-width="2"/>
+                <g *ngFor="let d of svgDotPositions(); let i = index">
+                  <circle [attr.cx]="d.x" [attr.cy]="d.y" r="4.5" fill="#185FA5" stroke="#fff" stroke-width="1.5"/>
+                  <text [attr.x]="d.x" [attr.y]="d.y+3.5" font-size="7" fill="#fff" text-anchor="middle">{{ i+1 }}</text>
+                </g>
+              </svg>
+              <div class="rec-svg-preview__status" [style.color]="sommets()>=3?'#4ADE80':'#FBBF24'">
+                {{ sommets()>=3 ? '✓ polygone fermé · '+sommets()+' sommets' : '⚠ '+(3-sommets())+' sommet(s) supplémentaire(s) requis' }}
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Pied périmètre -->
+          <div class="rec-phase-panel__foot">
+            <button class="rec-btn rec-btn--ghost" [disabled]="sommets()===0" (click)="resetPoints()">Réinitialiser</button>
+            <div class="rec-phase-panel__foot-right">
+              <span class="rec-hint" *ngIf="!periIsValid()">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                polygone ≥ 3 sommets requis
+              </span>
+              <button class="rec-btn rec-btn--primary" [disabled]="!periIsValid()" (click)="validerEtAllerReseau()">
+                Valider le périmètre · réseau →
+              </button>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ─── Sous-onglet RÉSEAU ─── -->
+        <ng-container *ngIf="p1Tab()==='reseau'">
+          <div class="rec-phase-panel__head">
+            <div>
+              <div class="rec-phase-panel__title">Phase 1b — Squelette du réseau</div>
+              <div class="rec-phase-panel__sub">nœuds + tronçons · topographie uniquement (diamètre/matériau → Infrastructures)</div>
+            </div>
+          </div>
+
+          <!-- Table nœuds internes -->
+          <div class="rec-net-section">
+            <div class="rec-net-section__head">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/></svg>
+              <span>Nœuds</span>
+              <span class="rec-net-section__count">{{ allNoeuds().length }} total ({{ sommets() }} sommets + {{ noeudsInternes().length }} internes)</span>
+              <button class="rec-btn rec-btn--primary-sm" style="margin-left:auto" (click)="pasteNoeuds()">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+                Coller nœuds
+              </button>
+            </div>
+            <div class="rec-paste-err" *ngIf="noeudPasteErr()">⚠ {{ noeudPasteErr() }}</div>
+
+            <div class="rec-topo-table-wrap">
+              <table class="rec-topo-table">
+                <thead><tr><th>ID</th><th>Latitude</th><th>Longitude</th><th>Cote (m)</th><th>Type</th><th></th></tr></thead>
+                <tbody>
+                  <!-- Sommets périmètre (lecture seule) -->
+                  <tr *ngFor="let n of points()" class="rec-topo-table__readonly">
+                    <td class="rec-topo-table__id">{{ n.id }}</td>
+                    <td><span class="rec-topo-ro">{{ n.lat || '—' }}</span></td>
+                    <td><span class="rec-topo-ro">{{ n.lng || '—' }}</span></td>
+                    <td><span class="rec-topo-ro">{{ n.cote ?? '—' }}</span></td>
+                    <td><span class="rec-type-badge" style="background:rgba(96,165,250,.12);color:#60A5FA">sommet</span></td>
+                    <td style="color:#4B5563;font-size:9px">périmètre</td>
+                  </tr>
+                  <!-- Nœuds internes éditables -->
+                  <tr *ngFor="let n of noeudsInternes()">
+                    <td class="rec-topo-table__id">{{ n.id }}</td>
+                    <td><input class="rec-topo-input" type="number" step="0.0001" [value]="n.lat||''" placeholder="18.573" (change)="updateNoeudField(n.id,'lat',$any($event.target).value)"></td>
+                    <td><input class="rec-topo-input" type="number" step="0.0001" [value]="n.lng||''" placeholder="-72.268" (change)="updateNoeudField(n.id,'lng',$any($event.target).value)"></td>
+                    <td><input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.1" [value]="n.cote??''" placeholder="150" (change)="updateNoeudField(n.id,'cote',$any($event.target).value)"></td>
+                    <td>
+                      <span class="rec-type-badge" [style.background]="'rgba('+nodeColor(n.type)+',0.12)'" [style.color]="nodeColor(n.type)">{{ nodeLabel(n.type) }}</span>
+                    </td>
+                    <td><button class="rec-del-btn" (click)="removeNoeudInterne(n.id)"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></td>
+                  </tr>
+                  <!-- Ajout rapide -->
+                  <tr class="rec-topo-table__add-row">
+                    <td colspan="6">
+                      <button class="rec-add-noeud-btn" *ngFor="let nt of nodeTypes" (click)="addNoeudInterne(nt.value)">
+                        + {{ nt.label }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Table tronçons -->
+          <div class="rec-net-section" style="margin-top:10px">
+            <div class="rec-net-section__head">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <span>Tronçons</span>
+              <span class="rec-net-section__count">longueur auto-calculée (distance géodésique) · éditable</span>
+            </div>
+            <div class="rec-topo-table-wrap">
+              <table class="rec-topo-table">
+                <thead><tr><th>Tronçon</th><th>De</th><th>À</th><th>Long. (m)</th><th>Nature</th><th></th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let t of troncons()">
+                    <td class="rec-topo-table__id">{{ t.id }}</td>
+                    <td style="font-size:11px;color:#93C5FD">{{ t.deNoeudId }}</td>
+                    <td style="font-size:11px;color:#93C5FD">{{ t.aNoeudId }}</td>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:4px">
+                        <input class="rec-topo-input rec-topo-input--narrow" type="number" step="1"
+                               [value]="tronconLength(t)"
+                               [title]="t.longueurAuto ? 'Auto · cliquer pour surcharger' : 'Valeur manuelle'"
+                               (change)="overrideLongueur(t.id,$any($event.target).value)">
+                        <svg *ngIf="t.longueurAuto" width="10" height="10" fill="none" stroke="#6B7785" stroke-width="2" viewBox="0 0 24 24" title="auto"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                      </div>
+                    </td>
+                    <td>
+                      <select class="rec-topo-input rec-topo-input--narrow"
+                              [ngModel]="t.nature"
+                              (ngModelChange)="updateTronconNature(t.id, $event)">
+                        <option *ngFor="let tn of tronconNatures" [value]="tn.value">{{ tn.label }}</option>
+                      </select>
+                    </td>
+                    <td><button class="rec-del-btn" (click)="removeTroncon(t.id)"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></td>
+                  </tr>
+
+                  <!-- Formulaire ajout tronçon -->
+                  <tr class="rec-add-troncon-row">
+                    <td class="rec-topo-table__id" style="color:#6B7785">Nouveau</td>
+                    <td>
+                      <select class="rec-topo-input rec-topo-input--narrow" [(ngModel)]="newTronconDe">
+                        <option value="">De…</option>
+                        <option *ngFor="let n of allNoeuds()" [value]="n.id">{{ n.id }}</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select class="rec-topo-input rec-topo-input--narrow" [(ngModel)]="newTronconA">
+                        <option value="">À…</option>
+                        <option *ngFor="let n of allNoeuds()" [value]="n.id" [disabled]="n.id===newTronconDe">{{ n.id }}</option>
+                      </select>
+                    </td>
+                    <td>
+                      <span style="font-size:10px;color:#6B7785" *ngIf="newTronconDe && newTronconA && newTronconDe!==newTronconA">
+                        {{ previewLength() }} m ⟲
+                      </span>
+                    </td>
+                    <td>
+                      <select class="rec-topo-input rec-topo-input--narrow" [(ngModel)]="newTronconNature">
+                        <option *ngFor="let tn of tronconNatures" [value]="tn.value">{{ tn.label }}</option>
+                      </select>
+                    </td>
+                    <td>
+                      <button class="rec-btn rec-btn--primary-sm" [disabled]="!newTronconDe||!newTronconA||newTronconDe===newTronconA" (click)="addTroncon()">+</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Aperçu SVG réseau -->
+          <div class="rec-svg-preview" *ngIf="allNoeuds().length>=2 && networkSvg() as svg" style="margin-top:10px">
+            <div class="rec-svg-preview__head">
+              <svg width="10" height="10" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><line x1="7" y1="12" x2="17" y2="6"/><line x1="7" y1="12" x2="17" y2="18"/></svg>
+              Aperçu réseau <span class="rec-svg-preview__live">graphe reconstruit</span>
+            </div>
+            <svg viewBox="0 0 520 150" width="100%" style="display:block">
+              <rect width="520" height="150" fill="#1A2530" rx="6"/>
+              <!-- Polygone périmètre -->
+              <polygon *ngIf="svg.poly" [attr.points]="svg.poly" fill="rgba(96,165,250,0.1)" stroke="rgba(96,165,250,0.4)" stroke-width="1.5"/>
+              <!-- Tronçons -->
+              <line *ngFor="let e of svg.edges"
+                    [attr.x1]="e.x1" [attr.y1]="e.y1" [attr.x2]="e.x2" [attr.y2]="e.y2"
+                    [attr.stroke]="e.t.nature==='maille' ? '#4ADE80' : '#FBBF24'"
+                    stroke-width="2" [attr.stroke-dasharray]="e.t.nature==='antenne'?'5 3':null"/>
+              <!-- Nœuds -->
+              <g *ngFor="let n of svg.ns">
+                <circle [attr.cx]="n.x" [attr.cy]="n.y" r="5"
+                        [attr.fill]="nodeColor(n.type)" stroke="#0F1419" stroke-width="1.5"/>
+                <text [attr.x]="n.x" [attr.y]="n.y-8" font-size="8" fill="#CBD5E1" text-anchor="middle">{{ n.id }}</text>
+              </g>
+            </svg>
+            <div class="rec-svg-preview__legend">
+              <span><svg width="16" height="8" style="vertical-align:middle"><line x1="0" y1="4" x2="16" y2="4" stroke="#4ADE80" stroke-width="2"/></svg> maille</span>
+              <span><svg width="16" height="8" style="vertical-align:middle"><line x1="0" y1="4" x2="16" y2="4" stroke="#FBBF24" stroke-width="2" stroke-dasharray="4 2"/></svg> antenne</span>
+              <span *ngFor="let nt of [{t:'sommet',c:'#60A5FA'},{t:'alimentation',c:'#FBBF24'},{t:'piquage',c:'#A78BFA'},{t:'nœud',c:'#4ADE80'}]">
+                <svg width="10" height="10" style="vertical-align:middle"><circle cx="5" cy="5" r="4" [attr.fill]="nt.c"/></svg> {{ nt.t }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Pied réseau -->
+          <div class="rec-phase-panel__foot">
+            <button class="rec-btn rec-btn--ghost" (click)="p1Tab.set('perimetre')">← Périmètre</button>
+            <div class="rec-phase-panel__foot-right">
+              <span class="rec-hint" *ngIf="noeudsIsoles().length>0" style="color:#F87171">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                {{ noeudsIsoles().length }} nœud(s) non relié(s) — {{ noeudsIsolesIds() }}
+              </span>
+              <button class="rec-btn rec-btn--primary" [disabled]="troncons().length===0" (click)="validerReseau()">
+                Valider le réseau · phase 2
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <!-- ═══ PHASE 2 : Bâti ═══ -->
+      <ng-container *ngIf="phase()===2">
+        <div class="rec-phase-panel__head">
+          <div>
+            <div class="rec-phase-panel__title">Phase 2 — Comptage du bâti</div>
+            <div class="rec-phase-panel__sub">découper en sous-zones · compter les maisons · appliquer le coefficient majorateur</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="rec-btn rec-btn--primary-sm" (click)="pasteSousZones()">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+              Coller depuis Excel
+            </button>
+          </div>
+        </div>
+
+        <!-- Table sous-zones -->
+        <div class="rec-topo-table-wrap" style="margin:0 14px">
+          <table class="rec-topo-table">
+            <thead>
+              <tr>
+                <th>Sous-zone</th>
+                <th>Méthode</th>
+                <th>Maisons comptées</th>
+                <th>Coef. majorateur</th>
+                <th>Corrigées</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let sz of sousZones()">
+                <!-- Nom -->
+                <td>
+                  <input class="rec-topo-input" type="text" [value]="sz.nom"
+                         (change)="updateSousZoneNom(sz.id,$any($event.target).value)">
+                </td>
+                <!-- Méthode -->
+                <td>
+                  <select class="rec-topo-input rec-topo-input--narrow"
+                          [ngModel]="sz.methode"
+                          (ngModelChange)="updateSousZoneMethode(sz.id, $event)">
+                    <option *ngFor="let m of methodes" [value]="m.value">{{ m.label }}</option>
+                  </select>
+                </td>
+                <!-- Maisons comptées -->
+                <td>
+                  <input class="rec-topo-input rec-topo-input--narrow" type="number" min="0"
+                         [value]="sz.maisonsComptees || ''"
+                         placeholder="0"
+                         (change)="updateSousZoneNum(sz.id,'maisonsComptees',$any($event.target).value)">
+                </td>
+                <!-- Coefficient -->
+                <td>
+                  <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.01" min="1" max="2"
+                         [value]="sz.coefMajorateur"
+                         (change)="updateSousZoneNum(sz.id,'coefMajorateur',$any($event.target).value)">
+                </td>
+                <!-- Corrigées (calculé) -->
+                <td>
+                  <span class="rec-bati-corrige" [class.rec-bati-corrige--nonzero]="sz.maisonsComptees>0">
+                    {{ sz.maisonsComptees > 0 ? corriger(sz) : '—' }}
+                  </span>
+                </td>
+                <td>
+                  <button class="rec-del-btn" (click)="removeSousZone(sz.id)">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Ligne totaux -->
+              <tr class="rec-bati-total" *ngIf="sousZones().length > 0">
+                <td style="font-weight:500">Total</td>
+                <td></td>
+                <td style="font-weight:500">{{ totalMaisonsComptees() }}</td>
+                <td></td>
+                <td style="font-weight:500;color:#F5F7FA">{{ totalMaisonsCorrigees() }}</td>
+                <td></td>
+              </tr>
+
+              <!-- Ajout sous-zone -->
+              <tr class="rec-topo-table__add-row" (click)="addSousZone()">
+                <td colspan="6">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Ajouter une sous-zone
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Note coefficient -->
+        <div style="padding:6px 14px;font-size:10px;color:#6B7785">
+          Le coefficient majorateur compense les maisons non vues au comptage (caché sous végétation, en construction…). Typiquement 1,05 pour satellite, 1,02 pour terrain.
+        </div>
+
+        <!-- Alerte densité -->
+        <div class="rec-density-alert" *ngIf="densiteAlert()">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          {{ densiteAlert() }}
+        </div>
+
+        <!-- Pied phase 2 -->
+        <div class="rec-phase-panel__foot">
+          <button class="rec-btn rec-btn--ghost" (click)="phase.set(1)">← Phase 1</button>
+          <div class="rec-phase-panel__foot-right">
+            <span class="rec-hint" *ngIf="!batiIsValid() && sousZones().length>0">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              toutes les sous-zones doivent avoir un comptage
+            </span>
+            <span *ngIf="batiIsValid()" style="font-size:10px;color:#4ADE80">
+              ✓ {{ sousZones().length }} sous-zones · {{ totalMaisonsCorrigees() }} maisons
+            </span>
+            <button class="rec-btn rec-btn--primary" [disabled]="!batiIsValid()" (click)="validerBati()">
+              Valider le bâti · phase 3
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ═══ PHASE 3 : Enquête ═══ -->
+      <ng-container *ngIf="phase()===3">
+        <div class="rec-phase-panel__head">
+          <div>
+            <div class="rec-phase-panel__title">Phase 3 — Enquête terrain</div>
+            <div class="rec-phase-panel__sub">échantillon ≥ 10% par sous-zone · questionnaire géolocalisé · ratios → population → débits</div>
+          </div>
+        </div>
+
+        <!-- 3a : Échantillonnage par sous-zone -->
+        <div class="rec-enquete-section">
+          <div class="rec-enquete-section__title">Échantillonnage</div>
+          <div class="rec-topo-table-wrap">
+            <table class="rec-topo-table">
+              <thead>
+                <tr>
+                  <th>Sous-zone</th>
+                  <th>Maisons</th>
+                  <th>Taille éch. (10%)</th>
+                  <th>Collectées</th>
+                  <th>Géoloc.</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let e of echantillons()">
+                  <td class="rec-topo-table__id">{{ e.nomSousZone }}</td>
+                  <td style="color:#8B9AAB">{{ e.maisonsCorrigees }}</td>
+                  <td style="color:#6B7785">{{ e.taille }}</td>
+                  <td>
+                    <input class="rec-topo-input rec-topo-input--narrow" type="number" min="0"
+                           [value]="e.collectees||''"
+                           placeholder="0"
+                           (change)="updateEchantillon(e.sousZoneId,'collectees',$any($event.target).value)">
+                  </td>
+                  <td>
+                    <input class="rec-topo-input rec-topo-input--narrow" type="number" min="0"
+                           [value]="e.geolocalisees||''"
+                           placeholder="0"
+                           (change)="updateEchantillon(e.sousZoneId,'geolocalisees',$any($event.target).value)">
+                  </td>
+                  <td>
+                    <span *ngIf="e.collectees >= e.taille" style="color:#4ADE80;font-size:10px">✓ {{ e.collectees }}/{{ e.taille }}</span>
+                    <span *ngIf="e.collectees < e.taille && !e.derogation" style="color:#FBBF24;font-size:10px">⚠ {{ e.collectees }}/{{ e.taille }}</span>
+                    <span *ngIf="e.collectees < e.taille && e.derogation" style="color:#60A5FA;font-size:10px">📄 dérог. {{ e.collectees }}/{{ e.taille }}</span>
+                  </td>
+                </tr>
+                <!-- Ligne totaux -->
+                <tr class="rec-bati-total" *ngIf="echantillons().length > 0">
+                  <td style="font-weight:500">Total</td>
+                  <td>{{ totalMaisonsCorrigees() }}</td>
+                  <td>{{ totalTaille() }}</td>
+                  <td style="font-weight:500">{{ totalCollectees() }}</td>
+                  <td style="font-weight:500">{{ totalGeolocalisees() }}</td>
+                  <td [style.color]="tauxGlobal()===100 ? '#4ADE80' : '#FBBF24'" style="font-weight:500">{{ tauxGlobal() }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Dérogation pour les sous-zones incomplètes -->
+          <ng-container *ngFor="let e of echantillons()">
+            <div *ngIf="e.collectees < e.taille" class="rec-derogation-row">
+              <span class="rec-derogation-label">Dérogation {{ e.nomSousZone }}</span>
+              <input class="rec-topo-input" type="text" style="flex:1"
+                     [value]="e.derogation || ''"
+                     placeholder="Justification (accès limité, zone d'insécurité…)"
+                     (change)="updateDerogation(e.sousZoneId,$any($event.target).value)">
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- 3b : Ratios issus de l'enquête -->
+        <div class="rec-enquete-section">
+          <div class="rec-enquete-section__title">
+            Ratios moyens <span style="color:#6B7785;font-weight:400">· issus des fiches collectées</span>
+          </div>
+          <div class="rec-params-grid">
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">Ménages / maison</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.01"
+                     [value]="ratios().menagesParMaison"
+                     (change)="updateRatios('menagesParMaison',$any($event.target).value)">
+            </div>
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">Personnes / ménage</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.1"
+                     [value]="ratios().personnesParMenage"
+                     (change)="updateRatios('personnesParMenage',$any($event.target).value)">
+            </div>
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">Niveau de vie</span>
+              <input class="rec-topo-input" type="text" placeholder="ex : 53% pauvre · 47% moyen"
+                     [value]="ratios().niveauVie || ''"
+                     (change)="updateRatios('niveauVie',$any($event.target).value)">
+            </div>
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">Tarif actuel (Gdes/gallon)</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.5"
+                     [value]="ratios().tarifGallon || ''"
+                     placeholder="7"
+                     (change)="updateRatios('tarifGallon',$any($event.target).value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3c : Paramètres méthodo -->
+        <div class="rec-enquete-section">
+          <div class="rec-enquete-section__title">
+            Paramètres méthodologiques
+            <span style="color:#60A5FA;font-size:9px;font-weight:400;margin-left:4px">· modifier → recalcul auto</span>
+          </div>
+          <div class="rec-params-grid">
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">Croissance (%/an)</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.1"
+                     [value]="params().tauxCroissanceAn"
+                     (change)="updateParams('tauxCroissanceAn',$any($event.target).value)">
+            </div>
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">Horizon (ans)</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="1"
+                     [value]="params().horizonAns"
+                     (change)="updateParams('horizonAns',$any($event.target).value)">
+            </div>
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">Dotation (l/j/hab)</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="5"
+                     [value]="params().dotationLjHab"
+                     (change)="updateParams('dotationLjHab',$any($event.target).value)">
+            </div>
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">Pertes réseau (%)</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="1" min="0" max="60"
+                     [value]="params().pertesPercent"
+                     (change)="updateParams('pertesPercent',$any($event.target).value)">
+            </div>
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">C<sub>pj</sub> (pointe jour)</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.1"
+                     [value]="params().cpj"
+                     (change)="updateParams('cpj',$any($event.target).value)">
+            </div>
+            <div class="rec-param-field">
+              <span class="rec-param-lbl">C<sub>ph</sub> (pointe heure)</span>
+              <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.1"
+                     [value]="params().cph"
+                     (change)="updateParams('cph',$any($event.target).value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Pied phase 3 -->
+        <div class="rec-phase-panel__foot">
+          <button class="rec-btn rec-btn--ghost" (click)="phase.set(2)">← Phase 2</button>
+          <div class="rec-phase-panel__foot-right">
+            <span class="rec-hint" *ngIf="!enqueteIsValid() && echantillons().length>0">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              échantillon ≥ 10% ou dérogation requise par sous-zone
+            </span>
+            <button class="rec-btn rec-btn--primary" [disabled]="!enqueteIsValid()" (click)="validerEnquete()">
+              Valider l'enquête · phase 4
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ═══ PHASE 4 ═══ -->
+      <ng-container *ngIf="phase()===4">
+        <div class="rec-phase-panel__head">
+          <div>
+            <div class="rec-phase-panel__title">Phase 4 — Demande par tronçon</div>
+            <div class="rec-phase-panel__sub">lignes = tronçons réseau · catégories d'usagers · Table 3.2</div>
+          </div>
+          <button class="rec-btn rec-btn--primary-sm" (click)="pasteDemande()">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+            Coller Table 3.2
+          </button>
+        </div>
+
+        <div class="rec-paste-err" *ngIf="p4PasteErr()">⚠ {{ p4PasteErr() }}</div>
+
+        <!-- Matrice tronçon × catégorie -->
+        <div class="rec-topo-table-wrap">
+          <table class="rec-topo-table rec-demand-table">
+            <thead>
+              <tr>
+                <th style="text-align:left">Tronçon</th>
+                <th *ngFor="let c of categories()" style="text-align:right">{{ c.label }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let dt of demandeTroncons()">
+                <td class="rec-topo-table__id">{{ dt.tronconId }}</td>
+                <td *ngFor="let c of categories()" style="text-align:right;padding:3px 4px">
+                  <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.001" min="0"
+                         [value]="dt.demande[c.id] || ''"
+                         placeholder="0"
+                         (change)="updateDemande(dt.tronconId, c.id, $any($event.target).value)">
+                </td>
+              </tr>
+              <!-- Totaux -->
+              <tr class="rec-bati-total" *ngIf="demandeTroncons().length > 0">
+                <td style="font-weight:500">TOTAL</td>
+                <td *ngFor="let c of categories()" style="text-align:right;font-weight:500">
+                  {{ totalParCat()[c.id] ? totalParCat()[c.id].toFixed(3) : '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Points de consommation institutionnels -->
+        <div class="rec-enquete-section">
+          <div class="rec-enquete-section__title">
+            Points de consommation
+            <span style="color:#6B7785;font-weight:400">· géolocalisés · rattachés à un tronçon</span>
+          </div>
+          <div *ngFor="let pc of pointsConso()" class="rec-point-conso-row">
+            <input class="rec-topo-input" type="text" placeholder="Nom" [value]="pc.nom"
+                   (change)="updatePointConso(pc.id,'nom',$any($event.target).value)">
+            <select class="rec-topo-input rec-topo-input--narrow"
+                    [ngModel]="pc.tronconId" (ngModelChange)="updatePointConso(pc.id,'tronconId',$event)">
+              <option *ngFor="let t of troncons()" [value]="t.id">{{ t.id }}</option>
+            </select>
+            <input class="rec-topo-input rec-topo-input--narrow" type="number" step="0.001" min="0"
+                   placeholder="l/s" [value]="pc.debitLs || ''"
+                   (change)="updatePointConso(pc.id,'debitLs',$any($event.target).value)">
+            <button class="rec-del-btn" (click)="removePointConso(pc.id)">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            </button>
+          </div>
+          <button class="rec-btn rec-btn--ghost" style="margin-top:6px;font-size:11px" (click)="addPointConso()">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter (école, église, centre de santé…)
+          </button>
+        </div>
+
+        <div class="rec-phase-panel__foot">
+          <button class="rec-btn rec-btn--ghost" (click)="phase.set(3)">← Phase 3</button>
+          <div class="rec-phase-panel__foot-right">
+            <span class="rec-hint" *ngIf="demandeTotal() > 0 && !demandeVsQpj().ok" style="color:#FB7185">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              demande {{ fmtNum(demandeVsQpj().tot, 1) }} l/s &gt; Qpj {{ fmtNum(demandeVsQpj().qpj, 1) }} l/s
+            </span>
+            <span *ngIf="demandeIsValid()" style="font-size:10px;color:#4ADE80">
+              ✓ {{ fmtNum(demandeTotal(), 2) }} l/s ≤ Qpj
+            </span>
+            <button class="rec-btn rec-btn--primary" [disabled]="!demandeIsValid()" (click)="validerDemande()">
+              Valider la demande · phase 5
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ═══ PHASE 5 ═══ -->
+      <ng-container *ngIf="phase()===5">
+        <div class="rec-phase-panel__head">
+          <div>
+            <div class="rec-phase-panel__title">Phase 5 — Validation finale</div>
+            <div class="rec-phase-panel__sub">vérifie les sorties des 4 phases · fige en version réf. {{ zone() ? refYear(zone()!) : '' }}</div>
+          </div>
+        </div>
+
+        <!-- Récapitulatif des sorties -->
+        <div class="rec-enquete-section">
+          <div class="rec-enquete-section__title">Récapitulatif des sorties</div>
+          <div class="rec-p5-summary-grid">
+            <div class="rec-p5-sum-item">
+              <svg width="10" height="10" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+              Périmètre
+              <span>{{ fmtNum(superficieKm2()) }} km²</span>
+            </div>
+            <div class="rec-p5-sum-item">
+              <svg width="10" height="10" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              Bâti
+              <span>{{ totalMaisonsCorrigees() }} maisons</span>
+            </div>
+            <div class="rec-p5-sum-item">
+              <svg width="10" height="10" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              Population
+              <span>{{ popActuelle() | number:'1.0-0' }} → {{ popHorizon() | number:'1.0-0' }}</span>
+            </div>
+            <div class="rec-p5-sum-item">
+              <svg width="10" height="10" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="10 15 12 17 14 15"/><polyline points="14 9 12 7 10 9"/></svg>
+              Demande
+              <span>{{ fmtNum(demandeTotal(), 1) }} l/s ventilés</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Règles bloquantes -->
+        <div class="rec-enquete-section">
+          <div class="rec-enquete-section__title">Règles de validation</div>
+          <div class="rec-p5-rules-grid">
+            <div class="rec-p5-rule" *ngFor="let r of regles()">
+              <svg *ngIf="r.ok" width="12" height="12" fill="none" stroke="#4ADE80" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg *ngIf="!r.ok" width="12" height="12" fill="none" stroke="#FB7185" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span [style.color]="r.ok ? '#CBD5E1' : '#FB7185'">{{ r.label }}</span>
+              <span class="rec-p5-tag rec-p5-tag--bloquant" style="margin-left:auto">bloquant</span>
+            </div>
+          </div>
+          <!-- Lien retour si règle échoue -->
+          <div *ngIf="!toutesReglesOk()" class="rec-p5-hint">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Corriger les règles échouées avant de valider —
+            <button class="rec-btn rec-btn--ghost" style="font-size:10px;padding:2px 7px" (click)="goToFailingPhase()">retour phase</button>
+          </div>
+        </div>
+
+        <!-- Dérogation optionnelle -->
+        <div class="rec-enquete-section">
+          <div class="rec-enquete-section__title">
+            Dérogation tracée
+            <span style="color:#6B7785;font-weight:400">· optionnel · justification enregistrée dans le snapshot</span>
+          </div>
+          <textarea class="rec-topo-input" rows="2" style="width:calc(100% - 14px);resize:vertical"
+                    placeholder="Ex : source non encore rattachée, débit disponible non confirmé — validation autorisée par OREPA…"
+                    [value]="p5Derogation()"
+                    (input)="p5Derogation.set($any($event.target).value)"></textarea>
+        </div>
+
+        <div class="rec-phase-panel__foot">
+          <button class="rec-btn rec-btn--ghost" (click)="phase.set(4)">← Phase 4</button>
+          <div class="rec-phase-panel__foot-right">
+            <span class="rec-hint" *ngIf="!toutesReglesOk()">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              {{ reglesFailing() }} règle(s) bloquante(s) non satisfaite(s)
+            </span>
+            <button class="rec-btn rec-btn--primary" style="background:linear-gradient(135deg,#166534,#15803d);border-color:#22c55e" [disabled]="!toutesReglesOk()" (click)="validerRecensement()">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Valider · passer en supervisée
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+    </div><!-- /rec-phase-panel -->
+
+    <!-- ── Colonne droite ── -->
+    <div class="rec-sidebar">
+
+      <!-- Résultats périmètre (phase 1a) -->
+      <div class="rec-card" *ngIf="phase()===1">
+        <div class="rec-card__title">
+          {{ p1Tab()==='reseau' ? 'Réseau' : 'Périmètre' }}
+        </div>
+        <div class="rec-card__sub">calculs live</div>
+
+        <ng-container *ngIf="p1Tab()==='perimetre'">
+          <div class="rec-kv">
+            <span class="rec-kv__label">Superficie <span class="rec-live-dot" *ngIf="sommets()>=3">live</span></span>
+            <span class="rec-kv__val" [class.rec-kv__val--pending]="sommets()<3">{{ sommets()>=3 ? fmtNum(superficieKm2())+' km²' : '— km²' }}</span>
+          </div>
+          <div class="rec-kv">
+            <span class="rec-kv__label">Périmètre</span>
+            <span class="rec-kv__val" [class.rec-kv__val--pending]="sommets()<2">{{ sommets()>=2 ? fmtNum(perimetreKm())+' km' : '— km' }}</span>
+          </div>
+          <ng-container *ngIf="altMin()!==null">
+            <div class="rec-divider"></div>
+            <div class="rec-kv"><span class="rec-kv__label">Alt. min / max</span><span class="rec-kv__val" style="font-size:11px">{{ altMin() }} – {{ altMax() }} m</span></div>
+            <div class="rec-kv" *ngIf="denivele()!==null"><span class="rec-kv__label">Dénivelé</span><span class="rec-kv__val" style="font-size:11px">{{ fmtNum(denivele(),1) }} m</span></div>
+            <div class="rec-adduction" *ngIf="typeAdduction()">→ adduction probablement <strong>{{ typeAdduction() }}</strong></div>
+          </ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="p1Tab()==='reseau'">
+          <div class="rec-kv"><span class="rec-kv__label">Nœuds</span><span class="rec-kv__val">{{ allNoeuds().length }}</span></div>
+          <div class="rec-kv"><span class="rec-kv__label">Tronçons</span><span class="rec-kv__val">{{ troncons().length }}</span></div>
+          <div class="rec-kv"><span class="rec-kv__label">Linéaire total</span><span class="rec-kv__val">{{ lineaireTotal() }} m</span></div>
+          <div class="rec-divider"></div>
+          <div class="rec-kv"><span class="rec-kv__label">Type de réseau</span><span class="rec-kv__val" style="font-size:11px">{{ networkType() ?? '—' }}</span></div>
+          <div *ngIf="noeudsIsoles().length>0" class="rec-kv" style="color:#F87171;font-size:10px;margin-top:4px">
+            ⚠ {{ noeudsIsoles().length }} nœud(s) non relié(s)
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Résultats calculés (phases 2+) -->
+      <div class="rec-card" *ngIf="phase()>1">
+        <div class="rec-card__title">Résultats calculés</div>
+        <div class="rec-card__sub">live · phase {{ phase() }}</div>
+
+        <div class="rec-kv"><span class="rec-kv__label">Superficie</span>
+          <span class="rec-kv__val">{{ z.superficie ? z.superficie+' km²' : '—' }}</span></div>
+
+        <!-- Phase 2 : bâti live -->
+        <ng-container *ngIf="phase()===2">
+          <div class="rec-kv">
+            <span class="rec-kv__label">Maisons <span class="rec-live-dot" *ngIf="sousZones().length>0">live</span></span>
+            <span class="rec-kv__val" [class.rec-kv__val--pending]="totalMaisonsCorrigees()===0">
+              {{ totalMaisonsCorrigees() || '—' }}
+            </span>
+          </div>
+          <div style="font-size:9px;color:#6B7785;margin-bottom:4px" *ngIf="totalMaisonsComptees()>0">
+            {{ totalMaisonsComptees() }} comptées × coef → {{ totalMaisonsCorrigees() }}
+          </div>
+          <div class="rec-kv" *ngIf="densiteBati()">
+            <span class="rec-kv__label">Densité bâti</span>
+            <span class="rec-kv__val" style="font-size:11px">~{{ densiteBati() }} m/km²</span>
+          </div>
+        </ng-container>
+
+        <!-- Phase 3+ : bâti figé -->
+        <div class="rec-kv" *ngIf="phase()>2">
+          <span class="rec-kv__label">Maisons (figé)</span>
+          <span class="rec-kv__val">{{ z.foyers || '—' }}</span>
+        </div>
+
+        <div class="rec-divider"></div>
+
+        <!-- Phase < 3 : population à venir -->
+        <ng-container *ngIf="phase()<3">
+          <div class="rec-kv">
+            <span class="rec-kv__label">Population</span>
+            <span class="rec-kv__val rec-kv__val--pending">—</span>
+          </div>
+          <div style="font-size:9px;color:#60A5FA;margin-bottom:6px">→ maisons × ratios de la phase 3</div>
+          <div class="rec-kv"><span class="rec-kv__label">Réseau · linéaire</span>
+            <span class="rec-kv__val">{{ lineaireTotal() ? lineaireTotal()+' m' : '—' }}</span></div>
+          <div class="rec-kv"><span class="rec-kv__label">Q pointe (Qpj)</span>
+            <span class="rec-kv__val rec-kv__val--pending">—</span></div>
+        </ng-container>
+
+        <!-- Phase 3 : chaîne de calcul live -->
+        <ng-container *ngIf="phase()===3">
+          <div class="rec-chain-title">Chaîne de calcul <span class="rec-live-dot">live</span></div>
+          <div class="rec-chain-sub">déroulée, jamais saisie</div>
+
+          <div class="rec-chain-item">
+            <span class="rec-chain-label">Maisons</span>
+            <span class="rec-chain-val rec-chain-val--base">{{ totalMaisonsCorrigees() }}</span>
+          </div>
+          <div class="rec-chain-op">× {{ ratios().menagesParMaison }} ménages/maison</div>
+          <div class="rec-chain-item">
+            <span class="rec-chain-label">Ménages</span>
+            <span class="rec-chain-val">{{ menages() }}</span>
+          </div>
+          <div class="rec-chain-op">× {{ ratios().personnesParMenage }} pers/ménage</div>
+          <div class="rec-chain-item rec-chain-item--result">
+            <span class="rec-chain-label">Pop. {{ anneeHorizon() - params().horizonAns }}</span>
+            <span class="rec-chain-val rec-chain-val--big">{{ popActuelle() | number:'1.0-0' }}</span>
+          </div>
+          <div class="rec-chain-op">+ {{ params().tauxCroissanceAn }}%/an · {{ params().horizonAns }} ans</div>
+          <div class="rec-chain-item rec-chain-item--result">
+            <span class="rec-chain-label">Pop. {{ anneeHorizon() }}</span>
+            <span class="rec-chain-val rec-chain-val--big rec-chain-val--blue">{{ popHorizon() | number:'1.0-0' }}</span>
+          </div>
+
+          <div class="rec-chain-divider"></div>
+          <div class="rec-chain-section">Débits (horizon)</div>
+
+          <div class="rec-chain-item">
+            <span class="rec-chain-label">Q moy. journalier</span>
+            <span class="rec-chain-val">{{ fmtNum(qmjLs(), 1) }} l/s</span>
+          </div>
+          <div class="rec-chain-item">
+            <span class="rec-chain-label">Q pointe jour (Qpj)</span>
+            <span class="rec-chain-val">{{ fmtNum(qpjLs(), 1) }} l/s</span>
+          </div>
+          <div class="rec-chain-item">
+            <span class="rec-chain-label">Q pointe heure (Qph)</span>
+            <span class="rec-chain-val">{{ fmtNum(qphLs(), 1) }} l/s</span>
+          </div>
+          <div class="rec-chain-formula">
+            Qmj = pop × {{ params().dotationLjHab }} × (1 + {{ params().pertesPercent }}%) / 86 400
+          </div>
+        </ng-container>
+
+        <!-- Phase > 3 : résultats figés -->
+        <ng-container *ngIf="phase()>3">
+          <div class="rec-kv"><span class="rec-kv__label">Pop. actuelle</span><span class="rec-kv__val">{{ z.population | number:'1.0-0' }}</span></div>
+          <div class="rec-kv"><span class="rec-kv__label">Pop. {{ z.horizonRef }}</span><span class="rec-kv__val" style="color:#60A5FA">{{ popHorizon() | number:'1.0-0' }}</span></div>
+          <div class="rec-divider"></div>
+          <div class="rec-kv"><span class="rec-kv__label">Qmj</span><span class="rec-kv__val">{{ z.qmj ? z.qmj+' l/s' : '—' }}</span></div>
+          <div class="rec-kv"><span class="rec-kv__label">Qpj</span><span class="rec-kv__val">{{ z.qpj ? z.qpj+' l/s' : '—' }}</span></div>
+          <div class="rec-kv"><span class="rec-kv__label">Réseau · linéaire</span><span class="rec-kv__val">{{ lineaireTotal() ? lineaireTotal()+' m' : '—' }}</span></div>
+        </ng-container>
+      </div>
+
+      <!-- Phase 4 : ventilation live -->
+      <div class="rec-card" *ngIf="phase()===4">
+        <div class="rec-card__title">Demande ventilée <span class="rec-live-dot">live</span></div>
+        <div class="rec-card__sub">→ alimente le dashboard</div>
+
+        <div style="font-size:10px;color:#8B9AAB;margin-bottom:2px">Domestique (BP + BF)</div>
+        <div style="font-size:15px;font-weight:500;color:#F5F7FA;margin-bottom:4px">
+          {{ fmtNum(demandeDomestique(), 2) }} l/s
+          <span style="font-size:10px;color:#6B7785" *ngIf="demandeTotal()>0">
+            · {{ (demandeDomestique() / demandeTotal() * 100).toFixed(0) }}%
+          </span>
+        </div>
+        <div class="rec-prog-bar" style="margin:0 0 8px">
+          <div class="rec-prog-bar__fill" [style.width.%]="demandeTotal()>0 ? demandeDomestique()/demandeTotal()*100 : 0"></div>
+        </div>
+
+        <div style="font-size:10px;color:#8B9AAB;margin-bottom:2px">Institutionnel</div>
+        <div style="font-size:15px;font-weight:500;color:#F5F7FA;margin-bottom:8px">
+          {{ fmtNum(demandeInstitutionnel(), 2) }} l/s
+          <span style="font-size:10px;color:#6B7785" *ngIf="demandeTotal()>0">
+            · {{ (demandeInstitutionnel() / demandeTotal() * 100).toFixed(0) }}%
+          </span>
+        </div>
+
+        <div class="rec-divider"></div>
+        <div class="rec-kv">
+          <span class="rec-kv__label">Demande totale</span>
+          <span class="rec-kv__val">{{ fmtNum(demandeTotal(), 2) }} l/s</span>
+        </div>
+        <div class="rec-kv" style="margin-top:2px">
+          <span class="rec-kv__label">vs Qpj ph.3</span>
+          <span [style.color]="demandeVsQpj().ok ? '#4ADE80' : '#FB7185'" style="font-size:11px;font-weight:500">
+            {{ fmtNum(qpjLs(), 1) }} l/s {{ demandeVsQpj().ok ? '✓' : '⚠' }}
+          </span>
+        </div>
+        <div style="font-size:9px;color:#6B7785;margin-top:6px">
+          contrôle : somme ventilée ≤ Qpj
+        </div>
+      </div>
+
+      <!-- Phase 5 : ce que déclenche la validation -->
+      <div class="rec-card" *ngIf="phase()===5">
+        <div class="rec-card__title">
+          <svg width="11" height="11" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          À la validation
+        </div>
+        <div class="rec-card__sub">effets déclenchés</div>
+        <div class="rec-p5-trigger-list">
+          <div><svg width="10" height="10" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Recensement figé réf. {{ zone() ? refYear(zone()!) : '' }}</div>
+          <div><svg width="10" height="10" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg> Polygone visible sur la carte</div>
+          <div><svg width="10" height="10" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Graphe réseau → Infrastructures</div>
+          <div><svg width="10" height="10" fill="none" stroke="#4ADE80" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Demande ventilée → Dashboard</div>
+        </div>
+      </div>
+
+      <!-- Progression -->
+      <div class="rec-card">
+        <div class="rec-card__title">Progression</div>
+        <div class="rec-prog-bar"><div class="rec-prog-bar__fill" [style.width.%]="done()/5*100"></div></div>
+        <div class="rec-prog-label">{{ done() }} / 5 phases complètes</div>
+        <div class="rec-phase-list">
+          <div *ngFor="let ph of phases; let i = index" class="rec-phase-item"
+               [class.rec-phase-item--done]="phaseStatus(i+1)==='done'"
+               [class.rec-phase-item--active]="phaseStatus(i+1)==='active'">
+            <span class="rec-phase-item__dot"></span>{{ ph.label }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Fiche zone -->
+      <div class="rec-card rec-card--muted">
+        <div class="rec-card__title">{{ z.nom }}</div>
+        <div class="rec-card__meta">{{ z.codeIhsi || z.code }}</div>
+        <div class="rec-card__meta" style="margin-top:4px">{{ z.dept }} › {{ z.commune }}</div>
+        <div *ngIf="z.orepa" class="rec-card__meta">{{ z.orepa }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #notFound>
+  <div class="rec-not-found">
+    <div>Zone introuvable · {{ zoneId() }}</div>
+    <button class="rec-btn rec-btn--ghost" (click)="retourTerritoire()">← Territoire</button>
+  </div>
+</ng-template>

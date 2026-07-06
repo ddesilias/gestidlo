@@ -1,0 +1,171 @@
+<div *ngIf="visible" class="prm-overlay" (click)="fermer.emit()">
+  <div class="prm-panel" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="prm-head">
+      <div class="prm-head__icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </div>
+      <div>
+        <div class="prm-head__title">Paramètres rapides</div>
+        <div class="prm-head__sub">Personnalisation · Notifications · Sécurité</div>
+      </div>
+      <button class="prm-close" type="button" (click)="fermer.emit()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Contenu scrollable -->
+    <div class="prm-body">
+
+      <!-- Profil -->
+      <div class="prm-profile-card">
+        <div class="prm-avatar">AS</div>
+        <div class="prm-profile-info">
+          <div class="prm-profile-name">Admin Super</div>
+          <div class="prm-profile-role">Super Admin · DINEPA National</div>
+          <div class="prm-profile-email">admin&#64;dinepa.gouv.ht</div>
+        </div>
+        <span class="prm-online-badge">● En ligne</span>
+      </div>
+
+      <!-- Apparence -->
+      <div class="prm-section">
+        <div class="prm-section__title">Apparence</div>
+
+        <div class="prm-field">
+          <label class="prm-lbl">Thème</label>
+          <div class="prm-themes">
+            <button *ngFor="let t of THEMES" type="button" class="prm-theme-btn" [class.prm-theme-btn--active]="theme()===t.id" (click)="selectTheme(t.id)">
+              <div class="prm-theme-swatch" [class]="t.cls"></div>
+              <span>{{ t.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="prm-row2">
+          <div class="prm-field">
+            <label class="prm-lbl">Langue</label>
+            <div class="prm-lang-btns">
+              <button *ngFor="let l of LANGS" type="button" class="prm-lang-btn" [class.prm-lang-btn--active]="lang()===l.id" (click)="selectLang(l.id)">{{ l.label }}</button>
+            </div>
+          </div>
+          <div class="prm-field">
+            <label class="prm-lbl">Taille du texte</label>
+            <div class="prm-size-btns">
+              <button type="button" class="prm-size-btn" [class.prm-size-btn--active]="textSize()==='sm'" (click)="selectSize('sm')">Petit</button>
+              <button type="button" class="prm-size-btn" [class.prm-size-btn--active]="textSize()==='md'" (click)="selectSize('md')">Normal</button>
+              <button type="button" class="prm-size-btn" [class.prm-size-btn--active]="textSize()==='lg'" (click)="selectSize('lg')">Grand</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="prm-section">
+        <div class="prm-section__title">Notifications</div>
+        <div class="prm-toggles">
+          <label class="prm-toggle-row">
+            <div class="prm-toggle-info">
+              <span class="prm-toggle-lbl">Alertes critiques</span>
+              <span class="prm-toggle-sub">Push + SMS en temps réel</span>
+            </div>
+            <div class="prm-toggle-switch" [class.prm-toggle-switch--on]="notifAlertes()" (click)="notifAlertes.set(!notifAlertes())">
+              <div class="prm-toggle-knob"></div>
+            </div>
+          </label>
+          <label class="prm-toggle-row">
+            <div class="prm-toggle-info">
+              <span class="prm-toggle-lbl">Dépassements SLA</span>
+              <span class="prm-toggle-sub">Notification à l'échéance</span>
+            </div>
+            <div class="prm-toggle-switch" [class.prm-toggle-switch--on]="notifSla()" (click)="notifSla.set(!notifSla())">
+              <div class="prm-toggle-knob"></div>
+            </div>
+          </label>
+          <label class="prm-toggle-row">
+            <div class="prm-toggle-info">
+              <span class="prm-toggle-lbl">Nouvelles interventions</span>
+              <span class="prm-toggle-sub">Assignation terrain</span>
+            </div>
+            <div class="prm-toggle-switch" [class.prm-toggle-switch--on]="notifIntervention()" (click)="notifIntervention.set(!notifIntervention())">
+              <div class="prm-toggle-knob"></div>
+            </div>
+          </label>
+          <label class="prm-toggle-row">
+            <div class="prm-toggle-info">
+              <span class="prm-toggle-lbl">Rapports générés</span>
+              <span class="prm-toggle-sub">Export & validation prêts</span>
+            </div>
+            <div class="prm-toggle-switch" [class.prm-toggle-switch--on]="notifRapports()" (click)="notifRapports.set(!notifRapports())">
+              <div class="prm-toggle-knob"></div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Périmètre actif -->
+      <div class="prm-section">
+        <div class="prm-section__title">Périmètre actif</div>
+        <div class="prm-field">
+          <label class="prm-lbl">Zones de supervision</label>
+          <input class="prm-input" type="text" [(ngModel)]="scopeZone"/>
+        </div>
+        <div class="prm-hint">Ce périmètre filtre par défaut toutes les vues de l'application.</div>
+      </div>
+
+      <!-- Sécurité -->
+      <div class="prm-section">
+        <div class="prm-section__title">Sécurité</div>
+        <div class="prm-security-list">
+          <div class="prm-security-item">
+            <div class="prm-security-info">
+              <span class="prm-security-lbl">Mot de passe</span>
+              <span class="prm-security-sub">Dernière modification il y a 42 jours</span>
+            </div>
+            <button type="button" class="prm-sec-btn" (click)="changerMotDePasse()">Modifier</button>
+          </div>
+          <div class="prm-security-item">
+            <div class="prm-security-info">
+              <span class="prm-security-lbl">Authentification 2FA</span>
+              <span class="prm-security-sub prm-security-sub--green">● Activée — Application TOTP</span>
+            </div>
+            <button type="button" class="prm-sec-btn" (click)="gerer2fa()">Gérer</button>
+          </div>
+          <div class="prm-security-item">
+            <div class="prm-security-info">
+              <span class="prm-security-lbl">Sessions actives</span>
+              <span class="prm-security-sub">1 session · Chrome / Windows 11</span>
+            </div>
+            <button type="button" class="prm-sec-btn" (click)="voirSessions()">Voir</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raccourcis -->
+      <div class="prm-section">
+        <div class="prm-section__title">Raccourcis clavier</div>
+        <div class="prm-shortcuts">
+          <div *ngFor="let s of SHORTCUTS" class="prm-shortcut">
+            <kbd class="prm-kbd">{{ s.key }}</kbd>
+            <span class="prm-shortcut-lbl">{{ s.label }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="prm-foot">
+      <button type="button" class="prm-foot-btn prm-foot-btn--danger" (click)="deconnecter()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="prm-foot-btn" (click)="voirTousParametres()">Tous les paramètres</button>
+        <button type="button" class="prm-foot-btn prm-foot-btn--primary" (click)="sauvegarder()">Sauvegarder</button>
+      </div>
+    </div>
+
+  </div>
+</div>

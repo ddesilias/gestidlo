@@ -19,9 +19,16 @@ static const char *PASSWORD = "operator";
 
 static const char *POINT_ID = "POINT-001";
 
-static const char *SENSOR_PRESSURE = "WOKWI-PRESSURE";
-static const char *SENSOR_FLOW = "WOKWI-FLOW";
-static const char *SENSOR_LEVEL = "WOKWI-LEVEL";
+// sensorCode = code du capteur dans le registre GEstidlo (table capteur). L'ingestion met à jour
+// l'état live du capteur (page Capteurs IoT) par ce code. Voir le seed (Carrefour / Ouest) :
+//   CPT-PR-CAR-001 (pression, validé) · CPT-NV-CAR-002 (niveau, validé) · CPT-DB-CAR-003 (débit, EN ATTENTE).
+// Le débit n'apparaîtra « en ligne » qu'une fois le capteur validé par le superviseur Ouest (démo du cycle).
+static const char *SENSOR_PRESSURE = "CPT-PR-CAR-001";
+static const char *SENSOR_LEVEL = "CPT-NV-CAR-002";
+static const char *SENSOR_FLOW = "CPT-DB-CAR-003";
+
+// Batterie simulée (légère décharge). Le signal vient du RSSI WiFi réel.
+static int simulatedBattery = 92;
 
 // Pressure (analog)
 static const int POT_PRESSURE_PIN = 34;  // ADC1
@@ -163,9 +170,12 @@ static void sendMeasurement(
   StaticJsonDocument<384> body;
   body["pointId"] = pointId;
   body["sensorId"] = sensorId;
+  body["sensorCode"] = sensorId;        // = code du registre capteur (corrélation live)
   body["type"] = type;
   body["value"] = value;
   body["unit"] = unit;
+  body["battery"] = simulatedBattery;
+  body["signal"] = (int)WiFi.RSSI();
   String json;
   serializeJson(body, json);
 
@@ -247,6 +257,9 @@ void loop() {
     return;
   }
   lastSentAtMs = now;
+
+  // Décharge batterie simulée (lente) pour la démo.
+  if (simulatedBattery > 15 && (now % 30000) < SEND_INTERVAL_MS) simulatedBattery--;
 
   const float pressure = adcToPressure(analogRead(POT_PRESSURE_PIN));
 

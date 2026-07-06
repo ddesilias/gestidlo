@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Wireframe – Page Territoire AEP · GestiDlo</title>
+<style>
+  /* ── Design tokens (émulés hors Figma) ── */
+  :root {
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --color-text-primary:     #111827;
+    --color-text-secondary:   #374151;
+    --color-text-tertiary:    #6b7280;
+    --color-text-success:     #15803d;
+    --color-text-warning:     #b45309;
+    --color-text-danger:      #dc2626;
+    --color-text-info:        #1d4ed8;
+    --color-background-primary:   #ffffff;
+    --color-background-secondary: #f9fafb;
+    --color-background-info:      #eff6ff;
+    --color-border-secondary: #d1d5db;
+    --color-border-tertiary:  #e5e7eb;
+  }
+  body { background:#f3f4f6; margin:0; padding:16px; font-family:var(--font-sans); }
+
+  /* ── Utilitaires wireframe ── */
+  .wf-dot  { width:8px;height:8px;border-radius:50%;display:inline-block;flex:none; }
+  .wf-row  { display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:6px;font-size:12px;color:var(--color-text-secondary); }
+  .wf-tag  { font-size:10px;padding:1px 6px;border-radius:6px;background:var(--color-background-info);color:var(--color-text-info);font-weight:500;white-space:nowrap; }
+  .wf-chip { font-size:11px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary); }
+  .wf-box  { background:var(--color-background-secondary);border-radius:8px;padding:8px 10px; }
+  .wf-btn  { font-size:11px;padding:4px 9px;border-radius:6px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);cursor:pointer; }
+  .wf-sep  { border:none;border-top:0.5px solid var(--color-border-tertiary);margin:6px 0; }
+  .wf-kv   { display:flex;justify-content:space-between;font-size:10px;color:var(--color-text-secondary);margin-top:3px; }
+  .wf-kv span:last-child { color:var(--color-text-primary); }
+
+  /* barre de progression */
+  .wf-bar  { height:5px;border-radius:3px;background:var(--color-border-tertiary);position:relative; }
+  .wf-bar > div { height:100%;border-radius:3px; }
+
+  /* Page wrapper */
+  .page { background:var(--color-background-primary);border-radius:12px;padding:16px;max-width:1200px;margin:0 auto; }
+</style>
+</head>
+<body>
+<div class="page" aria-label="Wireframe basse fidélité – Page Territoire AEP GestiDlo">
+
+  <!-- ══ BREADCRUMB ══ -->
+  <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px">
+    Gouvernance › Territoire · Module 1/8
+  </div>
+
+  <!-- ══ EN-TÊTE ══ -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:18px;font-weight:500;color:var(--color-text-primary)">Référentiel territorial AEP</span>
+      <!-- Chip fraîcheur référentiel uniquement -->
+      <span class="wf-chip" title="Référentiel IHSI mis à jour il y a 2 jours">
+        <i>⬤</i> IHSI · 2j
+      </span>
+      <span class="wf-chip" style="color:var(--color-text-warning)">
+        ⚠ 3 zones critiques (&lt;40%)
+      </span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span class="wf-btn">⇄ Comparer</span>
+      <span class="wf-btn">↓ Exporter</span>
+      <span class="wf-btn">↑ Import IHSI</span>
+      <span class="wf-btn" style="border:2px solid var(--color-border-info);color:var(--color-text-info)">+ Activer une zone</span>
+    </div>
+  </div>
+  <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:12px">
+    10 départements · 142 communes · 571 sections · périmètre national DINEPA
+  </div>
+
+  <!-- ══ KPI ROW (4 cartes) ══ -->
+  <!--
+    CORRECTIONS :
+    • KPI 1 : renommé "Couverture périmètre supervisé" (plus "nationale") + valeur 38 %
+      (pondérée population : 194,5 k / 505,1 k = 38,5 % → affiché 38 %)
+    • KPI 2 : unité "Communes" explicite, jamais "sections" ou "zones"
+    • KPI 3 : dénominateur = population du périmètre supervisé, pas nationale
+    • KPI 4 : inchangé
+  -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
+
+    <div class="wf-box">
+      <div style="font-size:12px;color:var(--color-text-secondary)">
+        Couverture périmètre supervisé
+        <span class="wf-tag">corrigé</span>
+      </div>
+      <div style="font-size:22px;font-weight:500;color:var(--color-text-primary)">38%</div>
+      <div style="font-size:10px;color:var(--color-text-tertiary)">
+        pondérée population · 194,5 k / 505,1 k
+      </div>
+    </div>
+
+    <div class="wf-box">
+      <div style="font-size:12px;color:var(--color-text-secondary)">
+        Communes supervisées
+        <span class="wf-tag">corrigé</span>
+      </div>
+      <div style="font-size:22px;font-weight:500;color:var(--color-text-primary)">
+        7<span style="font-size:13px;color:var(--color-text-tertiary)">/142 communes</span>
+      </div>
+      <div style="font-size:10px;color:var(--color-text-tertiary)">unité : commune (pas section)</div>
+    </div>
+
+    <div class="wf-box">
+      <div style="font-size:12px;color:var(--color-text-secondary)">Population desservie</div>
+      <div style="font-size:22px;font-weight:500;color:var(--color-text-primary)">194,5 k</div>
+      <div style="font-size:10px;color:var(--color-text-tertiary)">/ 505,1 k du périmètre supervisé</div>
+    </div>
+
+    <div class="wf-box">
+      <div style="font-size:12px;color:var(--color-text-secondary)">Zones critiques (&lt;40%)</div>
+      <div style="font-size:22px;font-weight:500;color:var(--color-text-danger)">3</div>
+      <div style="font-size:10px;color:var(--color-text-tertiary)">couverture insuffisante</div>
+    </div>
+
+  </div>
+
+  <!-- ══ CORPS EN 3 COLONNES ══ -->
+  <div style="display:grid;grid-template-columns:215px minmax(0,1fr) 230px;gap:10px;align-items:start">
+
+    <!-- ─── COL 1 : ARBRE DES 142 COMMUNES ─── -->
+    <!--
+      CORRECTION :
+      • Toutes les communes listées et filtrables (142 au total)
+      • 4 états visibles : supervisée / à déployer / couverture insuffisante / non recensée
+      • Aucune commune repliée arbitrairement
+      • Compteur "142 résultats" cohérent avec le header
+    -->
+    <div style="border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:8px">
+
+      <!-- Recherche -->
+      <div style="display:flex;align-items:center;gap:6px;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:5px 7px;font-size:11px;color:var(--color-text-tertiary);margin-bottom:7px">
+        🔍 Département, commune…
+      </div>
+
+      <!-- Filtres d'état -->
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">
+        <span class="wf-chip" style="border-color:var(--color-border-info);color:var(--color-text-info)">Toutes</span>
+        <span class="wf-chip">Supervisées</span>
+        <span class="wf-chip">À déployer</span>
+        <span class="wf-chip">Critiques</span>
+        <span class="wf-chip">Non rec.</span>
+      </div>
+
+      <!-- Légende état -->
+      <div style="display:flex;gap:8px;font-size:9px;color:var(--color-text-tertiary);margin-bottom:7px;flex-wrap:wrap">
+        <span><span class="wf-dot" style="background:var(--color-text-success)"></span> &gt;70%</span>
+        <span><span class="wf-dot" style="background:var(--color-text-warning)"></span> 40–70%</span>
+        <span><span class="wf-dot" style="background:var(--color-text-danger)"></span> &lt;40%</span>
+        <span><span class="wf-dot" style="background:#9ca3af"></span> à dépl.</span>
+        <span><span class="wf-dot" style="background:var(--color-border-secondary)"></span> non rec.</span>
+      </div>
+
+      <!-- Arbre : Département Ouest (4 supervisées + toutes les non-sup. exposées) -->
+      <div class="wf-row" style="font-weight:500;color:var(--color-text-primary)">
+        ▼ Ouest
+        <span style="margin-left:auto;font-size:10px;color:var(--color-text-tertiary)">4 sup · 20 com.</span>
+      </div>
+
+      <div style="padding-left:10px">
+
+        <!-- Léogâne – supervisée, couverture 62% -->
+        <div class="wf-row" style="color:var(--color-text-primary)">
+          ▼ Léogâne
+          <span style="margin-left:auto;font-size:11px">62%</span>
+          <span class="wf-dot" style="background:var(--color-text-warning)"></span>
+        </div>
+        <div style="padding-left:14px">
+          <div class="wf-row" style="background:var(--color-background-info);color:var(--color-text-info)">
+            1ère Dessources
+            <span style="margin-left:auto;font-size:10px">HT-09-04-01</span>
+          </div>
+          <div class="wf-row">2ème Petite Rivière</div>
+          <div class="wf-row">3ème Parc-Cahouane</div>
+        </div>
+
+        <!-- Pétion-Ville – supervisée, critique -->
+        <div class="wf-row">
+          Pétion-Ville
+          <span style="margin-left:auto;font-size:11px">42%</span>
+          <span class="wf-dot" style="background:var(--color-text-warning)"></span>
+        </div>
+
+        <!-- Carrefour – supervisée, critique <40% -->
+        <div class="wf-row" style="color:var(--color-text-danger)">
+          Carrefour
+          <span style="margin-left:auto;font-size:11px">12%</span>
+          <span class="wf-dot" style="background:var(--color-text-danger)"></span>
+        </div>
+
+        <!-- Port-au-Prince – à déployer (ni masquée, ni repliée arbitrairement) -->
+        <div class="wf-row">
+          Port-au-Prince
+          <span style="margin-left:auto;font-size:10px;color:var(--color-text-tertiary)">à déployer</span>
+          <span class="wf-dot" style="background:#9ca3af"></span>
+        </div>
+
+        <!-- Delmas – non recensée -->
+        <div class="wf-row">
+          Delmas
+          <span style="margin-left:auto;font-size:10px;color:var(--color-text-tertiary)">non recensé</span>
+          <span class="wf-dot" style="background:var(--color-border-secondary)"></span>
+        </div>
+
+        <!-- Cité-Soleil – non recensée (était cachée avant) -->
+        <div class="wf-row">
+          Cité-Soleil
+          <span style="margin-left:auto;font-size:10px;color:var(--color-text-tertiary)">non recensé</span>
+          <span class="wf-dot" style="background:var(--color-border-secondary)"></span>
+        </div>
+
+        <!-- Gressier – non recensée (était cachée avant) -->
+        <div class="wf-row">
+          Gressier
+          <span style="margin-left:auto;font-size:10px;color:var(--color-text-tertiary)">non recensé</span>
+          <span class="wf-dot" style="background:var(--color-border-secondary)"></span>
+        </div>
+
+        <!-- Note : les 13 autres communes de Ouest sont toutes listées de la même façon -->
+        <div class="wf-row" style="color:var(--color-text-tertiary);font-style:italic;font-size:10px">
+          … 13 autres communes de Ouest
+        </div>
+      </div>
+
+      <!-- Département Artibonite (replié) -->
+      <div class="wf-row" style="color:var(--color-text-primary)">
+        ▶ Artibonite
+        <span style="margin-left:auto;font-size:10px;color:var(--color-text-tertiary)">2 sup · 15 com.</span>
+      </div>
+
+      <!-- Département Nord (replié) -->
+      <div class="wf-row" style="color:var(--color-text-primary)">
+        ▶ Nord
+        <span style="margin-left:auto;font-size:10px;color:var(--color-text-tertiary)">1 sup · 19 com.</span>
+      </div>
+
+      <!-- Autres départements repliés -->
+      <div class="wf-row" style="color:var(--color-text-tertiary);font-style:italic;font-size:10px">
+        … 7 autres départements (repliés)
+      </div>
+
+      <hr class="wf-sep">
+      <!-- Compteur aligné sur le header : 142 résultats (corrigé, was "140") -->
+      <div style="font-size:10px;color:var(--color-text-tertiary);display:flex;justify-content:space-between">
+        <span>↑↓ naviguer</span>
+        <span>142 communes <span class="wf-tag">corrigé</span></span>
+      </div>
+    </div>
+
+    <!-- ─── COL 2 : CARTE CHOROPLÈTHE ─── -->
+    <!--
+      CORRECTIONS :
+      • La carte doit teinter chaque polygone commune/section selon l'onglet actif
+      • La zone sélectionnée est surlignée + zoom centré
+      • Bande de fraîcheur unique en bas : 3 horloges séparées
+        (référentiel IHSI / agrégation indicateurs / live telémétrie)
+    -->
+    <div style="border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:8px">
+
+      <!-- Onglets de couche -->
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
+        <span class="wf-chip" style="border-color:var(--color-border-info);color:var(--color-text-info)">Couverture AEP</span>
+        <span class="wf-chip">Statut</span>
+        <span class="wf-chip">Alertes</span>
+        <span class="wf-chip">Ouvrages</span>
+      </div>
+
+      <!-- Zone carte -->
+      <div style="border:1px dashed var(--color-border-secondary);border-radius:8px;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--color-text-tertiary);position:relative;background:var(--color-background-secondary)">
+
+        <span style="font-size:30px">🗺</span>
+        <div style="font-size:12px;text-align:center;line-height:1.5">
+          Choroplèthe · polygones commune/section<br>
+          colorés selon l'onglet actif<br>
+          <span class="wf-tag">corrigé · polygones coloriés, pas fond vide</span>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-info)">
+          🎯 Zone sélectionnée : surlignée + zoom centré
+        </div>
+
+        <!-- Légende carte -->
+        <div style="position:absolute;bottom:8px;left:8px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:6px 8px;font-size:10px;display:grid;gap:3px">
+          <span><span class="wf-dot" style="background:var(--color-text-success)"></span> &gt; 70%</span>
+          <span><span class="wf-dot" style="background:var(--color-text-warning)"></span> 40–70%</span>
+          <span><span class="wf-dot" style="background:var(--color-text-danger)"></span> &lt; 40%</span>
+          <span><span class="wf-dot" style="background:#9ca3af"></span> à déployer</span>
+          <span><span class="wf-dot" style="background:var(--color-border-secondary)"></span> non recensé</span>
+        </div>
+
+      </div>
+
+      <!-- Bande de fraîcheur : 3 horloges séparées -->
+      <!--
+        CORRECTION :
+        Avant : 4 indicateurs contradictoires mélangés (IHSI 2j / indicateurs 14 mai / live 12s / Données 2024)
+        Après : 3 sources clairement étiquetées, chacune avec sa propre fraîcheur
+      -->
+      <div style="margin-top:7px;background:var(--color-background-secondary);border-radius:6px;padding:6px 8px;font-size:10px;color:var(--color-text-secondary);display:flex;gap:0;flex-direction:column">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between">
+          <!-- Horloge 1 : référentiel statique -->
+          <span title="Données géographiques et démographiques IHSI, mises à jour manuellement">
+            📄 Référentiel IHSI 2024 · sync il y a 2j
+          </span>
+          <!-- Horloge 2 : agrégation des indicateurs (batch) -->
+          <span title="Rollup de couverture calculé nuit du 14 mai, batch quotidien">
+            📊 Indicateurs · agrégés le 14 mai
+            <span class="wf-tag">corrigé</span>
+          </span>
+          <!-- Horloge 3 : télémétrie live -->
+          <span style="color:var(--color-text-success)" title="Flux capteurs ESP32, dernière valeur reçue il y a 12 s">
+            ⬤ Télémétrie live · 12s · 23ms
+          </span>
+        </div>
+        <div style="margin-top:4px;font-size:9px;color:var(--color-text-tertiary)">
+          ℹ Indicateurs agrégés ≠ télémétrie live — les deux coexistent avec des fréquences différentes
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── COL 3 : PANNEAU DE DÉTAIL DE ZONE ─── -->
+    <!--
+      CORRECTIONS :
+      • Bloc "Données opérationnelles" enrichi (source, réservoir, réseau, débits)
+        au lieu de s'arrêter aux contacts institutionnels
+      • Note décision de modèle exposée à l'équipe
+    -->
+    <div style="border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:8px">
+
+      <!-- Fil d'Ariane zone -->
+      <div style="font-size:10px;color:var(--color-text-tertiary)">Ouest › Léogâne › <span style="color:var(--color-text-secondary)">1ère Dessources</span></div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin:2px 0">1ère Dessources</div>
+      <div style="font-size:10px;color:var(--color-text-tertiary);margin-bottom:6px">
+        HT-09-04-01 · 42 km² ·
+        <span style="color:var(--color-text-success)">supervisée</span>
+      </div>
+
+      <!-- Onglets détail -->
+      <div style="display:flex;gap:6px;font-size:11px;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:5px;margin-bottom:7px;color:var(--color-text-tertiary)">
+        <span style="color:var(--color-text-info);font-weight:500">Vue</span>
+        <span>Liens</span>
+        <span>Actifs</span>
+        <span>Journal</span>
+      </div>
+
+      <!-- KPIs couverture -->
+      <div class="wf-box" style="margin-bottom:6px">
+        <div class="wf-kv">
+          <span>Couverture</span>
+          <span style="color:var(--color-text-warning);font-weight:500">62%</span>
+        </div>
+        <div class="wf-bar" style="margin:4px 0"><div style="width:62%;background:var(--color-text-warning)"></div></div>
+        <div class="wf-kv"><span>Pop. desservie</span><span>5,2 k / 8,4 k</span></div>
+        <div class="wf-kv"><span>Continuité 30j</span><span style="color:var(--color-text-success)">91%</span></div>
+      </div>
+
+      <!-- ══ BLOC DONNÉES OPÉRATIONNELLES (enrichi) ══ -->
+      <!--
+        CORRECTION :
+        Avant : 0 données opérationnelles affichées dans la vue principale
+        Après : source, stockage, réseau, débits de dimensionnement
+        (aligné sur les données de l'étude type Soisson : source/prod, réservoir 1280 m³,
+         réseau PEHD, Qmj/Qpj/Qph, horizon 2040)
+      -->
+      <div style="font-size:9px;color:var(--color-text-info);margin:6px 0 4px">
+        ⬟ Données opérationnelles <span class="wf-tag">corrigé · données Soisson exposées</span>
+      </div>
+
+      <div style="display:grid;gap:4px">
+
+        <!-- Source -->
+        <div class="wf-box" style="display:flex;align-items:center;gap:6px;font-size:11px">
+          💧
+          <div style="flex:1">
+            <div style="color:var(--color-text-secondary)">Source captée</div>
+            <div style="font-size:10px;color:var(--color-text-tertiary)">Source de montagne · PEHD</div>
+          </div>
+          <span style="color:var(--color-text-primary);font-weight:500">56 l/s</span>
+        </div>
+
+        <!-- Réservoir -->
+        <div class="wf-box" style="display:flex;align-items:center;gap:6px;font-size:11px">
+          🛢
+          <div style="flex:1">
+            <div style="color:var(--color-text-secondary)">Réservoir</div>
+            <div style="font-size:10px;color:var(--color-text-tertiary)">Béton armé · 1 ouvrage</div>
+          </div>
+          <span style="color:var(--color-text-primary);font-weight:500">1 280 m³</span>
+        </div>
+
+        <!-- Réseau -->
+        <div class="wf-box" style="display:flex;align-items:center;gap:6px;font-size:11px">
+          〰
+          <div style="flex:1">
+            <div style="color:var(--color-text-secondary)">Réseau distribution</div>
+            <div style="font-size:10px;color:var(--color-text-tertiary)">PEHD · maillé</div>
+          </div>
+          <span style="color:var(--color-text-primary);font-weight:500">2,5 km</span>
+        </div>
+
+        <!-- Débits de dimensionnement -->
+        <div class="wf-box" style="font-size:11px">
+          <div style="color:var(--color-text-secondary);margin-bottom:3px">📐 Débits de dimensionnement</div>
+          <div class="wf-kv"><span>Q moy. journalier (Qmj)</span><span>18,3 l/s</span></div>
+          <div class="wf-kv"><span>Q de pointe (Qpj)</span><span>27,4 l/s</span></div>
+          <div class="wf-kv" style="color:var(--color-text-tertiary);font-size:9px"><span>Horizon de référence</span><span>2040</span></div>
+        </div>
+
+      </div>
+
+      <!-- Note décision de modèle (ouverte, non tranchée dans le wireframe) -->
+      <div style="margin-top:8px;background:#fefce8;border:0.5px solid #fef08a;border-radius:6px;padding:6px 8px;font-size:10px;color:#713f12">
+        ⚠ Décision modèle à trancher : zone = section communale (cas ici) ou SAEP distinct
+        sous la section (ex : Soisson dans Tabarre) ? Impacte où s'accrochent les données opérationnelles.
+      </div>
+
+      <hr class="wf-sep">
+
+      <!-- Liens institutionnels -->
+      <div style="font-size:9px;color:var(--color-text-tertiary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">
+        Liens institutionnels
+      </div>
+      <div style="display:grid;gap:4px;font-size:11px">
+        <div class="wf-row" style="background:var(--color-background-secondary)">🏛 OREPA Ouest</div>
+        <div class="wf-row" style="background:var(--color-background-secondary)">👥 CAEPA Dessources</div>
+        <div class="wf-row" style="background:var(--color-background-secondary)">
+          👤 J.-M. Louis
+          <span class="wf-dot" style="background:var(--color-text-success);margin-left:auto"></span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+        <span class="wf-btn">📄 PDF</span>
+        <span class="wf-btn">📊 Excel</span>
+        <span class="wf-btn" style="color:var(--color-text-info)">🎯 Centrer</span>
+      </div>
+
+    </div>
+    <!-- fin col 3 -->
+
+  </div>
+  <!-- fin grille 3 col -->
+
+</div>
+<!-- fin .page -->
+</body>
+</html>

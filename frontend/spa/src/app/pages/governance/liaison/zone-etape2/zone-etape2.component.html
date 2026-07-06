@@ -1,0 +1,81 @@
+<div class="filter-pill">
+  <span class="ico">⛓</span> Listes filtrées pour
+  <strong>{{ departement() }} › {{ commune() }}</strong>
+</div>
+
+<!-- URD (un seul nom, dérivée du département) -->
+<label class="field-label">URD <span class="muted">· dérivée du département</span></label>
+<div class="field locked">
+  <span class="ico">🏛</span>
+  <span class="value">URD {{ departement() }}</span>
+  <span class="lock">🔒</span>
+</div>
+<p class="hint">Déduite automatiquement du département</p>
+
+<!-- Responsable URD : apparaît s'il existe -->
+<label class="field-label">Responsable URD</label>
+
+@if (responsableUrd(); as resp) {
+  <div class="resp-card">
+    <span class="avatar">{{ resp.initiales }}</span>
+    <div class="resp-info">
+      <span class="resp-role">RESPONSABLE URD</span>
+      <span class="resp-name">{{ resp.nomComplet }}</span>
+    </div>
+    <span class="status" [class.online]="resp.enLigne">
+      ● {{ resp.enLigne ? 'online' : 'hors ligne' }}
+    </span>
+  </div>
+} @else {
+  <div class="field empty">
+    <span>Aucun responsable URD · à désigner</span>
+    <button type="button" class="btn-inline" (click)="designerResponsable.emit()">
+      + Désigner
+    </button>
+  </div>
+  <p class="hint">Persisté dans la table des utilisateurs · rôle SUPERVISEUR_URD</p>
+}
+
+<!-- Responsable terrain (TEPAC) : lier un technicien existant de l'URD -->
+<label class="field-label">Responsable terrain (TEPAC) <span class="muted">· technicien de l'URD</span></label>
+
+<button type="button" class="field picker" (click)="tepacOuvert.set(!tepacOuvert())">
+  @if (tepacSelectionne(); as t) {
+    <span class="avatar">{{ t.initiales }}</span>
+    <div class="resp-info">
+      <span class="resp-name">{{ t.nomComplet || 'Poste à pourvoir' }}</span>
+      <span class="resp-role">TEPAC · commune de {{ t.commune }}</span>
+    </div>
+    <span class="pill" [class.actif]="t.statut==='ACTIF'"
+          [class.vacant]="t.statut==='VACANT'" [class.suspendu]="t.statut==='SUSPENDU'">
+      {{ etat(t.statut) }}
+    </span>
+  } @else {
+    <span class="muted">Sélectionner un technicien de l'URD {{ departement() }}…</span>
+  }
+  <span class="chevron">⌄</span>
+</button>
+
+@if (tepacOuvert()) {
+  <div class="picker-panel">
+    <input class="picker-search" type="text"
+           placeholder="Rechercher un technicien, une commune…"
+           [ngModel]="recherche()" (ngModelChange)="recherche.set($event)" />
+    @for (t of tepacsFiltres(); track t.id) {
+      <button type="button" class="picker-item" (click)="choisirTepac(t)">
+        <span class="avatar">{{ t.initiales }}</span>
+        <div class="resp-info">
+          <span class="resp-name">{{ t.nomComplet || 'Poste à pourvoir' }}</span>
+          <span class="resp-role">TEPAC · commune de {{ t.commune }}</span>
+        </div>
+        <span class="pill" [class.actif]="t.statut==='ACTIF'"
+              [class.vacant]="t.statut==='VACANT'" [class.suspendu]="t.statut==='SUSPENDU'">
+          {{ etat(t.statut) }}
+        </span>
+      </button>
+    } @empty {
+      <p class="hint center">Aucun TEPAC enregistré dans l'URD {{ departement() }}</p>
+    }
+  </div>
+}
+<p class="hint">Techniciens déjà enregistrés dans l'URD · un relais par commune</p>

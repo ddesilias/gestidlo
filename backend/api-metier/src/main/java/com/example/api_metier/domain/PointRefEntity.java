@@ -22,6 +22,10 @@ public class PointRefEntity {
 	@Column(length = 120)
 	private String territory;
 
+	/** Commune du point (périmètre fin, dénormalisé). Recopiée sur l'alerte/le ticket à la création. */
+	@Column(length = 80)
+	private String commune;
+
 	@Column
 	private Double lon;
 
@@ -82,6 +86,14 @@ public class PointRefEntity {
 
 	public void setTerritory(String territory) {
 		this.territory = territory;
+	}
+
+	public String getCommune() {
+		return commune;
+	}
+
+	public void setCommune(String commune) {
+		this.commune = commune;
 	}
 
 	public Double getLon() {

@@ -1,0 +1,404 @@
+<div class="ip-shell">
+
+  <!-- ══════════════════════════════ HEADER ══════════════════════════════ -->
+  <header class="ip-header">
+    <div class="ip-header__left">
+      <h1 class="ip-header__title">
+        Interventions terrain
+        <span class="ip-header__badge ip-header__badge--blue" *ngIf="state.kpis().actives > 0">{{ state.kpis().actives }} actives</span>
+        <span class="ip-header__badge ip-header__badge--red" *ngIf="state.kpis().critiques > 0">{{ state.kpis().critiques }} critique{{ state.kpis().critiques > 1 ? 's' : '' }}</span>
+      </h1>
+      <p class="ip-header__sub">Centre opérationnel — du problème détecté à la résolution validée.</p>
+    </div>
+    <div class="ip-header__right">
+      <button class="ip-btn ip-btn--ghost" type="button" (click)="state.ouvrirFiltres()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        Filtres
+        <span class="ip-filter-badge" *ngIf="state.nombreFiltresActifs() > 0">{{ state.nombreFiltresActifs() }}</span>
+      </button>
+      <div class="ip-vue-toggle">
+        <button type="button" class="ip-vue-btn"
+          [class.ip-vue-btn--active]="state.vue() === 'table'"
+          (click)="state.changerVue('table')">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/>
+          </svg>
+          Liste
+        </button>
+        <button type="button" class="ip-vue-btn"
+          [class.ip-vue-btn--active]="state.vue() === 'kanban'"
+          (click)="state.changerVue('kanban')">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="12" rx="1"/><rect x="16" y="3" width="5" height="15" rx="1"/>
+          </svg>
+          Kanban
+        </button>
+      </div>
+      <button class="ip-btn ip-btn--ghost" type="button" (click)="exporter()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exporter
+      </button>
+      <button class="ip-btn ip-btn--primary" type="button" (click)="state.ouvrirModal()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nouvelle intervention
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════ KPI CARDS ══════════════════════════════ -->
+  <div class="ip-kpi-strip">
+    <div class="ip-kpi-card">
+      <span class="ip-kpi-card__val">{{ state.kpis().actives }}</span>
+      <span class="ip-kpi-card__lbl">Actives</span>
+    </div>
+    <div class="ip-kpi-card ip-kpi-card--blue">
+      <span class="ip-kpi-card__val">{{ state.kpis().enCours }}</span>
+      <span class="ip-kpi-card__lbl">En cours</span>
+    </div>
+    <div class="ip-kpi-card ip-kpi-card--red" *ngIf="state.kpis().critiques > 0">
+      <span class="ip-kpi-card__val">{{ state.kpis().critiques }}</span>
+      <span class="ip-kpi-card__lbl">Critiques</span>
+    </div>
+    <div class="ip-kpi-card ip-kpi-card--green">
+      <span class="ip-kpi-card__val">{{ state.kpis().resolues }}</span>
+      <span class="ip-kpi-card__lbl">Résolues</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ TOOLBAR ══════════════════════════════ -->
+  <div class="ip-toolbar">
+    <div class="ip-search-wrap">
+      <svg class="ip-search-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="ip-search" type="text"
+        placeholder="Rechercher code, titre, technicien, infrastructure…"
+        [ngModel]="state.filtres().recherche"
+        (ngModelChange)="state.modifierRecherche($event)">
+    </div>
+    <div class="ip-chips">
+      <button type="button" class="ip-chip"
+        [class.ip-chip--on]="state.filtres().urgences_seules"
+        (click)="state.filtrerUrgences()">
+        <span class="ip-chip__dot ip-chip__dot--red"></span>Urgences
+      </button>
+      <button type="button" class="ip-chip"
+        [class.ip-chip--on]="state.filtres().aujourd_hui"
+        (click)="state.filtrerAujourdHui()">
+        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Aujourd'hui
+      </button>
+      <button type="button" class="ip-chip"
+        [class.ip-chip--on]="state.filtres().sla_depasse"
+        (click)="state.filtrerSlaDepasse()">
+        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+        SLA dépassé
+      </button>
+      <button type="button" class="ip-chip"
+        [class.ip-chip--on]="state.filtres().sans_assignation"
+        (click)="state.filtrerSansAssignation()">
+        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Sans assignation
+      </button>
+      <button type="button" class="ip-chip ip-chip--reset"
+        *ngIf="state.nombreFiltresActifs() > 0"
+        (click)="state.reinitialiserFiltres()">
+        × Effacer tout
+      </button>
+    </div>
+  </div>
+
+  <!-- IA banner -->
+  <div class="ip-ai-banner" *ngIf="aiBannerVisible() && state.kpis().actives > 0">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span class="ip-ai-banner__text">
+      <strong>Suggestion IA :</strong>
+      {{ state.presenceTechniciens().length }} technicien{{ state.presenceTechniciens().length !== 1 ? 's' : '' }} actif{{ state.presenceTechniciens().length !== 1 ? 's' : '' }} —
+      {{ state.kpis().critiques }} intervention{{ state.kpis().critiques !== 1 ? 's' : '' }} critique{{ state.kpis().critiques !== 1 ? 's' : '' }} active{{ state.kpis().critiques !== 1 ? 's' : '' }} en cours.
+      Optimisation de tournée disponible.
+    </span>
+    <button class="ip-ai-banner__close" type="button" (click)="aiBannerVisible.set(false)">×</button>
+  </div>
+
+  <!-- ══════════════════════════════ BODY ══════════════════════════════ -->
+  <div class="ip-body">
+
+    <!-- ── LIST VIEW ────────────────────────────────────────────────────── -->
+    <section class="ip-main" *ngIf="state.vue() === 'table'">
+
+      <div class="ip-empty" *ngIf="state.interventionsFiltrees().length === 0">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+        </svg>
+        <p>Aucune intervention ne correspond aux filtres.</p>
+      </div>
+
+      <!-- ── CARD ────────────────────────────────────────────────────────── -->
+      <div *ngFor="let item of state.interventionsFiltrees()"
+        class="ip-card"
+        [class.ip-card--critique]="item.priority === 'critique' && isActive(item.status)"
+        [class.ip-card--haute]="item.priority === 'haute' && isActive(item.status)"
+        [class.ip-card--selected]="item.id === state.selection()?.id"
+        [class.ip-card--dim]="state.selection() !== null && item.id !== state.selection()?.id"
+        [class.ip-card--cloture]="item.status === 'cloturee' || item.status === 'annulee'"
+        (click)="onCardClick(item.id)">
+
+        <!-- Top row -->
+        <div class="ip-card__top">
+          <span class="ip-card__code">{{ item.code }}</span>
+          <span class="ip-card__type">{{ typeLabels[item.type] }}</span>
+          <span class="ip-card__prio-dot" [style.background]="prioriteDot(item.priority)"></span>
+          <span class="ip-card__prio-lbl">{{ prioriteLabels[item.priority] }}</span>
+          <span class="ip-card__status"
+            [style.background]="statutBg(item.status)"
+            [style.color]="statutDot(item.status)">
+            {{ statutLabels[item.status] }}
+          </span>
+          <span class="ip-card__source" *ngIf="item.sourceAlertCode">
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            {{ item.sourceAlertCode }}
+          </span>
+          <span class="ip-card__spacer"></span>
+          <span class="ip-card__date">
+            <ng-container *ngIf="item.scheduledAt">{{ dateLabel(item.scheduledAt) }} {{ timeLabel(item.scheduledAt) }}</ng-container>
+            <ng-container *ngIf="!item.scheduledAt">{{ dateLabel(item.createdAt) }}</ng-container>
+          </span>
+          <button class="ip-card__expand-btn" type="button"
+            (click)="toggleExpand(item.id, $event)"
+            [title]="isExpanded(item) ? 'Réduire' : 'Développer'">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+              [class.rotated]="isExpanded(item)">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Title -->
+        <div class="ip-card__title">{{ item.title }}</div>
+
+        <!-- ── Expanded detail ─────────────────────────────────────────── -->
+        <div class="ip-card__expanded" *ngIf="isExpanded(item)">
+
+          <!-- 8-step workflow stepper -->
+          <div class="ip-stepper">
+            <ng-container *ngFor="let i of STEPPER_INDICES">
+              <div class="ip-stepper__dot-wrap">
+                <div class="ip-stepper__dot"
+                  [class.ip-stepper__dot--done]="workflowStep(item) > i"
+                  [class.ip-stepper__dot--current]="workflowStep(item) === i">
+                </div>
+                <span class="ip-stepper__lbl">{{ STEPPER_LABELS[i] }}</span>
+              </div>
+              <div class="ip-stepper__line"
+                *ngIf="i < STEPPER_INDICES.length - 1"
+                [class.ip-stepper__line--done]="workflowStep(item) > i">
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- Technician row -->
+          <div class="ip-tech-row" *ngIf="item.technicianId">
+            <div class="ip-tech-avatar">{{ techInitials(item.technicianName) }}</div>
+            <div class="ip-tech-info">
+              <span class="ip-tech-name">{{ item.technicianName }}</span>
+              <span class="ip-tech-inst">{{ item.institutionName }}</span>
+            </div>
+          </div>
+
+          <!-- SLA bar (full-width) -->
+          <div class="ip-sla" *ngIf="item.technicianId && (item.startedAt || item.status === 'en-cours')">
+            <div class="ip-sla__track">
+              <div class="ip-sla__fill"
+                [style.width.%]="durationPct(item) > 100 ? 100 : durationPct(item)"
+                [class.ip-sla__fill--warn]="durationPct(item) >= 60 && durationPct(item) < 80"
+                [class.ip-sla__fill--danger]="durationPct(item) >= 80 && durationPct(item) < 100"
+                [class.ip-sla__fill--over]="durationPct(item) >= 100">
+              </div>
+            </div>
+            <span class="ip-sla__text" [class.ip-sla__text--over]="durationPct(item) >= 100">
+              {{ slaLabel(item) }}
+            </span>
+          </div>
+
+          <!-- Non assignée -->
+          <div class="ip-unassigned" *ngIf="!item.technicianId">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            Non assignée — en attente d'affectation
+            <button class="ip-unassigned__btn" type="button"
+              (click)="$event.stopPropagation(); state.ouvrirModal()">
+              Assigner un technicien
+            </button>
+          </div>
+
+          <!-- Tasks checklist -->
+          <div class="ip-tasks" *ngIf="item.tasks.length > 0">
+            <div *ngFor="let task of item.tasks" class="ip-task"
+              [class.ip-task--done]="task.done"
+              (click)="$event.stopPropagation(); state.toggleTask(item, task.id)">
+              <svg *ngIf="task.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <svg *ngIf="!task.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#64748b" stroke-width="2">
+                <circle cx="12" cy="12" r="9"/>
+              </svg>
+              <span>{{ task.label }}</span>
+            </div>
+          </div>
+
+        </div><!-- /ip-card__expanded -->
+
+        <!-- Card footer -->
+        <div class="ip-card__footer">
+          <span class="ip-card__infra" *ngIf="item.infrastructureName">
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+            </svg>
+            {{ item.infrastructureName }}
+          </span>
+          <span class="ip-card__loc" *ngIf="item.commune">
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            {{ item.commune }}<ng-container *ngIf="item.department">, {{ item.department }}</ng-container>
+          </span>
+          <span class="ip-card__spacer"></span>
+          <div class="ip-card__actions">
+            <ng-container *ngFor="let next of state.nextStatuses(item.status)">
+              <button class="ip-card__action-btn ip-card__action-btn--primary" type="button"
+                *ngIf="next === 'en-cours'"
+                (click)="$event.stopPropagation(); state.setStatus(item.id, next)">
+                Démarrer
+              </button>
+              <button class="ip-card__action-btn ip-card__action-btn--primary" type="button"
+                *ngIf="next === 'assignee'"
+                (click)="$event.stopPropagation(); state.setStatus(item.id, next)">
+                Assigner
+              </button>
+              <button class="ip-card__action-btn ip-card__action-btn--success" type="button"
+                *ngIf="next === 'terminee'"
+                (click)="$event.stopPropagation(); state.setStatus(item.id, next)">
+                Terminer
+              </button>
+              <button class="ip-card__action-btn ip-card__action-btn--success" type="button"
+                *ngIf="next === 'validee'"
+                (click)="$event.stopPropagation(); state.setStatus(item.id, next)">
+                Valider
+              </button>
+              <button class="ip-card__action-btn ip-card__action-btn--muted" type="button"
+                *ngIf="next === 'cloturee'"
+                (click)="$event.stopPropagation(); state.setStatus(item.id, next)">
+                Clôturer
+              </button>
+              <button class="ip-card__action-btn ip-card__action-btn--danger" type="button"
+                *ngIf="next === 'annulee'"
+                (click)="$event.stopPropagation(); state.setStatus(item.id, next)">
+                Annuler
+              </button>
+            </ng-container>
+            <button class="ip-card__action-btn ip-card__action-btn--ghost" type="button"
+              (click)="$event.stopPropagation(); onCardClick(item.id)"
+              title="Voir les détails">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              Détails
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /ip-card -->
+    </section><!-- /ip-main -->
+
+    <!-- ── KANBAN VIEW ─────────────────────────────────────────────────── -->
+    <section class="ip-kanban-wrap" *ngIf="state.vue() === 'kanban'">
+      <app-intervention-kanban></app-intervention-kanban>
+    </section>
+
+    <!-- ── TEAM PRESENCE PANEL ─────────────────────────────────────────── -->
+    <aside class="ip-presence">
+      <div class="ip-presence__header">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Équipe terrain
+        <span class="ip-presence__count">{{ state.presenceTechniciens().length }}</span>
+      </div>
+
+      <div class="ip-presence__empty" *ngIf="state.presenceTechniciens().length === 0">
+        Aucun technicien actif
+      </div>
+
+      <div *ngFor="let tech of state.presenceTechniciens()" class="ip-presence-item">
+        <div class="ip-presence-item__avatar"
+          [style.background]="statutBg(tech.status)"
+          [style.color]="statutDot(tech.status)">
+          {{ techInitials(tech.name) }}
+        </div>
+        <div class="ip-presence-item__info">
+          <span class="ip-presence-item__name">{{ tech.name }}</span>
+          <span class="ip-presence-item__codes">{{ tech.codes.join(' · ') }}</span>
+        </div>
+        <div class="ip-presence-item__dot" [style.background]="statutDot(tech.status)"></div>
+      </div>
+
+      <div class="ip-presence__divider" *ngIf="state.presenceTechniciens().length > 0"></div>
+
+      <div class="ip-presence__metrics">
+        <div class="ip-metric">
+          <span class="ip-metric__val">{{ state.kpis().actives }}</span>
+          <span class="ip-metric__lbl">Actives</span>
+        </div>
+        <div class="ip-metric" [class.ip-metric--red]="state.kpis().critiques > 0">
+          <span class="ip-metric__val">{{ state.kpis().critiques }}</span>
+          <span class="ip-metric__lbl">Critiques</span>
+        </div>
+        <div class="ip-metric ip-metric--green">
+          <span class="ip-metric__val">{{ state.kpis().resolues }}</span>
+          <span class="ip-metric__lbl">Résolues</span>
+        </div>
+      </div>
+    </aside>
+
+  </div><!-- /ip-body -->
+
+</div><!-- /ip-shell -->
+
+<!-- ══════════════════════════ DRAWER BACKDROP ══════════════════════════ -->
+<div class="ip-drawer-backdrop"
+  *ngIf="state.selection()"
+  (click)="state.selectionner(null)">
+</div>
+
+<!-- ══════════════════════════ DETAIL DRAWER ══════════════════════════ -->
+<app-intervention-detail-drawer
+  *ngIf="state.selection() as item"
+  [intervention]="item"
+  (fermer)="state.selectionner(null)">
+</app-intervention-detail-drawer>
+
+<!-- ══════════════════════════ FILTERS DRAWER ══════════════════════════ -->
+<app-interventions-filters-drawer *ngIf="state.filtresDrawerOuvert()">
+</app-interventions-filters-drawer>
+
+<!-- ══════════════════════════ NOUVELLE INTERVENTION ══════════════════════════ -->
+<app-nouvelle-intervention
+  *ngIf="state.modalOuvert()"
+  (fermer)="state.fermerModal()">
+</app-nouvelle-intervention>

@@ -1,0 +1,309 @@
+<div *ngIf="visible" class="exp-overlay" (click)="resetAndClose()">
+  <div class="exp-modal" (click)="$event.stopPropagation()"
+       [class.exp-modal--done]="phase() === 'done'">
+
+    <!-- ── Phase: CONFIG ── -->
+    <ng-container *ngIf="phase() === 'config'">
+
+      <!-- Header -->
+      <div class="exp-head">
+        <div class="exp-head__icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <div>
+          <div class="exp-head__title">Exporter rapport</div>
+          <div class="exp-head__sub">{{ selectedCount }} section(s) sélectionnée(s) · {{ periodeLabel }}</div>
+        </div>
+        <button class="exp-close" type="button" (click)="resetAndClose()">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="exp-body">
+
+        <!-- Colonne gauche -->
+        <div class="exp-left">
+          <div class="exp-section">
+            <div class="exp-section__title">Contenu à exporter</div>
+            <div class="exp-items">
+              <label *ngFor="let c of contents" class="exp-item" [class.exp-item--on]="c.checked">
+                <input type="checkbox" [(ngModel)]="c.checked" (change)="c.checked = !c.checked"/>
+                <span class="exp-item__lbl">{{ c.label }}</span>
+                <span *ngIf="c.checked" class="exp-item__check">✓</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="exp-section">
+            <div class="exp-section__title">Période</div>
+            <div class="exp-period-grid">
+              <label *ngFor="let opt of PERIODE_OPTIONS" class="exp-period-card" [class.exp-period-card--active]="periode()===opt.id">
+                <input type="radio" name="periode" [value]="opt.id" [checked]="periode()===opt.id" (change)="setPeriode(opt.id)"/>
+                {{ opt.label }}
+              </label>
+            </div>
+          </div>
+
+          <div class="exp-section">
+            <div class="exp-section__title">Format de sortie</div>
+            <div class="exp-formats">
+              <button *ngFor="let f of FORMAT_OPTIONS" type="button" class="exp-fmt-btn" [class.exp-fmt-btn--active]="format()===f.id" (click)="setFormat(f.id)">
+                <span class="exp-fmt-icon">{{ f.icon }}</span>
+                <span class="exp-fmt-label">{{ f.label }}</span>
+                <span class="exp-fmt-sub">{{ f.sub }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne droite -->
+        <div class="exp-right">
+          <div class="exp-section" *ngIf="format()==='pdf'">
+            <div class="exp-section__title">Sections PDF <span class="exp-count">{{ pdfCount }}/{{ pdfSections.length }}</span></div>
+            <div class="exp-pdf-list">
+              <label *ngFor="let s of pdfSections" class="exp-pdf-item" [class.exp-pdf-item--on]="s.checked">
+                <input type="checkbox" [(ngModel)]="s.checked" (change)="s.checked = !s.checked"/>
+                {{ s.label }}
+              </label>
+            </div>
+          </div>
+
+          <div class="exp-section">
+            <div class="exp-section__title">Destination</div>
+            <div class="exp-dest-list">
+              <label class="exp-dest-item" [class.exp-dest-item--active]="destination()==='download'">
+                <input type="radio" name="dest" value="download" [checked]="destination()==='download'" (change)="setDestination('download')"/>
+                <div class="exp-dest-icon exp-dest-icon--blue"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+                <div>
+                  <div class="exp-dest-lbl">Téléchargement direct</div>
+                  <div class="exp-dest-sub">Sauvegarder sur cet appareil</div>
+                </div>
+              </label>
+              <label class="exp-dest-item" [class.exp-dest-item--active]="destination()==='email'">
+                <input type="radio" name="dest" value="email" [checked]="destination()==='email'" (change)="setDestination('email')"/>
+                <div class="exp-dest-icon exp-dest-icon--green"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                <div>
+                  <div class="exp-dest-lbl">Envoyer par email</div>
+                  <input *ngIf="destination()==='email'" class="exp-email-input" type="email" [(ngModel)]="emailDest" (click)="$event.stopPropagation()"/>
+                </div>
+              </label>
+              <label class="exp-dest-item" [class.exp-dest-item--active]="destination()==='dinepa'">
+                <input type="radio" name="dest" value="dinepa" [checked]="destination()==='dinepa'" (change)="setDestination('dinepa')"/>
+                <div class="exp-dest-icon exp-dest-icon--amber"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div>
+                  <div class="exp-dest-lbl">Soumettre à DINEPA</div>
+                  <div class="exp-dest-sub">Dépôt registre national officiel</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="exp-section">
+            <div class="exp-section__title">Options</div>
+            <label class="exp-opt-row">
+              <input type="checkbox" [checked]="includeSignature()" (change)="includeSignature.set(!includeSignature())"/>
+              <span>Inclure page de signatures</span>
+            </label>
+            <label class="exp-opt-row">
+              <input type="checkbox" [checked]="includeAnonymisation()" (change)="includeAnonymisation.set(!includeAnonymisation())"/>
+              <span>Anonymiser les données personnelles</span>
+            </label>
+          </div>
+
+          <div class="exp-audit-note">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Cet export sera enregistré dans la piste d'audit DINEPA avec horodatage et identité du demandeur.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="exp-foot">
+        <button type="button" class="exp-btn exp-btn--ghost" (click)="resetAndClose()">Annuler</button>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="exp-btn exp-btn--ghost">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Planifier
+          </button>
+          <button type="button" class="exp-btn exp-btn--primary" (click)="exporter()">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exporter en {{ format().toUpperCase() }}
+          </button>
+        </div>
+      </div>
+
+    </ng-container>
+
+    <!-- ── Phase: GENERATING ── -->
+    <ng-container *ngIf="phase() === 'generating'">
+
+      <div class="exp-head" style="background:linear-gradient(to right,rgba(16,185,129,.1),transparent);">
+        <div class="exp-head__icon" style="background:rgba(16,185,129,.15); color:#34D399;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <div>
+          <div class="exp-head__title">Génération du rapport en cours…</div>
+          <div class="exp-head__sub">Configuration Gouvernance · {{ format().toUpperCase() }} officiel · {{ periodeLabel }}</div>
+        </div>
+        <button class="exp-close" type="button" style="opacity:.4; cursor:not-allowed;" disabled>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+
+        <!-- File card with progress -->
+        <div style="background:#161E28; border:1px solid #1F2A33; border-radius:10px; padding:16px;">
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+            <div style="width:48px; height:48px; background:rgba(239,68,68,.15); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:24px;">📄</div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; font-weight:600; color:#F5F7FA;">rapport-gouvernance-2026-05-14.{{ format() }}</div>
+              <div style="font-size:10px; color:#8B9AAB; margin-top:2px;">~47 pages · signé numériquement</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:20px; color:#34D399; font-weight:700; line-height:1;">{{ genProgress() }}%</div>
+              <div style="font-size:9px; color:#6B7785;">~{{ 5 - Math.round(genProgress() / 25) }}s</div>
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          <div style="height:8px; background:#0F1419; border-radius:4px; overflow:hidden; margin-bottom:14px;">
+            <div [style.width.%]="genProgress()" style="height:100%; background:linear-gradient(to right,#10B981,#34D399); border-radius:4px; transition:width .3s;"></div>
+          </div>
+
+          <!-- Generation steps -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <ng-container *ngFor="let step of GEN_STEPS; let i = index">
+              <div style="display:flex; align-items:center; gap:8px; font-size:11px;">
+                <span *ngIf="genStep() > i" style="color:#34D399; font-size:14px; flex-shrink:0;">✓</span>
+                <span *ngIf="genStep() === i" style="color:#60A5FA; font-size:12px; flex-shrink:0; animation:spin 1s linear infinite; display:inline-block;">↻</span>
+                <span *ngIf="genStep() < i" style="color:#6B7785; font-size:12px; flex-shrink:0;">○</span>
+                <span [style.color]="genStep() > i ? '#34D399' : genStep() === i ? '#60A5FA' : '#94A3B8'"
+                      [style.fontWeight]="genStep() === i ? '500' : '400'">{{ step }}</span>
+                <span *ngIf="genStep() > i" style="font-size:9px; color:#6B7785; margin-left:auto;">✓</span>
+                <span *ngIf="genStep() === i" style="font-size:9px; color:#60A5FA; margin-left:auto;">en cours…</span>
+                <span *ngIf="genStep() < i"  style="font-size:9px; color:#6B7785; margin-left:auto;">en attente</span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Info note -->
+        <div style="background:rgba(59,130,246,.06); border:1px solid rgba(59,130,246,.2); border-radius:8px; padding:12px 14px; display:flex; align-items:center; gap:10px; font-size:11px; color:#93C5FD;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Une fois généré, le fichier sera <strong style="color:#BFDBFE;">automatiquement téléchargé</strong> sur votre appareil et ajouté à l'historique des exports.</span>
+        </div>
+
+      </div>
+
+      <div class="exp-foot" style="background:#0A0E12;">
+        <span style="font-size:11px; color:#6B7785;">Vous pouvez fermer cette fenêtre — la génération continue en arrière-plan</span>
+        <button type="button" class="exp-btn exp-btn--ghost" (click)="continuerEnArrierePlan()">Continuer en arrière-plan</button>
+      </div>
+
+    </ng-container>
+
+    <!-- ── Phase: DONE ── -->
+    <ng-container *ngIf="phase() === 'done'">
+
+      <div class="exp-head" style="background:linear-gradient(to right,rgba(16,185,129,.15),transparent); border-bottom-color:rgba(16,185,129,.2);">
+        <div style="width:40px; height:40px; background:#10B981; border-radius:10px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 4px rgba(16,185,129,.2); flex-shrink:0;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="exp-head__title">Rapport généré avec succès</div>
+          <div class="exp-head__sub" style="color:#34D399;">Le téléchargement va démarrer automatiquement</div>
+        </div>
+        <button class="exp-close" type="button" (click)="resetAndClose()">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div style="padding:24px; display:flex; flex-direction:column; gap:14px;">
+
+        <!-- File ready card -->
+        <div style="background:#161E28; border:1px solid rgba(16,185,129,.3); border-radius:10px; padding:16px;">
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:12px;">
+            <div style="position:relative; flex-shrink:0;">
+              <div style="width:56px; height:56px; background:rgba(239,68,68,.15); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:30px;">📄</div>
+              <span style="position:absolute; bottom:-4px; right:-4px; width:20px; height:20px; background:#10B981; border:2px solid #161E28; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">✓</span>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:14px; font-weight:600; color:#F5F7FA;">rapport-gouvernance-2026-05-14.{{ format() }}</div>
+              <div style="display:flex; align-items:center; gap:6px; margin-top:4px; flex-wrap:wrap;">
+                <span style="font-size:10px; color:#8B9AAB;">47 pages</span>
+                <span style="color:#6B7785;">·</span>
+                <span style="font-size:10px; color:#8B9AAB;">2.4 Mo</span>
+                <span style="color:#6B7785;">·</span>
+                <span style="font-size:10px; color:#34D399;">🛡 Signé</span>
+                <span style="color:#6B7785;">·</span>
+                <span style="font-size:10px; color:#60A5FA;">généré il y a 2s</span>
+              </div>
+            </div>
+          </div>
+          <!-- Download zone -->
+          <div style="background:rgba(16,185,129,.05); border:1px solid rgba(16,185,129,.2); border-radius:6px; padding:10px 12px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:16px;">⬇</span>
+            <div style="flex:1;">
+              <div style="font-size:11px; font-weight:500; color:#34D399;">Téléchargement automatique en cours…</div>
+              <div style="font-size:10px; color:#6B7785; margin-top:1px;">Vérifiez votre dossier <strong style="color:#CBD5E1;">Téléchargements</strong> · si rien ne se passe, cliquez ci-dessous</div>
+            </div>
+            <button type="button" style="background:#10B981; border:1px solid #10B981; color:#fff; font-size:11px; padding:6px 12px; border-radius:6px; font-weight:600; cursor:pointer; white-space:nowrap;" (click)="telecharger()">⬇ Télécharger</button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+          <button type="button" class="exp-action-card" (click)="previsualiser()">
+            <span style="font-size:18px; color:#60A5FA;">👁</span>
+            <span style="font-size:11px; color:#CBD5E1;">Prévisualiser</span>
+            <span style="font-size:9px; color:#6B7785;">dans le navigateur</span>
+          </button>
+          <button type="button" class="exp-action-card" (click)="envoyerEmail()">
+            <span style="font-size:18px; color:#FBBF24;">✉</span>
+            <span style="font-size:11px; color:#CBD5E1;">Envoyer par email</span>
+            <span style="font-size:9px; color:#6B7785;">5 destinataires max</span>
+          </button>
+          <button type="button" class="exp-action-card" (click)="soumettreA()">
+            <span style="font-size:18px; color:#A5A4DC;">🛡</span>
+            <span style="font-size:11px; color:#CBD5E1;">Soumettre DINEPA</span>
+            <span style="font-size:9px; color:#6B7785;">API officielle</span>
+          </button>
+        </div>
+
+        <!-- Recent exports -->
+        <div style="background:#0A0E12; border:1px solid #1F2A33; border-radius:8px; padding:12px;">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span style="font-size:11px; color:#93C5FD; font-weight:500;">Vos derniers exports</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div *ngFor="let ex of RECENT_EXPORTS"
+                 [style.background]="ex.isNew ? 'rgba(16,185,129,.04)' : 'transparent'"
+                 [style.border]="ex.isNew ? '1px solid rgba(16,185,129,.2)' : 'none'"
+                 style="display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:5px;">
+              <span style="font-size:13px;">📄</span>
+              <span style="font-size:10px; flex:1;" [style.color]="ex.isNew ? '#34D399' : '#CBD5E1'">{{ ex.nom }}</span>
+              <span style="font-size:9px; color:#6B7785;">{{ ex.date }} · {{ ex.size }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="exp-foot" style="background:#0A0E12;">
+        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:#8B9AAB;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Export tracé dans l'audit · Admin Super
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="exp-btn exp-btn--ghost" (click)="resetAndClose()">Fermer</button>
+          <button type="button" class="exp-btn exp-btn--primary" (click)="nouvelExport()">+ Nouvel export</button>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </div>
+</div>

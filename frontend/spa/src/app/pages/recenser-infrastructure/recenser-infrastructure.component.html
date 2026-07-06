@@ -1,0 +1,422 @@
+<div class="ri-overlay" (click)="fermer.emit()">
+  <div class="ri-panel" (click)="$event.stopPropagation()">
+
+    <!-- ══════════════════════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════════════════════ -->
+    <div class="ri-header">
+      <div class="ri-header-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+          <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+          <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+          <path d="M10 6h4M10 10h4M10 14h4M10 18h4"/>
+        </svg>
+      </div>
+      <div class="ri-header-title">
+        <h2>Recenser une infrastructure</h2>
+        <p>Ouvrage hydraulique · Système AEP · Réseau de distribution</p>
+      </div>
+      <span class="ri-header-code">{{ codeGenere() }}</span>
+      <button type="button" class="ri-btn-close" (click)="fermer.emit()" title="Fermer">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         BODY
+    ══════════════════════════════════════════════════════════ -->
+    <div class="ri-body">
+
+      <!-- FORM ──────────────────────────────────────────────── -->
+      <form [formGroup]="form" class="ri-form" (ngSubmit)="onEnregistrer()" novalidate>
+
+        <!-- ── 1. IDENTIFICATION ───────────────────────────── -->
+        <div class="ri-section">
+          <div class="ri-section-label">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            Identification
+          </div>
+          <div class="ri-grid-2">
+
+            <!-- Famille -->
+            <div class="ri-field" [class.ri-field--error]="isInvalid('famille')">
+              <label class="ri-label">
+                Famille
+                <span class="ri-required">*</span>
+              </label>
+              <select class="ri-select" formControlName="famille">
+                <option value="">Choisir une famille…</option>
+                <option *ngFor="let cle of familleCles" [value]="cle">
+                  {{ familles[cle].label }}
+                </option>
+              </select>
+              <span class="ri-error" *ngIf="isInvalid('famille')">Champ requis</span>
+            </div>
+
+            <!-- Type -->
+            <div class="ri-field" [class.ri-field--error]="isInvalid('type')">
+              <label class="ri-label">
+                Type d'ouvrage
+                <span class="ri-required">*</span>
+              </label>
+              <select class="ri-select" formControlName="type">
+                <option value="">
+                  {{ familleSignal() ? 'Choisir un type…' : '— Sélectionner une famille d\'abord —' }}
+                </option>
+                <option *ngFor="let t of typesDisponibles()" [value]="t.value">
+                  {{ t.label }}
+                </option>
+              </select>
+              <span class="ri-error" *ngIf="isInvalid('type')">Champ requis</span>
+            </div>
+
+            <!-- Nom -->
+            <div class="ri-field ri-field--full" [class.ri-field--error]="isInvalid('nom')">
+              <label class="ri-label">
+                Nom de l'ouvrage
+                <span class="ri-required">*</span>
+              </label>
+              <input class="ri-input" type="text" formControlName="nom"
+                placeholder="Ex : Captage Momance, Réservoir Delmas, Borne-fontaine Boston…" />
+              <span class="ri-error" *ngIf="isInvalid('nom')">
+                {{ form.get('nom')?.errors?.['required'] ? 'Champ requis' : 'Minimum 3 caractères' }}
+              </span>
+            </div>
+
+            <!-- Code auto -->
+            <div class="ri-field ri-field--full">
+              <label class="ri-label">Code généré automatiquement</label>
+              <input class="ri-input ri-input--code" type="text" [value]="codeGenere()" readonly
+                title="Format : FAMILLE-DÉPARTEMENT-SÉQUENCE" />
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── 2. LOCALISATION ─────────────────────────────── -->
+        <div class="ri-section">
+          <div class="ri-section-label">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            Localisation
+          </div>
+          <div class="ri-grid-2">
+
+            <!-- Département -->
+            <div class="ri-field" [class.ri-field--error]="isInvalid('departement')">
+              <label class="ri-label">
+                Département
+                <span class="ri-required">*</span>
+              </label>
+              <select class="ri-select" formControlName="departement">
+                <option value="">Choisir un département…</option>
+                <option *ngFor="let d of departements" [value]="d">{{ d }}</option>
+              </select>
+              <span class="ri-error" *ngIf="isInvalid('departement')">Champ requis</span>
+            </div>
+
+            <!-- Commune -->
+            <div class="ri-field" [class.ri-field--error]="isInvalid('commune')">
+              <label class="ri-label">
+                Commune
+                <span class="ri-required">*</span>
+              </label>
+              <select class="ri-select" formControlName="commune">
+                <option value="">
+                  {{ departementSignal() ? 'Choisir une commune…' : '— Sélectionner un département d\'abord —' }}
+                </option>
+                <option *ngFor="let c of communesDisponibles()" [value]="c">{{ c }}</option>
+              </select>
+              <span class="ri-error" *ngIf="isInvalid('commune')">Champ requis</span>
+            </div>
+
+            <!-- Section communale -->
+            <div class="ri-field">
+              <label class="ri-label">Section communale</label>
+              <input class="ri-input" type="text" formControlName="section"
+                placeholder="Ex : 1ère section Dessources" />
+            </div>
+
+            <!-- Localité -->
+            <div class="ri-field">
+              <label class="ri-label">Localité</label>
+              <input class="ri-input" type="text" formControlName="localite"
+                placeholder="Ex : Nan Palmiste, Carrefour Duval…" />
+            </div>
+
+            <!-- GPS -->
+            <div class="ri-field ri-field--full">
+              <label class="ri-label">Coordonnées GPS</label>
+              <div class="ri-gps-row">
+                <input class="ri-input" type="number" formControlName="lat"
+                  placeholder="Latitude  (ex : 18.4912)" step="0.0001" />
+                <input class="ri-input" type="number" formControlName="lon"
+                  placeholder="Longitude (ex : −72.6417)" step="0.0001" />
+                <button type="button" class="ri-btn-map" (click)="ouvrirCarte.emit()">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+                    <line x1="9" y1="3" x2="9" y2="18"/>
+                    <line x1="15" y1="6" x2="15" y2="21"/>
+                  </svg>
+                  Carte
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── 3. RÉSEAU AEP ───────────────────────────────── -->
+        <div class="ri-section">
+          <div class="ri-section-label">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+            Réseau AEP
+          </div>
+          <div class="ri-grid-2">
+
+            <!-- Système AEP -->
+            <div class="ri-field ri-field--full">
+              <label class="ri-label">Système AEP</label>
+              <input class="ri-input" type="text" formControlName="systemeAep"
+                placeholder="Ex : AEP Momance, Système Léogâne Ouest…" />
+            </div>
+
+            <!-- Ressource naturelle liée -->
+            <div class="ri-field ri-field--full">
+              <label class="ri-label">Ressource naturelle liée</label>
+              <select class="ri-select" formControlName="ressourceId">
+                <option value="">Aucune ressource sélectionnée</option>
+                <option *ngFor="let r of ressourcesNaturelles" [value]="r.id">
+                  {{ r.nom }} — {{ r.type }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Ouvrages amont (tags) -->
+            <div class="ri-field ri-field--full">
+              <label class="ri-label">Ouvrages en amont</label>
+              <div class="ri-tags-wrap">
+                <div class="ri-tags-box">
+                  <span *ngFor="let id of ouvragesAmont()" class="ri-tag">
+                    {{ ouvrageCodeById(id) }}
+                    <button type="button" class="ri-tag-remove" (click)="retirerAmont(id)">
+                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </span>
+                  <input
+                    class="ri-tags-input"
+                    type="text"
+                    placeholder="Chercher un ouvrage amont…"
+                    [value]="searchAmont()"
+                    (input)="searchAmont.set($any($event.target).value)"
+                    (focus)="showAmontDropdown.set(true)"
+                    (blur)="hideAmontDelayed()" />
+                </div>
+                <div class="ri-tags-dropdown" *ngIf="showAmontDropdown() && suggestionsAmont().length">
+                  <button
+                    type="button"
+                    class="ri-tags-option"
+                    *ngFor="let o of suggestionsAmont()"
+                    (mousedown)="ajouterAmont(o.id)">
+                    <strong>{{ o.code }}</strong>
+                    <span>{{ o.nom }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ouvrages aval (tags) -->
+            <div class="ri-field ri-field--full">
+              <label class="ri-label">Ouvrages en aval</label>
+              <div class="ri-tags-wrap">
+                <div class="ri-tags-box">
+                  <span *ngFor="let id of ouvragesAval()" class="ri-tag">
+                    {{ ouvrageCodeById(id) }}
+                    <button type="button" class="ri-tag-remove" (click)="retirerAval(id)">
+                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </span>
+                  <input
+                    class="ri-tags-input"
+                    type="text"
+                    placeholder="Chercher un ouvrage aval…"
+                    [value]="searchAval()"
+                    (input)="searchAval.set($any($event.target).value)"
+                    (focus)="showAvalDropdown.set(true)"
+                    (blur)="hideAvalDelayed()" />
+                </div>
+                <div class="ri-tags-dropdown" *ngIf="showAvalDropdown() && suggestionsAval().length">
+                  <button
+                    type="button"
+                    class="ri-tags-option"
+                    *ngFor="let o of suggestionsAval()"
+                    (mousedown)="ajouterAval(o.id)">
+                    <strong>{{ o.code }}</strong>
+                    <span>{{ o.nom }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── 4. RESPONSABILITÉ ───────────────────────────── -->
+        <div class="ri-section">
+          <div class="ri-section-label">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Responsabilité
+          </div>
+          <div class="ri-grid-2">
+            <div class="ri-field ri-field--full">
+              <label class="ri-label">Technicien responsable</label>
+              <select class="ri-select" formControlName="technicienId">
+                <option value="">Aucun technicien assigné</option>
+                <option *ngFor="let t of techniciens" [value]="t.id">
+                  {{ t.prenom }} {{ t.nom }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 5. DESCRIPTION ─────────────────────────────── -->
+        <div class="ri-section">
+          <div class="ri-section-label">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Description
+          </div>
+          <div class="ri-field">
+            <label class="ri-label">
+              Observations, caractéristiques techniques…
+              <span class="ri-char-count">
+                {{ (form.get('description')?.value || '').length }} / 500
+              </span>
+            </label>
+            <textarea class="ri-textarea" formControlName="description" rows="3"
+              placeholder="Débit capté, matériaux, historique, observations de terrain…">
+            </textarea>
+          </div>
+        </div>
+
+      </form>
+
+      <!-- ASIDE ──────────────────────────────────────────────── -->
+      <aside class="ri-aside">
+
+        <!-- Code card -->
+        <div class="ri-code-card">
+          <div class="ri-card-label">Code généré</div>
+          <div class="ri-code-value" [class.ri-code-value--empty]="codeGenere() === '—'">
+            {{ codeGenere() }}
+          </div>
+          <div class="ri-code-hint" *ngIf="codeGenere() !== '—'">
+            Format FAMILLE · DÉPT · N°
+          </div>
+        </div>
+
+        <!-- Chaîne AEP aperçu -->
+        <div class="ri-chain-card">
+          <div class="ri-card-label">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="17 1 21 5 17 9"/>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <polyline points="7 23 3 19 7 15"/>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+            Chaîne AEP
+          </div>
+          <div class="ri-chain-preview">
+            <span *ngIf="ouvragesAmont().length" class="ri-chain-node ri-chain-node--up">
+              {{ amontCodes() }}
+            </span>
+            <span *ngIf="ouvragesAmont().length" class="ri-chain-arrow">→</span>
+            <span class="ri-chain-node ri-chain-node--current">
+              {{ form.get('nom')?.value || 'Cet ouvrage' }}
+            </span>
+            <span *ngIf="ouvragesAval().length" class="ri-chain-arrow">→</span>
+            <span *ngIf="ouvragesAval().length" class="ri-chain-node ri-chain-node--down">
+              {{ avalCodes() }}
+            </span>
+          </div>
+          <div class="ri-chain-empty" *ngIf="!ouvragesAmont().length && !ouvragesAval().length">
+            Ajoutez des ouvrages amont/aval pour voir la chaîne.
+          </div>
+        </div>
+
+        <!-- Complétion -->
+        <div class="ri-progress-card">
+          <div class="ri-progress-head">
+            <span class="ri-card-label" style="margin-bottom:0">Complétion</span>
+            <span class="ri-progress-count">{{ champRemplis() }} / {{ totalChamps }}</span>
+          </div>
+          <div class="ri-progress-bar">
+            <div class="ri-progress-fill"
+              [style.width.%]="(champRemplis() / totalChamps) * 100">
+            </div>
+          </div>
+        </div>
+
+        <!-- Reminder: required fields -->
+        <div class="ri-reminder" *ngIf="submitted() && form.invalid">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Complétez les champs obligatoires pour recenser.
+        </div>
+
+      </aside>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         FOOTER
+    ══════════════════════════════════════════════════════════ -->
+    <div class="ri-footer">
+      <button type="button" class="ri-btn ri-btn--ghost" (click)="fermer.emit()">
+        Annuler
+      </button>
+      <button type="button" class="ri-btn ri-btn--outline" (click)="onBrouillon()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Brouillon
+      </button>
+      <button type="button" class="ri-btn ri-btn--primary" (click)="onEnregistrer()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        Recenser
+      </button>
+    </div>
+
+  </div>
+</div>

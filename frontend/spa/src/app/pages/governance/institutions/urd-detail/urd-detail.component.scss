@@ -1,0 +1,436 @@
+$bg:      #0F1419; $bg-card: #13202B; $bg-in: #1A2530;
+$bdr:     #1F2A33; $bdr-btn: #2A3744;
+$text:    #E2E8EE; $muted: #8B9AAB; $vmuted: #6B7785;
+$green:   #4ADE80; $blue: #60A5FA; $amber: #FBBF24; $red: #FB7185;
+
+.ud-page { font-family: system-ui, -apple-system, sans-serif; color: $text; }
+
+// ── Breadcrumb ────────────────────────────────────────────────────
+.ud-breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+
+// ── En-tête persistant ────────────────────────────────────────────
+.ud-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.ud-title  { font-size: 18px; font-weight: 500; color: #F5F7FA; }
+
+// ── Bandeau KPI 8 cellules ────────────────────────────────────────
+.ud-kpi-band {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px; margin-bottom: 14px;
+}
+.ud-kpi {
+  background: $bg-in; border-radius: 8px; padding: 10px 12px;
+  &--danger-active { background: rgba(251,113,133,.08); border: 0.5px solid rgba(251,113,133,.3); }
+}
+.ud-kpi__label { font-size: 10px; color: $muted; margin-bottom: 3px; }
+.ud-kpi__val   { font-size: 19px; font-weight: 500; color: #F5F7FA; line-height: 1; }
+.ud-kpi__total { font-size: 11px; color: $vmuted; font-weight: 400; }
+
+// ── Barre d'onglets page ──────────────────────────────────────────
+.ud-tab-bar {
+  display: flex; flex-wrap: wrap;
+  border-bottom: 0.5px solid $bdr; margin-bottom: 16px; padding-bottom: 0;
+}
+.ud-page-tab {
+  display: inline-flex; align-items: center;
+  background: transparent; border: 0; border-bottom: 2px solid transparent;
+  color: $muted; font-size: 12px; padding: 8px 13px; cursor: pointer;
+  transition: color 120ms; font-family: inherit; margin-bottom: -0.5px;
+  &:hover  { color: $text; }
+  &--active { border-bottom-color: #F5F7FA; color: #F5F7FA; font-weight: 500; }
+}
+
+// ── Contenu d'onglet ──────────────────────────────────────────────
+.ud-tab-content { animation: ud-fade 150ms ease; }
+@keyframes ud-fade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+// ── Grille vue d'ensemble (4fr / 6fr) ────────────────────────────
+.ud-overview-grid {
+  display: grid; grid-template-columns: 4fr 6fr; gap: 12px; align-items: start;
+  @media (max-width: 920px) { grid-template-columns: 1fr; }
+}
+.ud-col { display: flex; flex-direction: column; gap: 12px; }
+
+// ── Cards ─────────────────────────────────────────────────────────
+.ud-card       { background: $bg-card; border: 0.5px solid $bdr; border-radius: 10px; padding: 12px; }
+.ud-card__head { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #F5F7FA; margin-bottom: 10px; }
+
+.ud-member {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 0.5px solid $bdr;
+  &:last-of-type { border-bottom: 0; }
+}
+.ud-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(96,165,250,.2); color: $blue;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500; flex-shrink: 0;
+}
+.ud-online { width: 7px; height: 7px; border-radius: 50%; background: $green; }
+.ud-add-member {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: $blue; background: transparent; border: 0; cursor: pointer;
+  padding: 6px 0 0; width: 100%;
+  &:hover { opacity: .8; }
+}
+
+// ── Mini-carte placeholder ────────────────────────────────────────
+.ud-map-ph {
+  height: 160px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px;
+  background: $bg-in; color: $vmuted;
+}
+
+// ── Activité récente ──────────────────────────────────────────────
+.ud-activity-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-top: 0.5px solid $bdr;
+  &:first-of-type { border-top: 0; }
+}
+.ud-activity-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+// ── Communes table card ───────────────────────────────────────────
+.ud-table-card {
+  background: $bg-card; border: 0.5px solid $bdr; border-radius: 10px; overflow: hidden;
+}
+.ud-table-card__head {
+  display: flex; align-items: center; gap: 7px; padding: 10px 12px;
+  border-bottom: 0.5px solid $bdr; font-size: 12px; font-weight: 500; color: #F5F7FA; flex-wrap: wrap;
+}
+.ud-filter-pill {
+  font-size: 9px; padding: 2px 7px; border-radius: 5px;
+  background: $bg-in; border: 0.5px solid $bdr-btn; color: $vmuted; cursor: pointer;
+  &--active { border-color: rgba(96,165,250,.4); color: $blue; background: rgba(96,165,250,.08); }
+}
+.ud-table  { width: 100%; }
+.ud-thead  {
+  display: grid; grid-template-columns: 1.5fr 1.2fr 0.5fr 0.6fr 0.6fr 0.7fr;
+  background: $bg-in; padding: 5px 12px;
+  div { font-size: 9px; color: $vmuted; font-weight: 500; }
+}
+.ud-tr {
+  display: grid; grid-template-columns: 1.5fr 1.2fr 0.5fr 0.6fr 0.6fr 0.7fr;
+  padding: 0 12px; border-top: 0.5px solid $bdr; cursor: pointer;
+  transition: background .12s;
+  &:hover    { background: $bg-in; }
+  &--critical { background: rgba(251,113,133,.06); }
+  &--warn     { background: rgba(251,191,36,.04); }
+}
+.ud-tc {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 0; font-size: 11px; color: $muted;
+  &--name { color: $text; font-weight: 400; }
+}
+.ud-empty { padding: 16px 12px; font-size: 11px; color: $vmuted; text-align: center; }
+
+// ── Bandeau priorité ──────────────────────────────────────────────
+.ud-priority-banner {
+  display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap;
+  background: rgba(251,113,133,.08); border: 0.5px solid rgba(251,113,133,.3);
+  border-radius: 8px; padding: 10px 14px;
+  margin-top: 12px; font-size: 11px; color: $muted;
+  svg { color: $red; }
+  strong { color: #F5F7FA; }
+}
+
+// ── Conformité — dimensions ───────────────────────────────────────
+.ud-conf-dim { display: flex; align-items: center; gap: 8px; }
+.ud-conf-bar {
+  width: 80px; height: 4px; background: $bg-in; border-radius: 2px; overflow: hidden; flex-shrink: 0;
+  &__fill { height: 100%; border-radius: 2px; transition: width .3s; }
+}
+
+// ── Stubs d'onglets ───────────────────────────────────────────────
+.ud-tab-stub {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 24px; gap: 10px; text-align: center;
+  background: $bg-card; border: 0.5px solid $bdr; border-radius: 10px;
+  svg { color: $vmuted; }
+  &__title { font-size: 15px; font-weight: 500; color: #F5F7FA; }
+  &__desc  { font-size: 11px; color: $muted; max-width: 380px; line-height: 1.7; }
+  &__stat  { font-size: 11px; color: $vmuted; padding: 4px 12px; background: $bg-in; border-radius: 5px; }
+}
+
+// ── Pills & buttons ───────────────────────────────────────────────
+.ud-pill {
+  font-size: 9px; padding: 1px 7px; border-radius: 5px; white-space: nowrap;
+  &--success { background: rgba(74,222,128,.15);  color: $green; }
+  &--warning { background: rgba(251,191,36,.15);  color: $amber; }
+  &--danger  { background: rgba(251,113,133,.15); color: $red; }
+  &--info    { background: rgba(96,165,250,.15);  color: $blue; }
+  &--muted   { background: $bg-in; border: 0.5px solid $bdr-btn; color: $vmuted;
+               display: inline-flex; align-items: center; gap: 4px; }
+}
+
+.ud-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 6px; padding: 5px 10px; font-size: 11px;
+  cursor: pointer; border: none; transition: all 120ms; font-family: inherit;
+  &--ghost        { background: $bg-in; border: 1px solid $bdr-btn; color: #CBD5E1; &:hover { background: $bdr; } }
+  &--outline-info { background: transparent; border: 0.5px solid rgba(96,165,250,.4); color: $blue; &:hover { background: rgba(96,165,250,.1); } }
+  &--confirm      { background: rgba(74,222,128,.15); border: 0.5px solid rgba(74,222,128,.3); color: $green;
+                    &:hover { background: rgba(74,222,128,.25); }
+                    &:disabled { opacity: .4; cursor: not-allowed; } }
+}
+
+// ── Commune drawer ────────────────────────────────────────────────
+.ud-drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 40;
+  display: flex; justify-content: flex-end;
+}
+.ud-drawer {
+  width: 380px; max-width: 100vw;
+  background: $bg-card; border-left: 1px solid $bdr;
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: slideIn 200ms ease;
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.ud-drawer__head {
+  display: flex; align-items: flex-start; gap: 9px; padding: 14px 16px;
+  border-bottom: 1px solid $bdr;
+}
+.ud-drawer__close {
+  background: transparent; border: 0; color: $vmuted; cursor: pointer; padding: 3px; margin-left: auto;
+  &:hover { color: $text; }
+}
+.ud-drawer__tabs { display: flex; border-bottom: 1px solid $bdr; padding: 0 8px; }
+.ud-tab {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent; border: 0; border-bottom: 2px solid transparent;
+  color: $muted; font-size: 11px; padding: 9px 8px; cursor: pointer; transition: all 120ms;
+  &--active { border-bottom-color: $blue; color: #F5F7FA; font-weight: 500; }
+}
+.ud-tab__badge {
+  font-size: 9px; padding: 1px 5px; border-radius: 4px;
+  background: $bg-in; color: $muted;
+}
+.ud-drawer__body { flex: 1; overflow-y: auto; padding: 10px 0; }
+.ud-drawer__note {
+  font-size: 10px; color: $vmuted; padding: 6px 14px;
+  border-top: 0.5px solid $bdr; margin-top: 4px;
+}
+
+// ── Drawer sections ───────────────────────────────────────────────
+.ud-drawer__section {
+  padding: 10px 14px;
+  & + & { border-top: 0.5px solid $bdr; }
+}
+.ud-drawer__section-title {
+  font-size: 9px; text-transform: uppercase; letter-spacing: .05em;
+  color: $vmuted; font-weight: 500; margin-bottom: 7px;
+}
+
+// ── TEPAC block ───────────────────────────────────────────────────
+.ud-tepac-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px; background: rgba(74,222,128,.06);
+  border: 0.5px solid rgba(74,222,128,.2); border-radius: 7px;
+}
+.ud-tepac-empty {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 9px; background: rgba(251,113,133,.06);
+  border: 0.5px solid rgba(251,113,133,.2); border-radius: 7px;
+  font-size: 11px; color: $red;
+  svg { flex-shrink: 0; }
+}
+
+// ── Zone rows ─────────────────────────────────────────────────────
+.ud-zone-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-top: 0.5px solid $bdr;
+  &:first-child { border-top: 0; }
+}
+.ud-zone-cov  { display: flex; align-items: center; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.ud-zones-empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 0; gap: 5px; font-size: 11px; color: $vmuted; text-align: center;
+}
+
+// ── Alert summary bar ─────────────────────────────────────────────
+.ud-alert-summary {
+  display: flex; gap: 10px; background: $bg-in; border-radius: 7px; padding: 9px 12px; margin-bottom: 8px;
+}
+.ud-alert-summary__item  { flex: 1; text-align: center; &--red { background: rgba(251,113,133,.06); border-radius: 5px; } }
+.ud-alert-summary__n     { font-size: 18px; font-weight: 500; color: #F5F7FA; line-height: 1; }
+.ud-alert-summary__label { font-size: 9px; color: $vmuted; margin-top: 2px; }
+
+.ud-no-tepac-warning {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; color: $amber; padding: 6px 9px;
+  background: rgba(251,191,36,.06); border: 0.5px solid rgba(251,191,36,.2); border-radius: 6px;
+  svg { flex-shrink: 0; }
+}
+
+// ── Alert cards ───────────────────────────────────────────────────
+.ud-alerte-card {
+  border-top: 0.5px solid $bdr; padding: 10px 14px;
+  &--critical { background: rgba(251,113,133,.04); border-left: 2px solid rgba(251,113,133,.4); }
+}
+.ud-alerte-card__top    { display: flex; align-items: flex-start; gap: 7px; }
+.ud-alerte-card__infra  { display: flex; align-items: center; gap: 5px; font-size: 9px; color: $vmuted; margin-top: 5px; padding-left: 14px; svg { flex-shrink: 0; } }
+.ud-alerte-card__inter  { display: flex; align-items: center; gap: 6px; font-size: 9px; margin-top: 4px; padding-left: 14px; svg { flex-shrink: 0; } }
+.ud-alerte-card__action { margin-top: 8px; padding-left: 14px; display: flex; gap: 6px; }
+
+.ud-sev-dot     { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+.ud-sla-badge   { font-size: 9px; padding: 1px 5px; border-radius: 4px; border: 0.5px solid; white-space: nowrap; }
+.ud-escalade-badge {
+  font-size: 9px; padding: 1px 5px; border-radius: 4px; white-space: nowrap;
+  &--auto   { background: rgba(251,191,36,.15); color: $amber; }
+  &--manuel { background: rgba(96,165,250,.15); color: $blue; }
+}
+
+// ── Escalade form ─────────────────────────────────────────────────
+.ud-escalade-form {
+  margin-top: 8px; padding: 10px;
+  background: rgba(251,191,36,.06); border: 0.5px solid rgba(251,191,36,.2); border-radius: 7px;
+}
+.ud-escalade-select,
+.ud-escalade-input {
+  width: 100%; background: $bg-in; border: 0.5px solid $bdr-btn;
+  border-radius: 5px; color: $text; font-size: 11px; padding: 6px 8px;
+  margin-bottom: 4px; font-family: inherit; outline: none;
+  &:focus { border-color: rgba(96,165,250,.4); }
+}
+
+// ── Territoire tab ─────────────────────────────────────────────────────
+.ud-ter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+  gap: 12px;
+  @media (max-width: 860px) { grid-template-columns: 1fr; }
+}
+.ud-ter-sidebar { display: flex; flex-direction: column; gap: 10px; }
+
+.ud-ter-perimetre {
+  background: rgba(96,165,250,.08); border: 0.5px solid rgba(96,165,250,.3);
+  border-radius: 8px; padding: 10px 12px;
+}
+.ud-ter-perimetre__label { font-size: 11px; color: rgba(96,165,250,.7); margin-bottom: 2px; }
+.ud-ter-perimetre__val {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 14px; font-weight: 500; color: $blue;
+  svg { flex-shrink: 0; }
+}
+.ud-ter-perimetre__hint { font-size: 10px; color: rgba(96,165,250,.55); margin-top: 2px; }
+
+.ud-ter-section-label { font-size: 11px; color: $muted; }
+
+.ud-ter-select {
+  width: 100%; margin-top: 5px;
+  background: $bg-in; border: 0.5px solid $bdr-btn; border-radius: 6px;
+  color: $text; padding: 6px 8px; font-size: 12px; font-family: inherit;
+  appearance: none; cursor: pointer;
+  &:focus { outline: 0.5px solid rgba(96,165,250,.5); }
+}
+
+.ud-ter-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+.ud-ter-chip {
+  font-size: 11px; padding: 3px 10px; border-radius: 999px;
+  cursor: pointer; transition: opacity 120ms; border: 1px solid currentColor;
+  &--actif        { background: rgba(74,222,128,.1);  color: #4ADE80; }
+  &--panne        { background: rgba(251,113,133,.1); color: #FB7185; }
+  &--maintenance  { background: rgba(251,191,36,.1);  color: #FBBF24; }
+  &--off          { opacity: .35; }
+}
+
+.ud-ter-tree { font-size: 12px; }
+.ud-ter-tree-dept {
+  display: flex; align-items: center; gap: 4px;
+  font-weight: 500; color: #F5F7FA; margin-bottom: 5px;
+  padding: 3px 0;
+}
+.ud-ter-tree-commune {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 0 4px 10px; cursor: pointer; color: $muted;
+  transition: color 120ms;
+  &:hover { color: $text; }
+  span:first-of-type { flex: 1; }
+}
+.ud-ter-tree-badge {
+  font-size: 10px; padding: 1px 6px; border-radius: 999px;
+  background: $bg-in; color: $vmuted;
+}
+.ud-ter-tree-zone {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 0 3px 26px; font-size: 11px; color: $vmuted;
+  svg { flex-shrink: 0; }
+  &--empty { font-style: italic; }
+}
+.ud-ter-tree-zone-name  { flex: 1; }
+.ud-ter-tree-zone-status { font-size: 10px; }
+
+.ud-ter-map-wrap {
+  position: relative; border: 0.5px solid $bdr;
+  border-radius: 10px; overflow: hidden; background: $bg-in;
+  min-height: 360px;
+}
+.ud-ter-map { width: 100%; height: 360px; }
+
+.ud-ter-activer-btn {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; align-items: center; gap: 5px;
+  border: 0.5px solid rgba(96,165,250,.5); color: $blue; background: $bg-card;
+  font-size: 12px; padding: 5px 10px; border-radius: 6px;
+  cursor: pointer; font-family: inherit; transition: background 120ms;
+  z-index: 400;
+  &:hover { background: rgba(96,165,250,.1); }
+}
+
+.ud-ter-map-caption {
+  position: absolute; bottom: 12px; left: 12px;
+  font-size: 11px; color: $muted; background: $bg-card;
+  padding: 4px 10px; border-radius: 6px; border: 0.5px solid $bdr;
+  pointer-events: none; z-index: 400;
+}
+
+.ud-ter-nat-link {
+  position: absolute; bottom: 12px; right: 12px;
+  font-size: 11px; color: $vmuted; background: transparent; border: 0;
+  cursor: pointer; font-family: inherit; z-index: 400;
+  &:hover { color: $muted; }
+}
+
+.ud-ter-success-toast {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; color: #4ADE80; background: rgba(74,222,128,.08);
+  border: 0.5px solid rgba(74,222,128,.3); border-radius: 7px;
+  padding: 8px 12px; margin-bottom: 10px;
+  svg { flex-shrink: 0; }
+}
+
+// ── Zone activation modal ──────────────────────────────────────────────
+.ud-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 16px;
+}
+.ud-modal {
+  background: $bg-card; border: 0.5px solid $bdr; border-radius: 12px;
+  width: 100%; max-width: 420px;
+  animation: ud-fade 150ms ease;
+}
+.ud-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 0.5px solid $bdr;
+  &__title { font-size: 14px; font-weight: 500; color: #F5F7FA; }
+  &__close  { background: transparent; border: 0; color: $vmuted; cursor: pointer; padding: 4px;
+               &:hover { color: $text; } }
+}
+.ud-modal-scope-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: $blue; background: rgba(96,165,250,.08);
+  border-bottom: 0.5px solid rgba(96,165,250,.2); padding: 8px 16px;
+  svg { flex-shrink: 0; }
+}
+.ud-modal-body   { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.ud-modal-field  { display: flex; flex-direction: column; gap: 4px; }
+.ud-modal-label  { font-size: 11px; color: $muted; }
+.ud-modal-input,
+.ud-modal-select {
+  background: $bg-in; border: 0.5px solid $bdr-btn; border-radius: 6px;
+  color: $text; padding: 7px 9px; font-size: 12px; font-family: inherit;
+  width: 100%; appearance: none;
+  &:focus { outline: 0.5px solid rgba(96,165,250,.5); }
+}
+.ud-modal-err  { font-size: 11px; color: $red; padding: 5px 8px; background: rgba(251,113,133,.06); border-radius: 5px; }
+.ud-modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 0.5px solid $bdr; }

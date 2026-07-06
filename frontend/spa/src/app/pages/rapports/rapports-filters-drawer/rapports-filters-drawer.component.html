@@ -1,0 +1,118 @@
+<!-- Overlay -->
+<div class="rfd-overlay" (click)="state.fermerFiltres()"></div>
+
+<!-- Drawer panel -->
+<div class="rfd-panel">
+
+  <div class="rfd-head">
+    <div class="rfd-head__left">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      <span>Filtres</span>
+      <span class="rfd-badge" *ngIf="state.nombreFiltresActifs() > 0">{{ state.nombreFiltresActifs() }}</span>
+    </div>
+    <div class="rfd-head__right">
+      <button class="rfd-reset" type="button"
+        *ngIf="state.nombreFiltresActifs() > 0"
+        (click)="state.reinitialiserFiltres()">
+        Effacer tout
+      </button>
+      <button class="rfd-close" type="button" (click)="state.fermerFiltres()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="rfd-body">
+
+    <!-- Recherche -->
+    <div class="rfd-group">
+      <p class="rfd-label">Recherche</p>
+      <div class="rfd-search">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="rfd-search__input" type="text"
+          [value]="state.filtres().recherche"
+          (input)="state.modifierRecherche($any($event.target).value)"
+          placeholder="Titre ou module…">
+      </div>
+    </div>
+
+    <!-- Statut -->
+    <div class="rfd-group">
+      <p class="rfd-label">Statut</p>
+      <div class="rfd-checks">
+        <label *ngFor="let s of STATUTS" class="rfd-check-item">
+          <input type="checkbox" class="rfd-check"
+            [checked]="state.filtres().statuts.includes(s)"
+            (change)="state.toggleStatut(s)">
+          <span class="rfd-dot" [style.background]="state.statusDot(s)"></span>
+          <span>{{ STATUT_LABELS[s] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Type -->
+    <div class="rfd-group">
+      <p class="rfd-label">Type de rapport</p>
+      <div class="rfd-checks">
+        <label *ngFor="let t of TYPES" class="rfd-check-item">
+          <input type="checkbox" class="rfd-check"
+            [checked]="state.filtres().types.includes(t)"
+            (change)="state.toggleType(t)">
+          <span class="rfd-dot" [style.background]="state.typeColor(t)"></span>
+          <span>{{ TYPE_LABELS[t] }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Format -->
+    <div class="rfd-group">
+      <p class="rfd-label">Format</p>
+      <div class="rfd-checks">
+        <label *ngFor="let f of FORMATS" class="rfd-check-item">
+          <input type="checkbox" class="rfd-check"
+            [checked]="state.filtres().formats.includes(f)"
+            (change)="state.toggleFormat(f)">
+          <span>{{ f.toUpperCase() }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Période -->
+    <div class="rfd-group">
+      <p class="rfd-label">Période</p>
+      <div class="rfd-date-row">
+        <div class="rfd-date-wrap">
+          <label class="rfd-date-lbl">Du</label>
+          <input type="date" class="rfd-date-in"
+            [value]="state.filtres().dateFrom"
+            (change)="state.modifierFiltre('dateFrom', $any($event.target).value)">
+        </div>
+        <div class="rfd-date-wrap">
+          <label class="rfd-date-lbl">Au</label>
+          <input type="date" class="rfd-date-in"
+            [value]="state.filtres().dateTo"
+            (change)="state.modifierFiltre('dateTo', $any($event.target).value)">
+        </div>
+      </div>
+    </div>
+
+    <div class="rfd-count">
+      {{ state.rapportsFiltres().length }} rapport(s) correspondant(s)
+    </div>
+
+  </div><!-- /rfd-body -->
+
+  <div class="rfd-foot">
+    <button class="rfd-btn rfd-btn--ghost" type="button" (click)="state.fermerFiltres()">Fermer</button>
+    <button class="rfd-btn rfd-btn--primary" type="button" (click)="state.fermerFiltres()">
+      Appliquer ({{ state.rapportsFiltres().length }})
+    </button>
+  </div>
+
+</div>

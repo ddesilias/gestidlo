@@ -1,0 +1,134 @@
+:host { display:block; }
+
+/* Le shell admin est TOUJOURS sombre (il se peint lui-même) alors que le thème global peut être
+ * en mode clair (ThemeService défaut 'light'). On fige donc les valeurs sombres des tokens d'alias
+ * sur `.gov-dash` : elles cascadent à tous les composants enfants via l'héritage des custom props. */
+.gov-dash {
+  --surface-0: #0f1419;
+  --surface-1: #161e28;
+  --surface-2: #1f2a33;
+  --text-primary:   #e2e8ee;
+  --text-secondary: #94a3b8;
+  --text-muted:     #64748b;
+  --text-accent:    #3b82f6;
+  --text-success:   #16a34a;
+  --text-warning:   #f59e0b;
+  --text-danger:    #e24b4a;
+  --border-color:   rgba(226, 232, 240, 0.14);
+  --border-strong:  rgba(226, 232, 240, 0.24);
+  --bg-accent:  rgba(59, 130, 246, 0.14);
+  --bg-success: rgba(16, 185, 129, 0.14);
+  --bg-warning: rgba(234, 179, 8, 0.12);
+  --bg-danger:  rgba(226, 75, 74, 0.12);
+
+  padding:14px 16px;
+  color:var(--text-primary);
+
+  &__header { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  &__lead { display:flex; align-items:center; gap:8px; min-width:0; flex-wrap:wrap; }
+
+  &__launcher {
+    display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+    font-size:12.5px; color:var(--text-secondary);
+    background:var(--surface-1); border:0.5px solid var(--border-color); border-radius:20px; padding:6px 12px;
+    i { font-size:16px; color:var(--text-accent); }
+    &:hover, &--on { color:var(--text-primary); border-color:var(--border-strong); }
+  }
+
+  &__reset {
+    display:inline-flex; align-items:center; gap:5px; cursor:pointer;
+    font-size:11px; color:var(--text-accent);
+    background:none; border:0.5px solid var(--text-accent); border-radius:20px; padding:5px 10px;
+    i { font-size:13px; }
+    &:hover { background:var(--bg-accent); }
+  }
+
+  &__scope {
+    position:relative; display:inline-flex; align-items:center; gap:6px;
+    font-size:14px; font-weight:600; color:var(--text-primary);
+    background:var(--surface-1); border:0.5px solid var(--border-color); border-radius:20px; padding:5px 12px;
+    cursor:pointer;
+    i { font-size:13px; color:var(--text-muted); }
+  }
+  &__scope-sel {
+    position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;
+  }
+
+  &__actions { display:flex; align-items:center; gap:8px; }
+  &__period {
+    font-size:12px; color:var(--text-secondary);
+    border:0.5px solid var(--border-color); border-radius:var(--radius); padding:5px 10px;
+    i { font-size:13px; vertical-align:-2px; }
+  }
+  &__primary {
+    font-size:12px; color:#fff; background:var(--text-accent);
+    border:none; border-radius:var(--radius); padding:6px 12px; cursor:pointer;
+    i { font-size:13px; vertical-align:-2px; }
+    &:hover { filter:brightness(1.08); }
+  }
+
+  &__synth {
+    font-size:11px; color:var(--text-secondary); margin:8px 0 14px;
+    .ok { color:var(--text-success); }
+    .warn { color:var(--text-danger); }
+  }
+
+  &__signals { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:14px; }
+
+  &__hero { display:grid; grid-template-columns:1.35fr 1fr; gap:12px; align-items:stretch; margin-bottom:12px; }
+
+  &__analytics { display:grid; grid-template-columns:1.35fr 1fr; gap:12px; align-items:stretch; margin-bottom:14px; }
+
+  &__foot { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+}
+
+/* Points d'attention (Zone C droite) */
+.attn {
+  background:var(--surface-1); border-radius:12px; padding:12px; height:100%; display:flex; flex-direction:column;
+  &__title { font-size:13px; font-weight:500; color:var(--text-primary); margin-bottom:8px; }
+  &__item { display:flex; gap:8px; padding:5px 0; align-items:flex-start; }
+  &__item i { font-size:15px; margin-top:1px; flex:none; }
+  &__txt { font-size:12px; color:var(--text-primary); }
+  &__sub { color:var(--text-muted); }
+  &__empty { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-success); margin:4px 0; i { font-size:14px; } }
+  &__more { margin-top:auto; align-self:flex-start; font-size:11px; color:var(--text-accent); background:none; border:0; cursor:pointer; padding:8px 0 0; }
+}
+
+/* Bas de page : santé + activité */
+.foot-card {
+  background:var(--surface-1); border-radius:12px; padding:12px;
+  &__head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  &__title { font-size:12px; color:var(--text-primary); margin-bottom:8px; display:block; }
+  &__pct { font-size:10px; color:var(--text-warning); }
+}
+.foot-svc {
+  display:flex; align-items:center; gap:8px; font-size:11px;
+  padding:4px 0; border-top:0.5px solid var(--border-color);
+  &__dot { width:7px; height:7px; border-radius:50%; flex:none; }
+  &__name { color:var(--text-secondary); flex:1; }
+  &__up { color:var(--text-primary); }
+}
+.foot-act {
+  display:flex; gap:8px; padding:5px 0; border-top:0.5px solid var(--border-color);
+  i { font-size:14px; color:var(--text-secondary); margin-top:2px; flex:none; }
+  &__body { min-width:0; flex:1; }
+  &__text { font-size:12px; color:var(--text-primary); }
+  &__detail { font-size:10px; color:var(--text-muted); }
+  &__time { font-size:10px; color:var(--text-muted); flex:none; white-space:nowrap; }
+  &__empty { font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; margin:8px 0 0;
+    i { font-size:14px; } }
+}
+
+app-governance-module-strip { display:block; }
+app-governance-map, app-dept-ranking { display:block; height:100%; }
+
+/* Responsive (§4) */
+@media (max-width:1199px) {
+  .gov-dash__hero,
+  .gov-dash__analytics { grid-template-columns:1fr; }
+  .gov-dash__signals { grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:700px) {
+  .gov-dash__foot { grid-template-columns:1fr; }
+  .gov-dash__signals { grid-template-columns:repeat(2,1fr); }
+}

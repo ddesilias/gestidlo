@@ -1,0 +1,52 @@
+<app-gov-shell title="Politiques & Procédures" [moduleNum]="6">
+
+  <div class="pol-header">
+    <div class="pol-header__icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </div>
+    <div>
+      <h2 class="pol-header__h2">Politiques & Procédures</h2>
+      <p class="pol-header__sub">Documents réglementaires · chartes · procédures opérationnelles standard</p>
+    </div>
+    <button class="pol-btn">+ Nouvelle politique</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="pol-stats">
+    <div class="pol-stat"><span class="pol-stat__val pol-stat__val--green">6</span><span class="pol-stat__lbl">Actives</span></div>
+    <div class="pol-stat"><span class="pol-stat__val pol-stat__val--amber">2</span><span class="pol-stat__lbl">En révision</span></div>
+    <div class="pol-stat"><span class="pol-stat__val">8</span><span class="pol-stat__lbl">Total</span></div>
+  </div>
+
+  <!-- List -->
+  <div class="pol-panel">
+    <div class="pol-panel__head">
+      <span class="pol-panel__title">Documents de politique</span>
+      <span class="pol-panel__count">{{ POLITIQUES.length }} documents</span>
+    </div>
+    <table class="pol-table">
+      <thead><tr><th>Référence</th><th>Titre</th><th>Catégorie</th><th>Version</th><th>Statut</th><th>Révision</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let p of POLITIQUES">
+          <td class="pol-mono">{{ p.ref }}</td>
+          <td class="pol-titre">{{ p.titre }}</td>
+          <td><span class="pol-cat">{{ p.categorie }}</span></td>
+          <td class="pol-muted pol-mono-sm">{{ p.version }}</td>
+          <td><span class="pol-stat-badge" [ngClass]="statutCls(p.statut)">{{ p.statut }}</span></td>
+          <td class="pol-muted">{{ p.revue }}</td>
+          <td class="pol-actions">
+            <button class="pol-act-btn">👁</button>
+            <button class="pol-act-btn">✎</button>
+            <button class="pol-act-btn">⬇</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pol-info">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Les politiques marquées "En révision" doivent être validées par un administrateur DINEPA avant publication.
+  </div>
+
+</app-gov-shell>

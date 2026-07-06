@@ -1,0 +1,528 @@
+<div class="cp-page">
+
+  <!-- ══════════════════ HEADER ══════════════════ -->
+  <div class="cp-header">
+    <div class="cp-header__left">
+      <h2 class="cp-title">Capteurs IoT</h2>
+      <div class="cp-header__badges">
+        <span class="cp-badge cp-badge--gw">
+          <span class="cp-badge__pulse"></span>
+          Passerelle GDL-GW-001 · connectée
+        </span>
+        <span class="cp-badge cp-badge--crit-count" *ngIf="nbCritiques() > 0">
+          <span class="cp-badge__dot"></span>
+          {{ nbCritiques() }} capteur{{ nbCritiques() > 1 ? 's' : '' }} critique{{ nbCritiques() > 1 ? 's' : '' }}
+        </span>
+        <span class="cp-badge cp-badge--mqtt">
+          <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M1 4a7 7 0 0 1 14 0M4 7a4 4 0 0 1 8 0M7 10a1 1 0 0 1 2 0v3H7v-3z"/>
+          </svg>
+          MQTT · dernière maj 4s
+        </span>
+      </div>
+      <p class="cp-subtitle">
+        Supervision des dispositifs connectés — Léogâne &amp; Petit-Goâve · {{ total() }} capteurs déployés
+      </p>
+    </div>
+    <div class="cp-header__actions">
+      <button class="cp-btn" type="button">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+        Filtres
+      </button>
+      <button class="cp-btn" type="button" (click)="scannerVisible.set(true)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Scanner QR
+      </button>
+      <button class="cp-btn" type="button">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importer
+      </button>
+      <button class="cp-btn" type="button">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter
+      </button>
+      <button class="cp-btn cp-btn--primary" type="button" (click)="ajouterVisible.set(true)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter un capteur
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ KPI STRIP ══════════════════ -->
+  <div class="cp-kpi-strip">
+
+    <div class="cp-kpi cp-kpi--blue" (click)="setFiltre(null)">
+      <div class="cp-kpi__top">
+        <span class="cp-kpi__lbl">Capteurs installés</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      </div>
+      <div class="cp-kpi__val-row">
+        <span class="cp-kpi__val">{{ total() }}</span>
+        <span class="cp-kpi__delta cp-kpi__delta--up">+4 cette semaine</span>
+      </div>
+      <div class="cp-kpi__sub">PR · DB · NV · QA</div>
+    </div>
+
+    <div class="cp-kpi cp-kpi--green" (click)="setFiltre(null)">
+      <span class="cp-kpi__pulse"></span>
+      <div class="cp-kpi__top">
+        <span class="cp-kpi__lbl">En ligne</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </div>
+      <div class="cp-kpi__val-row">
+        <span class="cp-kpi__val">{{ nbEnLigne() }}</span>
+        <span class="cp-kpi__sub-inline">/ {{ total() }}</span>
+      </div>
+      <div class="cp-kpi__bar">
+        <div class="cp-kpi__bar-fill" [style.width.%]="pctEnLigne()"></div>
+      </div>
+    </div>
+
+    <div class="cp-kpi cp-kpi--gray" (click)="setFiltre('horsLigne')">
+      <div class="cp-kpi__top">
+        <span class="cp-kpi__lbl">Hors ligne</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5F5E5A" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      </div>
+      <div class="cp-kpi__val-row">
+        <span class="cp-kpi__val">{{ nbHorsLigne() }}</span>
+        <span class="cp-kpi__sub-inline">/ {{ total() }}</span>
+      </div>
+      <div class="cp-kpi__sub">Vérification terrain requise</div>
+    </div>
+
+    <div class="cp-kpi cp-kpi--red" (click)="setFiltre('critiques')">
+      <span class="cp-kpi__pulse cp-kpi__pulse--red"></span>
+      <div class="cp-kpi__top">
+        <span class="cp-kpi__lbl">En alerte</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#A32D2D" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="cp-kpi__val-row">
+        <span class="cp-kpi__val">{{ nbEnAlerte() }}</span>
+        <span class="cp-kpi__sub-inline">dont {{ nbCritiques() }} critique{{ nbCritiques() > 1 ? 's' : '' }}</span>
+      </div>
+      <div class="cp-kpi__link" (click)="$event.stopPropagation()">Voir alertes →</div>
+    </div>
+
+    <div class="cp-kpi cp-kpi--orange" (click)="setFiltre(null)">
+      <div class="cp-kpi__top">
+        <span class="cp-kpi__lbl">Batterie faible</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#BA7517" stroke-width="2" stroke-linecap="round"><rect x="1" y="6" width="18" height="12" rx="2" ry="2"/><line x1="23" y1="13" x2="23" y2="11"/><line x1="5" y1="10" x2="7" y2="14"/><line x1="7" y1="10" x2="7" y2="14"/></svg>
+      </div>
+      <div class="cp-kpi__val-row">
+        <span class="cp-kpi__val">{{ nbBatterieFaible() }}</span>
+        <span class="cp-kpi__sub-inline">&lt; 20%</span>
+      </div>
+      <div class="cp-kpi__sub">À remplacer cette semaine</div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════ FILTRES RAPIDES ══════════════════ -->
+  <div class="cp-chips">
+    <span class="cp-chips__lbl">Filtres rapides</span>
+    <button class="cp-chip"
+      [class.cp-chip--on-red]="filtreActif() === 'critiques'"
+      [class.cp-chip--red]="filtreActif() !== 'critiques'"
+      type="button" (click)="setFiltre('critiques')">
+      ⚡ Critiques ({{ nbCritiques() }})
+    </button>
+    <button class="cp-chip" [class.cp-chip--on]="filtreActif() === 'horsLigne'"
+      type="button" (click)="setFiltre('horsLigne')">
+      Hors ligne ({{ nbHorsLigne() }})
+    </button>
+    <button class="cp-chip" [class.cp-chip--on]="filtreActif() === 'pression'"
+      type="button" (click)="setFiltre('pression')">Pression</button>
+    <button class="cp-chip" [class.cp-chip--on]="filtreActif() === 'debit'"
+      type="button" (click)="setFiltre('debit')">Débit</button>
+    <button class="cp-chip" [class.cp-chip--on]="filtreActif() === 'niveau'"
+      type="button" (click)="setFiltre('niveau')">Niveau</button>
+    <button class="cp-chip" [class.cp-chip--on]="filtreActif() === 'leogane'"
+      type="button" (click)="setFiltre('leogane')">Léogâne</button>
+    <button class="cp-chip" [class.cp-chip--on]="filtreActif() === 'nonCalibres'"
+      type="button" (click)="setFiltre('nonCalibres')">Non calibrés</button>
+    <button class="cp-chip cp-chip--link" type="button">+ Filtres avancés</button>
+  </div>
+
+  <!-- ══════════════════ CARTE + FLUX ══════════════════ -->
+  <div class="cp-dual">
+
+    <!-- Carte des capteurs -->
+    <div class="cp-card cp-map-card">
+      <div class="cp-card__head">
+        <div class="cp-card__head-left">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          <span class="cp-card__title">Carte des capteurs</span>
+          <span class="cp-card__sub">{{ total() }} marqueurs</span>
+        </div>
+        <div class="cp-card__head-right">
+          <button class="cp-btn cp-btn--sm" type="button">Couches</button>
+          <button class="cp-btn cp-btn--sm cp-btn--icon" type="button">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- SVG Map -->
+      <div class="cp-map">
+        <svg viewBox="0 0 500 340" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="map-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#0A1F2E"/>
+              <stop offset="100%" stop-color="#142838"/>
+            </linearGradient>
+          </defs>
+          <rect width="500" height="340" fill="url(#map-grad)"/>
+          <!-- Terrain eau -->
+          <path d="M0,180 Q80,160 160,170 T320,165 T500,150 L500,340 L0,340 Z" fill="#1A3A4F" opacity="0.5"/>
+          <path d="M0,250 Q120,230 240,240 T500,230 L500,340 L0,340 Z" fill="#0F2A3C" opacity="0.7"/>
+          <!-- Conduite principale -->
+          <path d="M50,80 Q150,90 250,85 T450,90" fill="none" stroke="#3B82F6" stroke-width="2" opacity="0.5" stroke-dasharray="4,3"/>
+          <text x="55" y="75" font-size="8" fill="#60A5FA" opacity="0.8" font-family="sans-serif">Conduite principale</text>
+
+          <!-- Passerelle GW (carré bleu) -->
+          <g>
+            <rect x="50" y="40" width="22" height="22" rx="4" fill="#3B82F6" opacity="0.3"/>
+            <rect x="54" y="44" width="14" height="14" rx="2" fill="#3B82F6"/>
+            <text x="61" y="54" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">GW</text>
+            <text x="76" y="50" font-size="7" fill="#93C5FD" font-family="sans-serif">Passerelle ESP32</text>
+          </g>
+
+          <!-- Sensors: en ligne (vert vif) -->
+          <g>
+            <circle cx="100" cy="120" r="14" fill="#10B981" opacity="0.2"/>
+            <circle cx="100" cy="120" r="7" fill="#10B981"/>
+            <text x="100" y="123" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">PR</text>
+          </g>
+          <g>
+            <circle cx="180" cy="100" r="14" fill="#10B981" opacity="0.2"/>
+            <circle cx="180" cy="100" r="7" fill="#10B981"/>
+            <text x="180" y="103" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">NV</text>
+          </g>
+          <g>
+            <circle cx="160" cy="180" r="14" fill="#10B981" opacity="0.2"/>
+            <circle cx="160" cy="180" r="7" fill="#10B981"/>
+            <text x="160" y="183" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">DB</text>
+          </g>
+
+          <!-- Sensor: critique avec halo pulsant -->
+          <g>
+            <circle cx="240" cy="140" r="24" fill="#EF4444" opacity="0.15">
+              <animate attributeName="r" values="20;28;20" dur="2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.15;0.05;0.15" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="240" cy="140" r="14" fill="#EF4444" opacity="0.3"/>
+            <circle cx="240" cy="140" r="8" fill="#EF4444"/>
+            <text x="240" y="143" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">PR</text>
+            <line x1="248" y1="132" x2="262" y2="118" stroke="#EF4444" stroke-width="0.8"/>
+            <rect x="264" y="108" width="100" height="14" rx="3" fill="#1F2A33"/>
+            <text x="314" y="118" font-size="8" fill="#F87171" font-weight="500" text-anchor="middle" font-family="sans-serif">CPT-PR-018 · 0.6 bar</text>
+          </g>
+
+          <!-- Sensor: attention (amber) -->
+          <g>
+            <circle cx="320" cy="200" r="14" fill="#F59E0B" opacity="0.2"/>
+            <circle cx="320" cy="200" r="7" fill="#F59E0B"/>
+            <text x="320" y="203" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">NV</text>
+          </g>
+
+          <!-- Sensor: hors ligne (gris) -->
+          <g>
+            <circle cx="380" cy="110" r="7" fill="#6B7785"/>
+            <text x="380" y="113" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">DB</text>
+            <line x1="388" y1="106" x2="402" y2="95" stroke="#6B7785" stroke-width="0.8"/>
+            <rect x="404" y="86" width="60" height="13" rx="3" fill="#1F2A33"/>
+            <text x="434" y="95" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="sans-serif">hors ligne</text>
+          </g>
+
+          <!-- Sensor: maintenance (bleu) -->
+          <g>
+            <circle cx="420" cy="220" r="14" fill="#3B82F6" opacity="0.2"/>
+            <circle cx="420" cy="220" r="7" fill="#3B82F6"/>
+            <text x="420" y="223" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">PR</text>
+          </g>
+
+          <!-- Autres capteurs en ligne -->
+          <g><circle cx="80" cy="240" r="7" fill="#10B981"/><text x="80" y="243" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">DB</text></g>
+          <g><circle cx="140" cy="270" r="7" fill="#10B981"/><text x="140" y="273" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">PR</text></g>
+          <g><circle cx="200" cy="290" r="7" fill="#10B981"/><text x="200" y="293" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">NV</text></g>
+          <g><circle cx="280" cy="270" r="7" fill="#10B981"/><text x="280" y="273" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">PR</text></g>
+          <g><circle cx="350" cy="250" r="7" fill="#10B981"/><text x="350" y="253" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">QA</text></g>
+          <g><circle cx="440" cy="160" r="7" fill="#10B981"/><text x="440" y="163" font-size="7" fill="#fff" font-weight="500" text-anchor="middle" font-family="sans-serif">NV</text></g>
+
+          <!-- Labels villes (fond sombre) -->
+          <rect x="60" y="180" width="44" height="14" rx="3" fill="#1F2A33" opacity="0.9"/>
+          <text x="82" y="190" font-size="8" fill="#CBD5E1" text-anchor="middle" font-weight="500" font-family="sans-serif">Léogâne</text>
+          <rect x="378" y="290" width="64" height="14" rx="3" fill="#1F2A33" opacity="0.9"/>
+          <text x="410" y="300" font-size="8" fill="#CBD5E1" text-anchor="middle" font-weight="500" font-family="sans-serif">Petit-Goâve</text>
+        </svg>
+
+        <!-- Légende sombre -->
+        <div class="cp-map__legend">
+          <span class="cp-map__lgd-item"><span class="cp-map__lgd-dot" style="background:#10B981"></span> En ligne</span>
+          <span class="cp-map__lgd-item"><span class="cp-map__lgd-dot" style="background:#F59E0B"></span> Attention</span>
+          <span class="cp-map__lgd-item"><span class="cp-map__lgd-dot" style="background:#EF4444"></span> Critique</span>
+          <span class="cp-map__lgd-item"><span class="cp-map__lgd-dot" style="background:#6B7785"></span> Hors ligne</span>
+          <span class="cp-map__lgd-item"><span class="cp-map__lgd-dot" style="background:#3B82F6"></span> Maintenance</span>
+          <span class="cp-map__lgd-item"><span class="cp-map__lgd-dot" style="background:#3B82F6; border-radius:2px"></span> Passerelle</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flux temps réel -->
+    <div class="cp-card cp-flux-card">
+      <div class="cp-card__head">
+        <div class="cp-card__head-left">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span class="cp-card__title">Flux temps réel</span>
+        </div>
+        <span class="cp-flux__live">
+          <span class="cp-flux__live-dot"></span>
+          MQTT live
+        </span>
+      </div>
+
+      <!-- Agrégats -->
+      <div class="cp-flux-stats">
+        <div class="cp-flux-stat">
+          <div class="cp-flux-stat__lbl">Pression moy.</div>
+          <div class="cp-flux-stat__val">{{ pressionMoy() }} <span>bar</span></div>
+        </div>
+        <div class="cp-flux-stat">
+          <div class="cp-flux-stat__lbl">Débit moy.</div>
+          <div class="cp-flux-stat__val">{{ debitMoy() }} <span>L/min</span></div>
+        </div>
+        <div class="cp-flux-stat">
+          <div class="cp-flux-stat__lbl">Niveau moy.</div>
+          <div class="cp-flux-stat__val">{{ niveauMoy() }} <span>%</span></div>
+        </div>
+        <div class="cp-flux-stat">
+          <div class="cp-flux-stat__lbl">Latence MQTT</div>
+          <div class="cp-flux-stat__val cp-flux-stat__val--green">23 <span>ms</span></div>
+        </div>
+      </div>
+
+      <!-- Flux list -->
+      <div class="cp-flux-list">
+        <div *ngFor="let c of fluxTempsReel()" class="cp-flux-row"
+          [class.cp-flux-row--critique]="c.statut === 'critique'"
+          [class.cp-flux-row--attention]="c.statut === 'attention'">
+          <span class="cp-dot" [ngClass]="fluxDotCls(c.statut)"
+            [class.cp-dot--pulse]="c.statut === 'critique'"></span>
+          <div class="cp-flux-row__info">
+            <span class="cp-flux-row__code" [class.cp-flux-row__code--offline]="c.statut === 'hors-ligne'">
+              {{ c.code }}
+            </span>
+            <span class="cp-flux-row__meta">{{ typeLabel(c.type) }} · {{ c.derniereTransmission }}</span>
+          </div>
+          <div class="cp-flux-row__right">
+            <span class="cp-flux-row__val" [ngClass]="valeurCls(c)">{{ valeurLabel(c) }}</span>
+            <span class="cp-flux-badge" [ngClass]="statutCls(c.statut)">{{ statutLabel(c.statut) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /cp-dual -->
+
+  <!-- ══════════════════ TABLEAU ══════════════════ -->
+  <div class="cp-card cp-table-card">
+
+    <!-- Table header -->
+    <div class="cp-table-toolbar">
+      <div class="cp-table-toolbar__left">
+        <input type="checkbox" class="cp-checkbox"/>
+        <span class="cp-table-count">{{ capteursFiltres().length }} capteur{{ capteursFiltres().length > 1 ? 's' : '' }}</span>
+        <span class="cp-table-sep">·</span>
+        <div class="cp-search-wrap">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="cp-search" type="text" placeholder="Rechercher un capteur…"
+            [value]="recherche()" (input)="setRecherche($any($event.target).value)"/>
+        </div>
+      </div>
+      <div class="cp-table-toolbar__right">
+        <button class="cp-btn cp-btn--sm" type="button">Colonnes</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="cp-table-scroll">
+      <table class="cp-table">
+        <thead>
+          <tr>
+            <th class="cp-th cp-th--cb"></th>
+            <th class="cp-th">Code</th>
+            <th class="cp-th">Type</th>
+            <th class="cp-th">Infrastructure</th>
+            <th class="cp-th">Localisation</th>
+            <th class="cp-th cp-th--r">Mesure</th>
+            <th class="cp-th">État</th>
+            <th class="cp-th cp-th--c">Batterie</th>
+            <th class="cp-th">Signal</th>
+            <th class="cp-th">Dernière trans.</th>
+            <th class="cp-th">Technicien</th>
+            <th class="cp-th cp-th--r">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of capteursPage()"
+            class="cp-tr" [ngClass]="rowCls(c.statut)"
+            [class.cp-tr--offline]="c.statut === 'hors-ligne'">
+
+            <td class="cp-td cp-td--cb"><input type="checkbox" class="cp-checkbox"/></td>
+
+            <td class="cp-td" style="cursor:pointer" (click)="ouvrirDetail(c)">
+              <span class="cp-code" [class.cp-code--offline]="c.statut === 'hors-ligne'">{{ c.code }}</span>
+            </td>
+
+            <td class="cp-td">
+              <span class="cp-type-badge">{{ typeLabel(c.type) }}</span>
+            </td>
+
+            <td class="cp-td">
+              <span class="cp-infra-link">{{ c.infraNom }}</span>
+            </td>
+
+            <td class="cp-td cp-td--loc">
+              {{ c.commune }}<ng-container *ngIf="c.section"> · {{ c.section }}</ng-container>
+            </td>
+
+            <td class="cp-td cp-td--r">
+              <span class="cp-mesure" [ngClass]="valeurCls(c)">{{ valeurLabel(c) }}</span>
+            </td>
+
+            <td class="cp-td">
+              <span class="cp-badge" [ngClass]="statutCls(c.statut)">
+                <span class="cp-badge__dot"
+                  *ngIf="['critique','en-ligne'].includes(c.statut)"
+                  [class.cp-badge__dot--pulse]="c.statut === 'critique'"></span>
+                {{ statutLabel(c.statut) }}
+              </span>
+            </td>
+
+            <td class="cp-td cp-td--c">
+              <ng-container *ngIf="c.batterie != null; else noBatt">
+                <div class="cp-batt">
+                  <div class="cp-batt__bar">
+                    <div class="cp-batt__fill" [ngClass]="battCls(c.batterie)"
+                      [style.width.%]="battPct(c.batterie)"></div>
+                  </div>
+                  <span class="cp-batt__pct" [ngClass]="battCls(c.batterie)">{{ c.batterie }}%</span>
+                </div>
+              </ng-container>
+              <ng-template #noBatt><span class="cp-muted">—</span></ng-template>
+            </td>
+
+            <td class="cp-td">
+              <span class="cp-signal" [ngClass]="signalCls(c.signalBars)">
+                {{ signalDots(c.signalBars) }}
+              </span>
+            </td>
+
+            <td class="cp-td" [class.cp-td--stale]="derniereTransCls(c.derniereTransmission)">
+              {{ c.derniereTransmission }}
+            </td>
+
+            <td class="cp-td">
+              <span class="cp-tech">
+                <span class="cp-tech__avatar"
+                  [style.background]="c.technicienBg"
+                  [style.color]="c.technicienCouleur">{{ c.technicienInitiales }}</span>
+                {{ c.technicienNom }}
+              </span>
+            </td>
+
+            <td class="cp-td cp-td--actions">
+              <button class="cp-act-btn" type="button" title="Voir détail" (click)="ouvrirDetail(c)">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <button class="cp-act-btn" [class.cp-act-btn--primary]="c.statut === 'hors-ligne'"
+                type="button" title="Intervenir">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              </button>
+              <button class="cp-act-btn" type="button" title="Plus d'options">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table footer / pagination -->
+    <div class="cp-table-foot">
+      <span class="cp-table-foot__info">
+        Affichage {{ pageMinIdx() }}–{{ pageMaxIdx() }} sur {{ capteursFiltres().length }}
+      </span>
+      <div class="cp-table-foot__pages">
+        <button class="cp-page-btn" type="button" (click)="pagePrecedente()" [disabled]="pageActuelle() === 0">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="cp-page-label">{{ pageActuelle() + 1 }} / {{ totalPages() }}</span>
+        <button class="cp-page-btn" type="button" (click)="pageSuivante()" [disabled]="pageActuelle() >= totalPages() - 1">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /cp-table-card -->
+
+  <!-- ══════════════════ BANDEAU ESP32 ══════════════════ -->
+  <div class="cp-esp32-banner">
+    <div class="cp-esp32-icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#185FA5" stroke-width="1.8" stroke-linecap="round">
+        <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+        <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+        <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+        <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+        <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+      </svg>
+    </div>
+    <div class="cp-esp32-text">
+      <p class="cp-esp32-title">Prototype IoT — passerelle ESP32 connectée</p>
+      <p class="cp-esp32-sub">
+        Protocole MQTT · Topic
+        <code class="cp-esp32-topic">gestidlo/+/+/+</code>
+        · Dernière donnée reçue il y a 4s
+        · 3 types de capteurs actifs (Pression / Débit / Niveau)
+      </p>
+    </div>
+    <div class="cp-esp32-actions">
+      <button class="cp-btn" type="button">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Règles d'alerte
+      </button>
+      <button class="cp-btn" type="button">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Synchroniser
+      </button>
+    </div>
+  </div>
+
+</div><!-- /cp-page -->
+
+<!-- ══════════════════ MODAL AJOUTER CAPTEUR ══════════════════ -->
+<app-ajouter-capteur
+  *ngIf="ajouterVisible()"
+  (fermer)="ajouterVisible.set(false)"
+  (enregistre)="ajouterVisible.set(false)">
+</app-ajouter-capteur>
+
+<!-- ══════════════════ MODAL SCANNER QR ══════════════════ -->
+<app-scanner-qr
+  *ngIf="scannerVisible()"
+  (fermer)="scannerVisible.set(false)">
+</app-scanner-qr>
+
+<!-- ══════════════════ DRAWER DÉTAIL CAPTEUR ══════════════════ -->
+<app-capteur-detail-drawer
+  *ngIf="capteurSelectionne()"
+  [capteur]="capteurSelectionne()!"
+  [prevCapteur]="prevCapteurDe(capteurSelectionne()!)"
+  [nextCapteur]="nextCapteurDe(capteurSelectionne()!)"
+  [liste]="capteursFiltres()"
+  (fermer)="fermerDetail()"
+  (naviguer)="naviguerDetail($event)"
+  (selectionner)="capteurSelectionne.set($event)">
+</app-capteur-detail-drawer>

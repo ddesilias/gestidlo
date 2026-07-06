@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Wireframe – Modal Activer une zone AEP · GestiDlo</title>
+<style>
+  :root {
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --border-radius-lg: 12px;
+    --color-text-primary:     #111827;
+    --color-text-secondary:   #374151;
+    --color-text-tertiary:    #6b7280;
+    --color-text-success:     #15803d;
+    --color-text-warning:     #b45309;
+    --color-text-danger:      #dc2626;
+    --color-text-info:        #1d4ed8;
+    --color-background-primary:   #ffffff;
+    --color-background-secondary: #f9fafb;
+    --color-background-info:      #eff6ff;
+    --color-border-secondary: #d1d5db;
+    --color-border-tertiary:  #e5e7eb;
+    --color-border-info:      #93c5fd;
+  }
+  body {
+    background: #1f2937;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+    font-family: var(--font-sans);
+  }
+
+  .ez-field {
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: 6px;
+    padding: 7px 9px;
+    font-size: 12px;
+    background: var(--color-background-primary);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+  }
+  .ez-lbl {
+    font-size: 10px;
+    color: var(--color-text-tertiary);
+    margin-bottom: 3px;
+    display: block;
+  }
+  .ez-req { color: var(--color-text-info); }
+  .ez-sel { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<!-- Overlay backdrop -->
+<div style="width:100%;display:flex;align-items:flex-start;justify-content:center">
+  <div style="width:430px;max-width:100%;background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)">
+
+    <!-- ── En-tête ── -->
+    <div style="padding:12px 14px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">Activer une zone</div>
+        <div style="font-size:11px;color:var(--color-text-tertiary)">étape 1 – enregistrement · ~1 min</div>
+      </div>
+      <span style="font-size:18px;color:var(--color-text-tertiary);cursor:pointer" aria-label="Fermer">✕</span>
+    </div>
+
+    <!-- ── Fil d'étapes ── -->
+    <div style="display:flex;align-items:center;gap:4px;padding:10px 14px;background:var(--color-background-secondary)">
+
+      <!-- Étape 1 : active -->
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-info);font-weight:500">
+        <span style="width:18px;height:18px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:10px">1</span>
+        Enregistrer
+      </div>
+
+      <div style="flex:1;height:1px;background:var(--color-border-tertiary)"></div>
+
+      <!-- Étape 2 : inactive -->
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-tertiary)">
+        <span style="width:18px;height:18px;border-radius:50%;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:10px">2</span>
+        Recenser
+      </div>
+
+      <div style="flex:1;height:1px;background:var(--color-border-tertiary)"></div>
+
+      <!-- Étape 3 : inactive -->
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-tertiary)">
+        <span style="width:18px;height:18px;border-radius:50%;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:10px">3</span>
+        Valider
+      </div>
+
+    </div>
+
+    <!-- ── Corps du formulaire ── -->
+    <div style="padding:14px">
+
+      <div style="font-size:10px;color:var(--color-text-info);font-weight:500;margin-bottom:8px">
+        * Requis pour créer la zone
+      </div>
+
+      <!-- Nom de la zone -->
+      <div style="margin-bottom:10px">
+        <span class="ez-lbl">Nom de la zone <span class="ez-req">*</span></span>
+        <div class="ez-field" style="color:var(--color-text-primary)">Soisson</div>
+      </div>
+
+      <!-- Rattachement territorial -->
+      <div style="margin-bottom:4px">
+        <span class="ez-lbl">Rattachement territorial <span class="ez-req">*</span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div class="ez-field ez-sel" style="color:var(--color-text-primary)">
+          Ouest <span style="font-size:13px;color:var(--color-text-tertiary)">▾</span>
+        </div>
+        <div class="ez-field ez-sel" style="color:var(--color-text-primary)">
+          Tabarre <span style="font-size:13px;color:var(--color-text-tertiary)">▾</span>
+        </div>
+      </div>
+      <!-- Section communale -->
+      <div class="ez-field ez-sel" style="color:var(--color-text-primary);margin-bottom:4px">
+        7e Bellevue Chardonnières <span style="font-size:13px;color:var(--color-text-tertiary)">▾</span>
+      </div>
+      <div style="font-size:10px;color:var(--color-text-tertiary);margin-bottom:12px">
+        ↳ place la zone dans l'arbre territoire
+      </div>
+
+      <!-- Code zone (auto) -->
+      <div style="margin-bottom:14px">
+        <span class="ez-lbl">Code zone <span style="color:var(--color-text-tertiary)">(auto)</span></span>
+        <div class="ez-field ez-sel">
+          <span style="color:var(--color-text-primary)">HT-09-32-07</span>
+          <span style="font-size:9px;color:var(--color-text-info)">généré · éditable</span>
+        </div>
+      </div>
+
+      <!-- Champs optionnels -->
+      <div style="font-size:10px;color:var(--color-text-tertiary);font-weight:500;margin-bottom:8px">
+        Optionnel – complétable plus tard
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+        <div>
+          <span class="ez-lbl">Type d'adduction</span>
+          <div class="ez-field ez-sel">Refoulement <span style="font-size:13px;color:var(--color-text-tertiary)">▾</span></div>
+        </div>
+        <div>
+          <span class="ez-lbl">Année de référence</span>
+          <div class="ez-field" style="color:var(--color-text-primary)">2025</div>
+        </div>
+        <div>
+          <span class="ez-lbl">Source de production</span>
+          <div class="ez-field" style="color:var(--color-text-tertiary)">à définir</div>
+        </div>
+        <div>
+          <span class="ez-lbl">Responsable assigné</span>
+          <div class="ez-field ez-sel">J.-M. Louis <span style="font-size:13px;color:var(--color-text-tertiary)">▾</span></div>
+        </div>
+      </div>
+
+      <!-- Périmètre & recensement reportés -->
+      <div style="background:var(--color-background-secondary);border-radius:8px;padding:10px;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-secondary);font-weight:500;margin-bottom:6px">
+          ⏸ Périmètre &amp; recensement – reportés
+        </div>
+        <div style="display:grid;gap:3px;font-size:10px;color:var(--color-text-tertiary)">
+          <span>· Tracer le périmètre sur la carte</span>
+          <span>· Comptage du bâti · enquête terrain</span>
+          <span>· Points de consommation</span>
+        </div>
+        <div style="font-size:9px;color:var(--color-text-info);margin-top:6px">
+          non requis pour enregistrer · viendra à l'étape 2
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Pied de modal ── -->
+    <div style="padding:11px 14px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)">
+      <div style="font-size:10px;color:var(--color-text-tertiary);margin-bottom:8px">
+        ℹ La zone apparaît aussitôt dans le territoire avec l'état « à déployer ».
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <span style="font-size:12px;padding:6px 12px;border-radius:6px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);cursor:pointer">
+          Enregistrer comme brouillon
+        </span>
+        <span style="font-size:12px;padding:6px 12px;border-radius:6px;border:2px solid var(--color-border-info);color:var(--color-text-info);font-weight:500;cursor:pointer">
+          Enregistrer &amp; recenser →
+        </span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

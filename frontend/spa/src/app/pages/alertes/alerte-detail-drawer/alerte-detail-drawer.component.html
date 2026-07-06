@@ -1,0 +1,749 @@
+<div class="add-layout">
+
+  <!-- ── LEFT LIST SIDEBAR ────────────────────────────────────────────────── -->
+  <div class="add-list">
+    <span class="add-list__lbl">Liste</span>
+    <button *ngFor="let a of state.alertesFiltrees()"
+      class="add-list-item"
+      [class.add-list-item--active]="a.id === alerte.id"
+      [class.add-list-item--crit]="a.severity === 'critique'"
+      [class.add-list-item--haute]="a.severity === 'haute'"
+      [class.add-list-item--moy]="a.severity === 'moyenne'"
+      [class.add-list-item--basse]="a.severity === 'basse'"
+      type="button" (click)="state.selectionner(a)">
+      {{ a.code.slice(-3) }}
+    </button>
+  </div>
+
+  <!-- ── MAIN PANEL ───────────────────────────────────────────────────────── -->
+  <div class="add-main">
+
+    <!-- ── STICKY HEADER ──────────────────────────────────────────────────── -->
+    <div class="add-header">
+
+      <!-- Row 1: meta + nav -->
+      <div class="add-header-top">
+        <div class="add-header-meta">
+          <span class="add-code">{{ alerte.code }}</span>
+          <span class="add-sev-badge"
+            [style.background]="severityBg(alerte.severity)"
+            [style.color]="severityDot(alerte.severity)"
+            [class.add-sev-badge--pulse]="alerte.severity === 'critique'">
+            <span class="add-sev-dot"></span>
+            {{ severityLabel(alerte.severity).toUpperCase() }}
+          </span>
+          <span class="add-sla-lbl"
+            [class.add-sla-lbl--warn]="slaSt === 'warn'"
+            [class.add-sla-lbl--over]="slaSt === 'over'"
+            *ngIf="isActive(alerte.status)">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            SLA {{ slaRestantLabel }}
+          </span>
+          <!-- Palier d'escalade -->
+          <span class="add-palier-badge"
+            [class.add-palier-badge--0]="alerte.escaladeNiveau === 0"
+            [class.add-palier-badge--1]="alerte.escaladeNiveau === 1"
+            [class.add-palier-badge--2]="alerte.escaladeNiveau === 2">
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>
+            </svg>
+            {{ escaladeNiveauLabel }}
+            <ng-container *ngIf="alerte.escaladeType === 'automatique'">· auto</ng-container>
+            <ng-container *ngIf="alerte.escaladeType === 'manuelle'">· renfort</ng-container>
+          </span>
+          <span class="add-presence">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            Marc D. consulte aussi
+          </span>
+        </div>
+        <div class="add-nav">
+          <button class="add-nav-btn" type="button" (click)="allerPrecedent()" [disabled]="currentIdx <= 0" title="Précédente (K)">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="add-nav-pos">{{ currentIdx + 1 }} / {{ total }}</span>
+          <button class="add-nav-btn" type="button" (click)="allerSuivant()" [disabled]="currentIdx >= total - 1" title="Suivante (J)">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="add-nav-btn" type="button" title="Plein écran">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          </button>
+          <button class="add-nav-btn add-nav-btn--close" type="button" (click)="fermer.emit()" title="Fermer (Esc)">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Title + meta -->
+      <h3 class="add-title">{{ alerte.title }}</h3>
+      <p class="add-meta">
+        Ouverte par <span class="add-meta__link">{{ alerte.sensorCode || sourceLabel(alerte.source) }}</span>
+        · {{ dateLabel(alerte.createdAt) }} {{ timeLabel(alerte.createdAt) }}
+        · <span class="add-meta__link">{{ alerte.commune }}<ng-container *ngIf="alerte.section"> · {{ alerte.section }}</ng-container></span>
+      </p>
+
+      <!-- Status stepper — dot + line design -->
+      <div class="add-stepper">
+        <ng-container *ngFor="let step of STEPPER; let last = last">
+          <div class="add-step"
+            [class.add-step--done]="stepState(step.id) === 'done'"
+            [class.add-step--active]="stepState(step.id) === 'active'"
+            [class.add-step--todo]="stepState(step.id) === 'todo'">
+            <div class="add-step__node">
+              <svg *ngIf="stepState(step.id) === 'done'" viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span *ngIf="stepState(step.id) === 'active'" class="add-step-pulse"></span>
+            </div>
+            <span class="add-step__lbl">{{ step.label }}</span>
+          </div>
+          <div class="add-step__line" *ngIf="!last"
+            [class.add-step__line--done]="stepState(step.id) === 'done'">
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="add-action-row">
+        <button class="add-abtn add-abtn--blue" type="button" *ngIf="alerte.interventionId" (click)="onVoirIntervention()">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          Voir intervention
+        </button>
+        <button class="add-abtn" type="button" *ngIf="!alerte.interventionId && isActive(alerte.status)" (click)="onCreerIntervention()">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          + Intervention
+        </button>
+        <button class="add-abtn" type="button">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/>
+          </svg>
+          Réassigner
+        </button>
+        <button class="add-abtn" type="button" *ngIf="peutEscalader" (click)="onEscalader()">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>
+          </svg>
+          Escalader → {{ escaladeNiveauSuivantLabel }}
+        </button>
+        <button class="add-abtn add-abtn--green" type="button" (click)="setStatus('resolue')" *ngIf="isActive(alerte.status)">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Marquer résolue
+        </button>
+        <button class="add-abtn" type="button">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Exporter PDF
+        </button>
+        <button class="add-abtn" type="button">···</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="add-tabs">
+        <button class="add-tab" [class.add-tab--on]="activeTab === 'overview'"     type="button" (click)="activeTab = 'overview'">Vue d'ensemble</button>
+        <button class="add-tab" [class.add-tab--on]="activeTab === 'intervention'" type="button" (click)="activeTab = 'intervention'">Intervention</button>
+        <button class="add-tab" [class.add-tab--on]="activeTab === 'activite'"     type="button" (click)="activeTab = 'activite'">Activité <em class="add-tab__n">12</em></button>
+        <button class="add-tab" [class.add-tab--on]="activeTab === 'conformite'"   type="button" (click)="activeTab = 'conformite'">Conformité</button>
+        <button class="add-tab" [class.add-tab--on]="activeTab === 'audit'"        type="button" (click)="activeTab = 'audit'">Audit</button>
+      </div>
+
+    <!-- ── Escalade motif overlay ──────────────────────────────────────────── -->
+    <div class="add-esc-overlay" *ngIf="showEscaladeOverlay()">
+      <div class="add-esc-hd">
+        <span class="add-esc-title">Escalader vers {{ escaladeNiveauSuivantLabel }}</span>
+        <button class="add-esc-close" type="button" (click)="showEscaladeOverlay.set(false)">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <p class="add-esc-hint">Choisissez un motif (obligatoire) :</p>
+      <div class="add-esc-motifs">
+        <button *ngFor="let m of motifsEscalade"
+          class="add-esc-motif"
+          [class.add-esc-motif--sel]="escaladeMotifChoisi() === m"
+          type="button"
+          (click)="selectMotifPredefined(m)">
+          {{ m }}
+        </button>
+      </div>
+      <input class="add-esc-input" type="text"
+        placeholder="Autre motif…"
+        [(ngModel)]="escaladeMotifCustom"
+        (input)="onClearMotifChoisi()"/>
+      <div class="add-esc-footer">
+        <button class="add-esc-cancel" type="button" (click)="showEscaladeOverlay.set(false)">Annuler</button>
+        <button class="add-esc-confirm" type="button"
+          [disabled]="!escaladeMotifChoisi() && !escaladeMotifCustom.trim()"
+          (click)="confirmerEscalade()">
+          Confirmer l'escalade
+        </button>
+      </div>
+    </div>
+
+    </div><!-- /add-header -->
+
+    <!-- ── BODY ─────────────────────────────────────────────────────────── -->
+    <div class="add-body">
+
+      <ng-container *ngIf="activeTab === 'overview'">
+
+        <!-- ═══ 1. Source IoT ═══════════════════════════════════════════════ -->
+        <div class="add-sec" *ngIf="alerte.source === 'iot' && alerte.sensorCode">
+          <div class="add-sec__hd">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+            </svg>
+            <span class="add-sec__ttl">Source IoT — temps réel</span>
+            <span class="add-live-badge">
+              <span class="add-live-glow"></span>
+              Mesure live · 12s
+            </span>
+            <a class="add-sec__link" href="javascript:void(0)">Ouvrir capteur →</a>
+          </div>
+
+          <div class="add-iot-grid">
+            <!-- Left: sensor summary -->
+            <div class="add-iot-left">
+              <p class="add-iot-sublbl">Capteur</p>
+              <p class="add-iot-code">{{ alerte.sensorCode }}</p>
+              <div class="add-iot-value-row">
+                <!-- Min/24h = value that triggered the alert -->
+                <div class="add-iot-val-block">
+                  <span class="add-iot-val-lbl">Min / 24h</span>
+                  <div class="add-iot-val-main">
+                    <span class="add-iot-big">{{ alerte.sensorMeasuredValue }}</span>
+                    <span class="add-iot-unit">{{ alerte.sensorUnit }}</span>
+                  </div>
+                  <span class="add-iot-trend">↓ seuil franchi</span>
+                </div>
+                <div class="add-iot-val-sep" *ngIf="sensor()"></div>
+                <!-- Live current value from sensor -->
+                <div class="add-iot-val-block" *ngIf="sensor()">
+                  <span class="add-iot-val-lbl">Valeur live</span>
+                  <div class="add-iot-val-main">
+                    <span class="add-iot-big"
+                      [class.add-iot-big--ok]="sensor()!.value > (alerte.sensorThreshold || 0)">
+                      {{ sensor()!.value }}
+                    </span>
+                    <span class="add-iot-unit">{{ sensor()!.unit }}</span>
+                  </div>
+                  <span class="add-iot-trend add-iot-trend--ok"
+                    *ngIf="sensor()!.value > (alerte.sensorThreshold || 0)">↑ récupération</span>
+                  <span class="add-iot-trend"
+                    *ngIf="sensor()!.value <= (alerte.sensorThreshold || 0)">↓ toujours bas</span>
+                </div>
+              </div>
+              <div class="add-iot-stats">
+                <div>Seuil critique : <strong>{{ alerte.sensorThreshold }}{{ alerte.sensorUnit }}</strong></div>
+              </div>
+              <button class="add-iot-test-btn" type="button">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                </svg>
+                Tester capteur
+              </button>
+            </div>
+
+            <!-- Right: chart + neighbors -->
+            <div class="add-iot-right">
+              <div class="add-iot-chart-hd">
+                <span class="add-iot-chart-lbl">24 dernières heures</span>
+                <span class="add-iot-chart-warn">⚠ alerte à {{ timeLabel(alerte.createdAt) }}</span>
+              </div>
+              <svg viewBox="0 0 400 100" class="add-iot-svg" aria-hidden="true">
+                <rect x="0" y="62" width="400" height="38" fill="rgba(239,68,68,.07)"/>
+                <line x1="0" y1="62" x2="400" y2="62" stroke="rgba(239,68,68,.35)" stroke-width="0.8" stroke-dasharray="3,2"/>
+                <text x="3" y="59" font-size="7" fill="#ef4444" opacity="0.65">seuil {{ alerte.sensorThreshold }}{{ alerte.sensorUnit }}</text>
+                <line x1="0" y1="14" x2="400" y2="14" stroke="rgba(74,222,128,.25)" stroke-width="0.8" stroke-dasharray="3,2"/>
+                <text x="3" y="11" font-size="7" fill="#4ade80" opacity="0.65">normal</text>
+                <polyline
+                  points="0,11 25,10 50,11 75,14 100,12 125,17 150,23 175,36 200,46 225,53 250,59 275,65 300,69 325,72 350,74 375,76 395,78"
+                  fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-linejoin="round"/>
+                <line x1="152" y1="5" x2="152" y2="95" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="2,2"/>
+                <circle cx="152" cy="23" r="3" fill="#ef4444"/>
+                <text x="156" y="10" font-size="7" fill="#ef4444" font-weight="500">alerte</text>
+                <circle cx="395" cy="78" r="4" fill="#ef4444" stroke="#0b1220" stroke-width="1.5"/>
+                <text x="358" y="96" font-size="7" fill="#ef4444" font-weight="500">min {{ alerte.sensorMeasuredValue }}{{ alerte.sensorUnit }}</text>
+              </svg>
+
+              <div class="add-neighbors" *ngIf="capteurVoisins.length">
+                <p class="add-neighbors__lbl">Capteurs voisins (rayon 2km)</p>
+                <div class="add-nbr-grid">
+                  <div class="add-nbr-card" *ngFor="let c of capteurVoisins"
+                    [class.ok]="c.ok" [class.warn]="!c.ok">
+                    <div class="add-nbr-code">{{ c.code }}</div>
+                    <div class="add-nbr-val" [class.add-nbr-val--ok]="c.ok" [class.add-nbr-val--warn]="!c.ok">
+                      {{ c.value }} {{ c.unit }} <span *ngIf="c.ok">↑</span><span *ngIf="!c.ok">↓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ 2. Localisation & Intervention ══════════════════════════════ -->
+        <div class="add-2col">
+
+          <!-- Localisation -->
+          <div class="add-sec">
+            <div class="add-sec__hd">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span class="add-sec__ttl">Localisation &amp; impact</span>
+            </div>
+            <div class="add-minimap">
+              <svg viewBox="0 0 280 120" class="add-minimap-svg" aria-hidden="true">
+                <rect width="280" height="120" fill="rgba(14,165,233,.05)"/>
+                <path d="M0,80 Q60,60 120,75 T280,70 L280,120 L0,120 Z" fill="rgba(34,197,94,.07)"/>
+                <circle cx="140" cy="55" r="35" fill="rgba(239,68,68,.07)"/>
+                <circle cx="140" cy="55" r="22" fill="rgba(239,68,68,.12)"/>
+                <circle cx="140" cy="55" r="6" fill="#ef4444"/>
+                <circle cx="140" cy="55" r="3" fill="#fff"/>
+                <circle cx="105" cy="40" r="3" fill="#3b82f6"/>
+                <circle cx="170" cy="68" r="3" fill="#3b82f6"/>
+                <circle cx="125" cy="78" r="3" fill="#3b82f6"/>
+                <circle cx="165" cy="35" r="3" fill="#22c55e"/>
+                <text x="148" y="58" font-size="7" fill="#fff" font-weight="500">{{ infra?.code || '—' }}</text>
+                <text x="6" y="116" font-size="8" fill="#475569">{{ alerte.commune }} · {{ alerte.section }}</text>
+              </svg>
+              <div class="add-impact-grid">
+                <div>
+                  <div class="add-impact-lbl">Pop. impactée</div>
+                  <div class="add-impact-val">~{{ infra?.population || 1200 }} foyers</div>
+                </div>
+                <div>
+                  <div class="add-impact-lbl">Météo</div>
+                  <div class="add-impact-val">☀ 28°C · sec</div>
+                </div>
+                <div>
+                  <div class="add-impact-lbl">Accès route</div>
+                  <div class="add-impact-val add-impact-val--ok">Praticable</div>
+                </div>
+                <div>
+                  <div class="add-impact-lbl">Infrastructure</div>
+                  <div class="add-impact-val">{{ infra?.name || '—' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Intervention -->
+          <div class="add-sec">
+            <div class="add-sec__hd">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+              <span class="add-sec__ttl">
+                <ng-container *ngIf="alerte.interventionId">Intervention liée</ng-container>
+                <ng-container *ngIf="!alerte.interventionId">Intervention</ng-container>
+              </span>
+              <span class="add-sec__badge" *ngIf="alerte.interventionId">{{ alerte.interventionId }} →</span>
+            </div>
+
+            <!-- With assignment -->
+            <div *ngIf="alerte.assignment">
+              <div class="add-intv-tech">
+                <div class="add-intv-avatar">{{ initials(alerte.assignment!.technicianName) }}</div>
+                <div class="add-intv-info">
+                  <div class="add-intv-name">{{ alerte.assignment!.technicianName }}</div>
+                  <div class="add-intv-role">Technicien · {{ alerte.assignment!.institutionName }}</div>
+                </div>
+                <button class="add-intv-btn" type="button" title="Appeler">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.64 3.48 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </button>
+                <button class="add-intv-btn" type="button" title="Message">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="add-intv-status-card">
+                <div class="add-intv-stat-row">
+                  <span class="add-intv-stat-lbl">Statut</span>
+                  <span class="add-intv-stat-val add-intv-stat-val--warn">▶ Sur site · diagnostic</span>
+                </div>
+                <div class="add-intv-stat-row">
+                  <span class="add-intv-stat-lbl">ETA résolution</span>
+                  <span class="add-intv-stat-val">~ 1h20</span>
+                </div>
+              </div>
+              <div class="add-checklist">
+                <div class="add-cl-item add-cl-item--done">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Arrivée sur site
+                </div>
+                <div class="add-cl-item add-cl-item--done">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Inspection visuelle
+                </div>
+                <div class="add-cl-item add-cl-item--active">
+                  <span class="add-cl-ring"></span>
+                  Test vanne principale
+                </div>
+                <div class="add-cl-item add-cl-item--todo">
+                  <span class="add-cl-empty"></span>
+                  Réparation
+                </div>
+                <div class="add-cl-item add-cl-item--todo">
+                  <span class="add-cl-empty"></span>
+                  Test final &amp; validation
+                </div>
+              </div>
+            </div>
+
+            <!-- No assignment -->
+            <div class="add-no-intv" *ngIf="!alerte.assignment && isActive(alerte.status)">
+              <p class="add-no-intv__txt">Aucune intervention créée pour cette alerte.</p>
+              <button class="add-create-intv-btn" type="button" (click)="onCreerIntervention()">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Créer une intervention
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /add-2col -->
+
+        <!-- ═══ 3. Intelligence & corrélations ══════════════════════════════ -->
+        <div class="add-sec">
+          <div class="add-sec__hd">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <span class="add-sec__ttl">Intelligence &amp; corrélations</span>
+          </div>
+          <div class="add-intel-grid">
+            <div class="add-intel-card add-intel-card--warn">
+              <div class="add-intel-hd">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                CORRÉLATION
+              </div>
+              <p class="add-intel-body">3 capteurs voisins en anomalie simultanée</p>
+              <a class="add-intel-link" href="javascript:void(0)">Voir incident groupé</a>
+            </div>
+            <div class="add-intel-card">
+              <div class="add-intel-hd">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                RÉCURRENCE
+              </div>
+              <p class="add-intel-body"><strong>4 alertes</strong> sur {{ infra?.code || 'cette infra' }} en 6 mois</p>
+              <a class="add-intel-link" href="javascript:void(0)">Maintenance préventive</a>
+            </div>
+            <div class="add-intel-card add-intel-card--crit">
+              <div class="add-intel-hd">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                RISQUE
+              </div>
+              <p class="add-intel-body">Rupture totale dans <strong>~4h</strong> si non traité</p>
+              <p class="add-intel-cause">Cause probable : fuite conduite principale</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ 4. Conséquences & conformité ════════════════════════════════ -->
+        <div class="add-sec">
+          <div class="add-sec__hd">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span class="add-sec__ttl">Conséquences &amp; conformité</span>
+          </div>
+          <div class="add-cons-grid">
+            <div class="add-cons-card">
+              <div class="add-cons-lbl">Eau perdue</div>
+              <div class="add-cons-val add-cons-val--red">~ 850 L</div>
+              <div class="add-cons-sub">cumul depuis {{ timeLabel(alerte.createdAt) }}</div>
+            </div>
+            <div class="add-cons-card">
+              <div class="add-cons-lbl">Qualité eau</div>
+              <div class="add-cons-val add-cons-val--green">✓ conforme</div>
+              <div class="add-cons-sub add-cons-sub--link">test programmé</div>
+            </div>
+            <div class="add-cons-card">
+              <div class="add-cons-lbl">Conformité</div>
+              <div class="add-cons-val add-cons-val--warn">⚠ à déclarer</div>
+              <div class="add-cons-sub add-cons-sub--link">délai 24h</div>
+            </div>
+            <div class="add-cons-card">
+              <div class="add-cons-lbl">Coût cumulé</div>
+              <div class="add-cons-val">3 200 HTG</div>
+              <div class="add-cons-sub">M.O + pièces + perte</div>
+            </div>
+          </div>
+          <div class="add-action-pills">
+            <button class="add-action-pill" type="button">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              Notifier citoyens ({{ infra?.population || 1200 }})
+            </button>
+            <button class="add-action-pill" type="button">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              Générer rapport DINEPA
+            </button>
+            <button class="add-action-pill" type="button">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                <line x1="12" y1="20" x2="12.01" y2="20"/>
+              </svg>
+              Affichage public
+            </button>
+          </div>
+        </div>
+
+        <!-- ═══ 5. Activité & collaboration ══════════════════════════════════ -->
+        <div class="add-sec">
+          <div class="add-sec__hd">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round">
+              <line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/>
+              <line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/>
+            </svg>
+            <span class="add-sec__ttl">Activité &amp; collaboration</span>
+            <span class="add-sec__count">12 événements</span>
+          </div>
+
+          <div class="add-timeline">
+
+            <div class="add-tl-item">
+              <div class="add-tl-dot add-tl-dot--warn"></div>
+              <div class="add-tl-content">
+                <div class="add-tl-row">
+                  <span class="add-tl-author">Marc D.</span>
+                  <span class="add-tl-time">a commenté · {{ timeLabel(alerte.updatedAt) }}</span>
+                </div>
+                <div class="add-tl-comment">
+                  Anomalie détectée sur la conduite principale.
+                  <span class="add-tl-mention">{{ '@' + (alerte.assignment?.technicianName || 'Technicien') }}</span>
+                  vérifier en priorité.
+                </div>
+              </div>
+            </div>
+
+            <div class="add-tl-item" *ngIf="alerte.assignment">
+              <div class="add-tl-dot add-tl-dot--green"></div>
+              <div class="add-tl-content">
+                <div class="add-tl-row">
+                  <span class="add-tl-author">{{ alerte.assignment!.technicianName }}</span>
+                  <span class="add-tl-time">a ajouté 2 photos terrain · {{ timeLabel(alerte.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="add-tl-item" *ngIf="alerte.assignment">
+              <div class="add-tl-dot add-tl-dot--gray"></div>
+              <div class="add-tl-sys">
+                <strong>{{ alerte.assignment!.technicianName }}</strong> a accusé réception et est en route
+              </div>
+            </div>
+
+            <div class="add-tl-item">
+              <div class="add-tl-dot add-tl-dot--gray"></div>
+              <div class="add-tl-sys">
+                Notification envoyée à <strong>{{ alerte.assignment?.technicianName || 'équipe de garde' }}</strong>
+              </div>
+            </div>
+
+            <div class="add-tl-item">
+              <div class="add-tl-dot add-tl-dot--red"></div>
+              <div class="add-tl-sys">
+                <strong class="add-tl-crit">Alerte déclenchée</strong>
+                par <span class="add-tl-mono">{{ alerte.sensorCode || sourceLabel(alerte.source) }}</span>
+                · {{ dateLabel(alerte.createdAt) }} {{ timeLabel(alerte.createdAt) }}
+              </div>
+            </div>
+
+          </div>
+
+          <div class="add-comment-box">
+            <div class="add-comment-avatar">AD</div>
+            <input class="add-comment-input" type="text"
+              placeholder="Écrire un commentaire… @mentionner, #tâche, joindre fichier"/>
+            <button class="add-comment-send" type="button">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ═══ 6. Liaisons croisées ═════════════════════════════════════════ -->
+        <div class="add-sec add-sec--last">
+          <div class="add-sec__hd">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            <span class="add-sec__ttl add-sec__ttl--sm">LIAISONS CROISÉES</span>
+          </div>
+          <div class="add-link-pills">
+            <button class="add-link-pill" type="button" *ngIf="infra">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+              </svg>
+              Infrastructure {{ infra.code }}
+            </button>
+            <button class="add-link-pill" type="button" *ngIf="alerte.sensorCode">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+              </svg>
+              Capteur {{ alerte.sensorCode }}
+            </button>
+            <button class="add-link-pill" type="button" *ngIf="alerte.interventionId">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+              Intervention {{ alerte.interventionId }}
+            </button>
+            <button class="add-link-pill" type="button">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+              Ressource eau
+            </button>
+            <button class="add-link-pill" type="button">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              Conformité DINEPA
+            </button>
+            <button class="add-link-pill" type="button">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              Vue Salle (carte)
+            </button>
+          </div>
+        </div>
+
+      </ng-container><!-- /overview -->
+
+      <!-- ── ACTIVITÉ tab ────────────────────────────────────────────────── -->
+      <ng-container *ngIf="activeTab === 'activite'">
+
+        <!-- Escalade history -->
+        <div class="add-sec" *ngIf="escaladeEvents.length">
+          <div class="add-sec__hd">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round">
+              <polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>
+            </svg>
+            <span class="add-sec__ttl">Historique d'escalade</span>
+            <span class="add-sec__count">{{ escaladeEvents.length }} événement{{ escaladeEvents.length > 1 ? 's' : '' }}</span>
+          </div>
+          <div class="add-timeline">
+            <div *ngFor="let ev of escaladeEvents" class="add-tl-item">
+              <div class="add-tl-dot"
+                [style.background]="escaladeTypeColor(ev.type)"
+                [style.box-shadow]="'0 0 0 3px ' + escaladeTypeColor(ev.type) + '22'">
+              </div>
+              <div class="add-tl-content">
+                <div class="add-tl-row">
+                  <span class="add-esc-type-badge"
+                    [class.add-esc-type-badge--auto]="ev.type === 'automatique'"
+                    [class.add-esc-type-badge--man]="ev.type === 'manuelle'">
+                    {{ escaladeTypeLabel(ev.type) }}
+                  </span>
+                  <span class="add-tl-time">{{ ev.auteur }} · {{ timeLabel(ev.date) }}</span>
+                </div>
+                <div class="add-tl-sys">
+                  Palier {{ ev.palierDepart }} → Palier {{ ev.palierArrive }}
+                  ({{ ev.palierDepart === 0 ? 'TEPAC' : 'URD' }} →
+                   {{ ev.palierArrive === 1 ? 'URD' : 'DINEPA' }})
+                </div>
+                <div class="add-tl-comment" *ngIf="ev.motif">{{ ev.motif }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="add-sec add-sec--last">
+          <div class="add-sec__hd">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round">
+              <line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/>
+              <line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/>
+            </svg>
+            <span class="add-sec__ttl">Journal d'activité</span>
+            <span class="add-sec__count">{{ alerte.assignment ? 4 : 2 }} événements</span>
+          </div>
+          <div class="add-timeline">
+            <div class="add-tl-item" *ngIf="alerte.assignment">
+              <div class="add-tl-dot add-tl-dot--warn"></div>
+              <div class="add-tl-content">
+                <div class="add-tl-row">
+                  <span class="add-tl-author">Marc D.</span>
+                  <span class="add-tl-time">a commenté · {{ timeLabel(alerte.updatedAt) }}</span>
+                </div>
+                <div class="add-tl-comment">Anomalie détectée sur la conduite principale.</div>
+              </div>
+            </div>
+            <div class="add-tl-item" *ngIf="alerte.assignment">
+              <div class="add-tl-dot add-tl-dot--green"></div>
+              <div class="add-tl-content">
+                <div class="add-tl-row">
+                  <span class="add-tl-author">{{ alerte.assignment!.technicianName }}</span>
+                  <span class="add-tl-time">a accusé réception · {{ timeLabel(alerte.assignment!.assignedAt) }}</span>
+                </div>
+                <div class="add-tl-sys">Intervention créée — {{ alerte.assignment!.institutionName }}</div>
+              </div>
+            </div>
+            <div class="add-tl-item">
+              <div class="add-tl-dot add-tl-dot--gray"></div>
+              <div class="add-tl-sys">
+                Notification envoyée à <strong>{{ alerte.assignment?.technicianName || 'équipe de garde' }}</strong>
+              </div>
+            </div>
+            <div class="add-tl-item">
+              <div class="add-tl-dot add-tl-dot--red"></div>
+              <div class="add-tl-sys">
+                <strong class="add-tl-crit">Alerte déclenchée</strong>
+                par <span class="add-tl-mono">{{ alerte.sensorCode || sourceLabel(alerte.source) }}</span>
+                · {{ dateLabel(alerte.createdAt) }} {{ timeLabel(alerte.createdAt) }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </ng-container><!-- /activite -->
+
+      <!-- Other tabs stub -->
+      <div class="add-tab-stub" *ngIf="activeTab !== 'overview' && activeTab !== 'activite'">
+        Onglet <em>{{ activeTab }}</em> — contenu à venir
+      </div>
+
+    </div><!-- /add-body -->
+  </div><!-- /add-main -->
+
+</div><!-- /add-layout -->

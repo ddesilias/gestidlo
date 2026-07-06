@@ -1,0 +1,171 @@
+<div class="csm-overlay" *ngIf="visible" (click)="fermer.emit()">
+  <div class="csm-card" (click)="$event.stopPropagation()">
+
+    <!-- ── En-tête ── -->
+    <div class="csm-header">
+      <div class="csm-header__left">
+        <div class="csm-header__icon">
+          <i class="ti ti-shield-plus"></i>
+        </div>
+        <div>
+          <h3 class="csm-header__title">Créer un compte superviseur URD</h3>
+          <p class="csm-header__sub">Super Admin DINEPA · attribue une identité opérationnelle départementale</p>
+        </div>
+      </div>
+      <button class="csm-close" type="button" (click)="fermer.emit()">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <!-- ── Corps scrollable ── -->
+    <div class="csm-body">
+
+      <!-- Bandeau info -->
+      <div class="csm-banner">
+        <i class="ti ti-info-circle csm-banner__icon"></i>
+        <p class="csm-banner__text">
+          Ce que vous définissez ici <strong>conditionne tout</strong> ce que le superviseur verra : sa carte sera
+          limitée à son URD, ses points filtrés à son département, ses pouvoirs définis par ses permissions.
+        </p>
+      </div>
+
+      <!-- ══ 1 · Identité ══ -->
+      <div class="csm-section">
+        <div class="csm-section__label csm-section__label--blue">1 · IDENTITÉ DE LA PERSONNE</div>
+        <div class="csm-grid-2">
+          <div class="csm-field">
+            <label class="csm-label">Nom complet <span class="csm-req">*</span></label>
+            <input class="csm-input" type="text" [(ngModel)]="nom" placeholder="Prénom Nom"/>
+          </div>
+          <div class="csm-field">
+            <label class="csm-label">Email professionnel <span class="csm-req">*</span></label>
+            <input class="csm-input" type="email" [(ngModel)]="email" placeholder="prenom.nom@dinepa.gouv.ht"/>
+          </div>
+          <div class="csm-field">
+            <label class="csm-label">Téléphone <span class="csm-req">*</span></label>
+            <input class="csm-input" type="tel" [(ngModel)]="telephone" placeholder="+509 XXXX XXXX"/>
+          </div>
+          <div class="csm-field">
+            <label class="csm-label">Fonction</label>
+            <input class="csm-input" type="text" [(ngModel)]="fonction"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 2 · Rattachement URD ══ -->
+      <div class="csm-section">
+        <div class="csm-section__label csm-section__label--green">2 · RATTACHEMENT URD — DÉFINIT LE PÉRIMÈTRE</div>
+        <div class="csm-grid-2 csm-mb">
+
+          <!-- URD select — verrouillé si pré-rempli depuis la fiche URD -->
+          <div class="csm-field">
+            <label class="csm-label">URD de rattachement <span class="csm-req">*</span></label>
+            <div *ngIf="isLocked" class="csm-locked-field">
+              <i class="ti ti-lock csm-locked-field__ico"></i>
+              <span class="csm-locked-field__val">{{ selectedUrd?.nom ?? selectedUrdId }}</span>
+            </div>
+            <select *ngIf="!isLocked"
+                    class="csm-select csm-select--green"
+                    [(ngModel)]="selectedUrdId"
+                    (ngModelChange)="onUrdChange()">
+              <option *ngFor="let u of urdList" [value]="u.id">▶ {{ u.nom }}</option>
+            </select>
+          </div>
+
+          <!-- Rôle — unique pour les superviseurs URD -->
+          <div class="csm-field">
+            <label class="csm-label">Rôle <span class="csm-req">*</span></label>
+            <select class="csm-select csm-select--green" disabled>
+              <option>▶ Superviseur URD</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Département couvert — toujours verrouillé (URD = 1 département) -->
+        <label class="csm-label">
+          Département couvert
+          <span style="color:#6B7785;font-weight:400"> — déduit de l'URD · verrouillé</span>
+        </label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap">
+          <span class="csm-dept-chip">
+            <i class="ti ti-map-pin"></i>
+            département {{ derivedDept || '—' }}
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#6B7785">
+            <i class="ti ti-lock" style="font-size:11px;"></i>
+            une URD = un seul département
+          </span>
+        </div>
+      </div>
+
+      <!-- ══ 3 · Identifiants ══ -->
+      <div class="csm-section">
+        <div class="csm-section__label csm-section__label--amber">3 · IDENTIFIANTS DE CONNEXION — CE QU'IL TAPERA SUR /LOGIN</div>
+        <div class="csm-creds-box">
+          <div class="csm-grid-2 csm-mb">
+            <div class="csm-field">
+              <label class="csm-label">Nom d'utilisateur <span class="csm-req">*</span></label>
+              <div class="csm-input-wrap">
+                <i class="ti ti-user csm-input-wrap__ico"></i>
+                <input class="csm-input csm-input--mono csm-input--amber csm-input--ico"
+                       type="text" [(ngModel)]="username"/>
+              </div>
+            </div>
+            <div class="csm-field">
+              <label class="csm-label">Mot de passe provisoire <span class="csm-req">*</span></label>
+              <div class="csm-input-wrap">
+                <i class="ti ti-lock csm-input-wrap__ico"></i>
+                <input class="csm-input csm-input--mono csm-input--amber csm-input--ico csm-input--gen"
+                       type="text" [(ngModel)]="password"/>
+                <button class="csm-gen-btn" type="button" (click)="generatePassword()">Générer</button>
+              </div>
+            </div>
+          </div>
+          <label class="csm-check-label">
+            <input type="checkbox" [(ngModel)]="forceChange" class="csm-checkbox"/>
+            <span>Forcer le changement de mot de passe à la première connexion (recommandé)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ══ 4 · Pouvoirs ══ -->
+      <div class="csm-section" style="margin-bottom:0">
+        <div class="csm-section__label csm-section__label--violet">4 · POUVOIRS ACCORDÉS — CE QU'IL POURRA FAIRE</div>
+        <div class="csm-grid-2">
+          <label *ngFor="let p of permDefs"
+                 class="csm-perm-item"
+                 [class.csm-perm-item--on]="hasPerm(p.id)">
+            <input type="checkbox" [checked]="hasPerm(p.id)" (change)="togglePerm(p.id)" class="csm-checkbox"/>
+            <i [ngClass]="'ti ' + p.icon" [style.color]="hasPerm(p.id) ? p.color : '#6B7785'"></i>
+            <span class="csm-perm-item__lbl" [class.csm-perm-item__lbl--dim]="!hasPerm(p.id)">{{ p.label }}</span>
+          </label>
+        </div>
+      </div>
+
+    </div><!-- /csm-body -->
+
+    <!-- ── Pied de page ── -->
+    <div class="csm-footer">
+      <div *ngIf="errorMsg" class="csm-error-banner">
+        <i class="ti ti-alert-triangle"></i>
+        {{ errorMsg }}
+      </div>
+      <span class="csm-footer__trace">
+        <i class="ti ti-shield-check" style="color:#34D399;"></i>
+        Création tracée dans le journal d'audit DINEPA
+      </span>
+      <div class="csm-footer__btns">
+        <button class="csm-btn csm-btn--ghost" type="button"
+                (click)="fermer.emit()" [disabled]="loading">Annuler</button>
+        <button class="csm-btn csm-btn--create" type="button"
+                (click)="onCreer()"
+                [disabled]="loading || !nom.trim() || !username.trim() || !password.trim()">
+          <span *ngIf="loading" class="csm-spinner"></span>
+          <i *ngIf="!loading" class="ti ti-check"></i>
+          {{ loading ? 'Création en cours…' : 'Créer le compte & envoyer les accès' }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

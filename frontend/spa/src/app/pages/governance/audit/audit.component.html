@@ -1,0 +1,57 @@
+<app-gov-shell title="Audit & Journaux" [moduleNum]="7">
+
+  <div class="aud-header">
+    <div class="aud-header__icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <div>
+      <h2 class="aud-header__h2">Audit & Journaux d'activité</h2>
+      <p class="aud-header__sub">Traçabilité complète · 1 247 événements · conservation 90 jours</p>
+    </div>
+    <button class="aud-btn">Exporter journal</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="aud-filters">
+    <div class="aud-search">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Rechercher utilisateur, action, module…" [value]="recherche()" (input)="recherche.set($any($event.target).value)"/>
+    </div>
+    <div class="aud-type-filters">
+      <button class="aud-tf" [class.aud-tf--active]="typeFilter()==='tous'"   (click)="typeFilter.set('tous')">Tous</button>
+      <button class="aud-tf" [class.aud-tf--active]="typeFilter()==='create'" (click)="typeFilter.set('create')">Créations</button>
+      <button class="aud-tf" [class.aud-tf--active]="typeFilter()==='update'" (click)="typeFilter.set('update')">Modifications</button>
+      <button class="aud-tf" [class.aud-tf--active]="typeFilter()==='delete'" (click)="typeFilter.set('delete')">Suppressions</button>
+      <button class="aud-tf" [class.aud-tf--active]="typeFilter()==='login'"  (click)="typeFilter.set('login')">Connexions</button>
+      <button class="aud-tf" [class.aud-tf--active]="typeFilter()==='export'" (click)="typeFilter.set('export')">Exports</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="aud-panel">
+    <table class="aud-table">
+      <thead><tr><th>#</th><th>Horodatage</th><th>Utilisateur</th><th>Action</th><th>Module</th><th>Détail</th><th>IP</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let e of events" class="aud-row">
+          <td class="aud-mono">{{ e.id }}</td>
+          <td class="aud-ts">{{ e.horodatage }}</td>
+          <td class="aud-user">{{ e.utilisateur }}</td>
+          <td class="aud-action">{{ e.action }}</td>
+          <td><span class="aud-module">{{ e.module }}</span></td>
+          <td class="aud-detail">{{ e.detail }}</td>
+          <td class="aud-ip">{{ e.ip }}</td>
+          <td><span class="aud-type" [ngClass]="typeCls(e.type)">{{ e.type }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="aud-foot">
+      <span>8 affichés sur 1 247 événements · 30 derniers jours</span>
+      <div class="aud-pag">
+        <button class="aud-pg">‹</button>
+        <span>1 / 156</span>
+        <button class="aud-pg">›</button>
+      </div>
+    </div>
+  </div>
+
+</app-gov-shell>
