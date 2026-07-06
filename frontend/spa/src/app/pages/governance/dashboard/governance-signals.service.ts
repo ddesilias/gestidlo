@@ -39,6 +39,18 @@ export interface SignalTile {
   statut: Statut | 'neutre'; route: string;
 }
 
+/**
+ * Carte du « Résumé exécutif » (§ wireframe) — plus riche qu'une tuile-signal : tag de gravité,
+ * grande valeur, deux sous-lignes, action. `route` → RouterLink ; `scopeDept` → bouton qui pilote
+ * le scope (carte « URD la plus critique »). Chaque carte est branchée sur un signal RÉEL.
+ */
+export interface ExecCard {
+  key: string; label: string; tag?: string; tagStatut?: Statut;
+  value: string; sub1: string; sub2: string;
+  statut: Statut | 'neutre'; actionLabel: string;
+  route?: string; scopeDept?: string;
+}
+
 /** Santé d'un département — indice UNIQUE (carte + classement), dérivé du store partagé. */
 export interface DeptSante {
   id: string; nom: string; couverture: number; alertes: number;
@@ -229,24 +241,96 @@ export class GovernanceSignalsService {
   });
 
   // ── Zone A : 6 tuiles-signal ───────────────────────────────────────────────
+  /**
+   * Rangée « structurelle » — uniquement les 3 KPI absents du Résumé exécutif (Couverture, Conformité,
+   * Pop. desservie). Alertes / SLA / À valider ont été RETIRÉS d'ici : ils vivent dans le Résumé exécutif
+   * (Alertes critiques, Interventions/SLA, Rapports) → fin du doublon.
+   */
   readonly tiles = computed<SignalTile[]>(() => {
     const cov = this.couvertureNationale();
     return [
-      { key: 'conformite', label: 'Conformité', value: `${ESTIM.conformiteScore}%`,
-        sub: `cible ${ESTIM.conformiteCible} · est.`, statut: statutHaut(ESTIM.conformiteScore, 90, 75), route: '/admin/governance/conformite' },
       { key: 'couverture', label: 'Couverture', value: `${cov}%`,
         sub: `${this.sectionsCouvertes()}/${this.sectionsTotal()} sections`, statut: statutHaut(cov, 25, 10), route: '/admin/governance/territoire' },
+      { key: 'conformite', label: 'Conformité', value: `${ESTIM.conformiteScore}%`,
+        sub: `cible ${ESTIM.conformiteCible} · est.`, statut: statutHaut(ESTIM.conformiteScore, 90, 75), route: '/admin/governance/conformite' },
       { key: 'population', label: 'Pop. desservie', value: this.populationDesservieLabel(),
         sub: 'habitants', statut: 'neutre', route: '/admin/governance/territoire' },
-      { key: 'alertes', label: 'Alertes actives', value: `${this.alertesActives()}`,
-        sub: 'en cours', statut: this.alertesActives() ? 'attention' : 'ok', route: '/admin/alertes' },
-      { key: 'sla', label: 'SLA respectés',
-        value: this.slaRespectePct() !== null ? `${this.slaRespectePct()}%` : 'n/d',
-        sub: this.mttrHeures() !== null ? `MTTR ${this.mttrHeures()} h` : 'aucune résolue',
-        statut: this.slaRespectePct() !== null ? statutHaut(this.slaRespectePct()!, 90, 70) : 'neutre',
-        route: '/admin/governance/regles' },
-      { key: 'avalider', label: 'À valider', value: `${this.nbAValider()} ›`,
-        sub: 'file de validation', statut: 'neutre', route: '/admin/rapports' },
+    ];
+  });
+
+  /**
+   * Santé réseau (0–100) — composite OPÉRATIONNEL, moyenne pondérée de sous-scores RÉELS, scopée.
+   * Poids validés : 35 % alertes · 30 % interventions · 20 % rapports · 15 % capteurs (couverture
+   * volontairement exclue : structurelle, pas un indicateur de santé). Zéro valeur inventée.
+   */
+  readonly santeReseau = computed<number>(() => {
+    const crit = this.alertesCritiquesScope().length;
+    const sAlertes = 100 - Math.min(100, crit * 15);
+
+    const sla = this.slaRespectePct();
+    const sInterv = sla !== null ? sla : 100 - Math.min(100, this.interventionsEnRetardCount() * 20);
+
+    const sRapports = 100 - Math.min(100, this.nbAValiderVieux() * 20);
+
+    const caps = this.capteursScope();
+    const sCapteurs = caps.length
+      ? Math.round((caps.filter(c => c.statut !== 'hors-ligne').length / caps.length) * 100) : 100;
+
+    return Math.round(0.35 * sAlertes + 0.30 * sInterv + 0.20 * sRapports + 0.15 * sCapteurs);
+  });
+
+  // ── Résumé exécutif (§ wireframe) — cartes riches, chacune sur un signal RÉEL ──────────────────
+  readonly resumeExecutif = computed<ExecCard[]>(() => {
+    const sante = this.santeReseau();
+    const santeStatut = statutHaut(sante, 90, 75);
+    const santeBande = sante >= 90 ? 'Bon' : sante >= 75 ? 'À surveiller' : sante >= 60 ? 'Dégradé' : 'Critique';
+
+    const nbCrit = this.alertesCritiquesScope().length;
+    const nonAss = this.alertesCritNonAssignees();
+    const critVieilles = this.alertesCritVieilles();
+    const aValider = this.nbAValider();
+    const rapVieux = this.nbAValiderVieux();
+    const retard = this.interventionsEnRetardCount();
+    const mttr = this.mttrHeures();
+    const sla = this.slaRespectePct();
+    const pop = this.popAffectee();
+    const nbComm = this.nbCommunesAffectees();
+    const pire = this.classement()[0];
+
+    return [
+      { key: 'sante', label: 'Santé réseau', tag: santeBande, tagStatut: santeStatut,
+        value: `${sante}%`, sub1: 'composite opérationnel', sub2: 'alertes · interv · rapports · capteurs',
+        statut: santeStatut, actionLabel: 'Voir le détail', route: '/admin/governance/territoire' },
+
+      { key: 'alertes-crit', label: 'Alertes critiques', tag: nbCrit ? 'Critique' : undefined, tagStatut: 'critique',
+        value: `${nbCrit}`,
+        sub1: nonAss ? `${nonAss} non assignée${nonAss > 1 ? 's' : ''}` : 'toutes prises en charge',
+        sub2: critVieilles ? `${critVieilles} > 48 h` : '',
+        statut: nbCrit ? 'critique' : 'ok', actionLabel: 'Voir les alertes', route: '/admin/alertes' },
+
+      { key: 'rapports', label: 'Rapports à valider',
+        value: `${aValider}`,
+        sub1: rapVieux ? `${rapVieux} > 48 h` : 'aucun en retard',
+        sub2: 'file de validation',
+        statut: rapVieux ? 'attention' : aValider ? 'neutre' : 'ok', actionLabel: 'Valider les rapports', route: '/admin/rapports' },
+
+      { key: 'interventions', label: 'Interventions en retard',
+        value: `${retard}`,
+        sub1: mttr !== null ? `MTTR ${mttr} h` : 'MTTR n/d',
+        sub2: sla !== null ? `SLA respecté ${sla}%` : 'aucune résolue',
+        statut: retard ? 'attention' : 'ok', actionLabel: 'Voir interventions', route: '/admin/interventions' },
+
+      { key: 'pop-affectee', label: 'Pop. potentiellement affectée',
+        value: pop ? pop.toLocaleString('fr-FR') : '0',
+        sub1: nbComm ? `${nbComm} commune${nbComm > 1 ? 's' : ''} concernée${nbComm > 1 ? 's' : ''}` : 'aucune',
+        sub2: 'alerte critique active',
+        statut: pop ? 'attention' : 'ok', actionLabel: 'Voir la carte', route: '/admin/alertes' },
+
+      { key: 'urd-critique', label: 'URD la plus critique',
+        value: pire ? pire.nom : '—',
+        sub1: pire ? `couverture ${pire.couverture}%` : 'aucune déployée',
+        sub2: pire ? `${pire.alertes} alerte${pire.alertes > 1 ? 's' : ''} active${pire.alertes > 1 ? 's' : ''}` : '',
+        statut: pire ? pire.statut : 'neutre', actionLabel: "Analyser l'URD", scopeDept: pire?.nom },
     ];
   });
 
@@ -378,6 +462,26 @@ export class GovernanceSignalsService {
   private readonly alertesCritiquesScope = computed(() =>
     this.alertesActivesListe().filter(a => a.severity === 'critique'),
   );
+  /** Alertes critiques sans prise en charge (statut ouvert ou aucune affectation). */
+  private readonly alertesCritNonAssignees = computed(() =>
+    this.alertesCritiquesScope().filter(a => a.status === 'ouverte' || !a.assignment).length,
+  );
+  /** Alertes critiques ouvertes depuis plus de 48 h. */
+  private readonly alertesCritVieilles = computed(() =>
+    this.alertesCritiquesScope().filter(a => (Date.now() - new Date(a.createdAt).getTime()) / 3_600_000 > 48).length,
+  );
+  /** Communes (normalisées) touchées par ≥1 alerte critique active, dans le scope. */
+  private readonly communesAlerteCritique = computed<Set<string>>(() =>
+    new Set(this.alertesCritiquesScope().map(a => norm(a.commune ?? '')).filter(Boolean)),
+  );
+  /** Population potentiellement affectée = Σ populationCible des zones ACTIVE des communes en alerte critique. */
+  readonly popAffectee = computed(() => {
+    const communes = this.communesAlerteCritique();
+    return this.zonesActivesScope()
+      .filter(z => communes.has(norm(z.commune ?? '')))
+      .reduce((s, z) => s + (z.populationCible ?? 0), 0);
+  });
+  readonly nbCommunesAffectees = computed(() => this.communesAlerteCritique().size);
   private readonly interventionsNonAssignees = computed(() =>
     this.interventionsScope().filter(i => ['creee', 'envoyee'].includes(i.status) || !i.technicianId),
   );

@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { SharedDrawersService } from '../shared/shared-drawers.service';
 import { GovernanceSignalsService } from './governance/dashboard/governance-signals.service';
 import { GovernanceSignalTileComponent } from './governance/dashboard/governance-signal-tile.component';
+import { GovernanceExecSummaryComponent } from './governance/dashboard/governance-exec-summary.component';
 import { GovernanceMapComponent } from './governance/dashboard/governance-map.component';
 import { DeptRankingComponent } from './governance/dashboard/dept-ranking.component';
 import { ComplianceTrendComponent } from './governance/dashboard/compliance-trend.component';
@@ -22,7 +23,7 @@ import { GovernancePilotageComponent } from './governance/dashboard/governance-p
   standalone: true,
   imports: [
     CommonModule, RouterLink,
-    GovernanceSignalTileComponent, GovernanceMapComponent, DeptRankingComponent,
+    GovernanceSignalTileComponent, GovernanceExecSummaryComponent, GovernanceMapComponent, DeptRankingComponent,
     ComplianceTrendComponent, GovernancePilotageComponent,
   ],
   templateUrl: './governance-page.component.html',

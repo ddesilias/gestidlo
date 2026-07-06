@@ -41,6 +41,10 @@
     </span>
   </p>
 
+  <!-- ══ RÉSUMÉ EXÉCUTIF : cartes décisionnelles (suivent le scope) ════ -->
+  <div class="gov-dash__sec-title"><h3>Résumé exécutif</h3><span class="gov-dash__sec-line"></span></div>
+  <app-governance-exec-summary [cards]="sig.resumeExecutif()" (drill)="drillDown($event)"></app-governance-exec-summary>
+
   <!-- ══ ZONE A : signaux nationaux ═══════════════════════════════════ -->
   <div class="gov-dash__signals">
     <app-governance-signal-tile *ngFor="let t of sig.tiles()" [tile]="t"></app-governance-signal-tile>

@@ -73,7 +73,7 @@
     .warn { color:var(--text-danger); }
   }
 
-  &__signals { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:14px; }
+  &__signals { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:10px 0 14px; }
 
   &__hero { display:grid; grid-template-columns:1.35fr 1fr; gap:12px; align-items:stretch; margin-bottom:12px; }
 
@@ -118,6 +118,11 @@
   &__empty { font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; margin:8px 0 0;
     i { font-size:14px; } }
 }
+
+.gov-dash__sec-title { display:flex; align-items:center; gap:10px; margin:2px 0 -4px;
+  h3 { margin:0; font-size:13px; font-weight:600; color:var(--text-primary); letter-spacing:.2px; }
+}
+.gov-dash__sec-line { flex:1; height:1px; background:var(--border-color); }
 
 app-governance-module-strip { display:block; }
 app-governance-map, app-dept-ranking { display:block; height:100%; }
