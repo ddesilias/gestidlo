@@ -1,29 +1,29 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { AppComponent } from './app.component';
 
+/**
+ * Spec de fumée d'AppComponent. Le scaffold d'origine plantait (`No provider for HttpClient`) et
+ * assertait du contenu scaffold (h1 « Hello, spa ») que l'app réelle n'a pas — remplacé par les
+ * providers requis (HttpClient testing + Router) et une assertion vraie (le composant se crée).
+ */
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it('se crée', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it(`should have the 'spa' title`, () => {
+  it(`porte le titre 'spa'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('spa');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, spa');
+    expect(fixture.componentInstance.title).toEqual('spa');
   });
 });
