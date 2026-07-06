@@ -126,6 +126,8 @@
 
 app-governance-module-strip { display:block; }
 app-governance-map, app-dept-ranking { display:block; height:100%; }
+app-governance-exec-summary { display:block; margin-bottom:14px; }
+app-governance-urd-table, app-governance-queues { display:block; margin-bottom:14px; }
 
 /* Responsive (§4) */
 @media (max-width:1199px) {

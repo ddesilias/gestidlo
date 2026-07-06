@@ -9,11 +9,12 @@ import { AuthService } from '../../../auth.service';
 import { DepartementsStore, Departement, norm } from '../../../departements.store';
 import { ZonesBackendStore, ZoneDto } from '../../../zones-backend.store';
 import { ActeurStore } from '../../../acteur.store';
-import { InterventionStore, Intervention } from '../../../intervention.store';
+import { InterventionStore, Intervention, InterventionPriority } from '../../../intervention.store';
 import {
   SLA_HEURES_INT, slaElapsedInt, estResolue, mttrHeures, slaRespectePct, InterventionResolue,
+  prioriteLabel, statutLabel,
 } from '../../interventions/intervention.types';
-import { Statut, statutHaut } from './governance-status.util';
+import { Statut, statutHaut, scoreSante, bandeSante } from './governance-status.util';
 
 /**
  * ESTIMATIONS SANS SOURCE BACKEND — seule la conformité réglementaire n'a PAS encore de store réel
@@ -49,6 +50,23 @@ export interface ExecCard {
   value: string; sub1: string; sub2: string;
   statut: Statut | 'neutre'; actionLabel: string;
   route?: string; scopeDept?: string;
+}
+
+/** Ligne du tableau « URD les plus en difficulté » — métriques PAR département (drill = scope). */
+export interface DeptLigne {
+  nom: string; score: number; statut: Statut;
+  alertesCrit: number; rapportsRetard: number; intervRetard: number; popAffectee: number;
+}
+
+/** Ligne du tableau « Rapports à valider ». */
+export interface RapportRow {
+  titre: string; urd: string; commune: string; type: string; delaiH: number; statut: string; route: string;
+}
+
+/** Ligne du tableau « Interventions urgentes ». */
+export interface InterventionRow {
+  code: string; urd: string; ouvrage: string; priorite: string; priStatut: Statut;
+  assignee: string; delaiH: number; statut: string; enRetard: boolean;
 }
 
 /** Santé d'un département — indice UNIQUE (carte + classement), dérivé du store partagé. */
@@ -264,26 +282,22 @@ export class GovernanceSignalsService {
    * volontairement exclue : structurelle, pas un indicateur de santé). Zéro valeur inventée.
    */
   readonly santeReseau = computed<number>(() => {
-    const crit = this.alertesCritiquesScope().length;
-    const sAlertes = 100 - Math.min(100, crit * 15);
-
-    const sla = this.slaRespectePct();
-    const sInterv = sla !== null ? sla : 100 - Math.min(100, this.interventionsEnRetardCount() * 20);
-
-    const sRapports = 100 - Math.min(100, this.nbAValiderVieux() * 20);
-
     const caps = this.capteursScope();
-    const sCapteurs = caps.length
-      ? Math.round((caps.filter(c => c.statut !== 'hors-ligne').length / caps.length) * 100) : 100;
-
-    return Math.round(0.35 * sAlertes + 0.30 * sInterv + 0.20 * sRapports + 0.15 * sCapteurs);
+    return scoreSante({
+      alertesCritiques: this.alertesCritiquesScope().length,
+      slaRespectePct: this.slaRespectePct(),
+      interventionsEnRetard: this.interventionsEnRetardCount(),
+      rapportsEnRetard: this.nbAValiderVieux(),
+      capteursTotal: caps.length,
+      capteursEnLigne: caps.filter(c => c.statut !== 'hors-ligne').length,
+    });
   });
 
   // ── Résumé exécutif (§ wireframe) — cartes riches, chacune sur un signal RÉEL ──────────────────
   readonly resumeExecutif = computed<ExecCard[]>(() => {
     const sante = this.santeReseau();
     const santeStatut = statutHaut(sante, 90, 75);
-    const santeBande = sante >= 90 ? 'Bon' : sante >= 75 ? 'À surveiller' : sante >= 60 ? 'Dégradé' : 'Critique';
+    const santeBande = bandeSante(sante);
 
     const nbCrit = this.alertesCritiquesScope().length;
     const nonAss = this.alertesCritNonAssignees();
@@ -332,6 +346,88 @@ export class GovernanceSignalsService {
         sub2: pire ? `${pire.alertes} alerte${pire.alertes > 1 ? 's' : ''} active${pire.alertes > 1 ? 's' : ''}` : '',
         statut: pire ? pire.statut : 'neutre', actionLabel: "Analyser l'URD", scopeDept: pire?.nom },
     ];
+  });
+
+  // ════════ TABLES ENRICHIES (§ wireframe) — toutes dérivées du réel ════════
+
+  /** Âge d'un rapport (h) depuis sa transmission (repli createdAt). */
+  private rapportAgeH(r: RapportDto): number {
+    const t = r.transmisLe ?? r.createdAt;
+    return t ? (Date.now() - new Date(t).getTime()) / 3_600_000 : 0;
+  }
+  /** Nom propre d'un département depuis sa clé normalisée (pour l'affichage des tables). */
+  private deptNomFromKey(k: string | undefined | null): string {
+    if (!k) return '—';
+    return this.deps.list().find(x => norm(x.nom) === k)?.nom ?? '—';
+  }
+
+  /**
+   * « URD les plus en difficulté » — une ligne PAR département déployé, métriques dérivées par dept
+   * (mêmes définitions que les compteurs scopés), score = même composite `scoreSante`. Pire en premier.
+   * NATIONAL par nature (comme la carte + le classement) : ce tableau ne suit pas le scope.
+   */
+  readonly classementEnrichi = computed<DeptLigne[]>(() => {
+    const alertesActives = this.alertes.toutesLesAlertes().filter(a => this.alertes.isActive(a.status));
+    const interventions = this._interventions();
+    const cd = this.communeDept();
+    const rapports = this.rapports.items();
+    const zones = this.zonesStore.zones();
+    const capteurs = this.capteurs.all();
+
+    return this.deps.deployes().map(d => {
+      const k = norm(d.nom);
+      const alCrit = alertesActives.filter(a => norm(a.department ?? '') === k && a.severity === 'critique');
+      const rapRetard = rapports.filter(r => r.status === 'TRANSMIS' && norm(r.departementId ?? '') === k && this.rapportAgeH(r) > 48).length;
+
+      const inDept = (i: Intervention) => (i.department ? norm(i.department) : cd.get(norm(i.commune ?? ''))) === k;
+      const intActives = interventions.filter(i => !['cloturee', 'annulee', 'rejetee'].includes(i.status) && inDept(i));
+      const intRetard = intActives.filter(i => !['terminee', 'validee'].includes(i.status) && slaElapsedInt(i.createdAt) > SLA_HEURES_INT[i.priority]).length;
+      const resolvedDept = interventions.filter(i => inDept(i) && estResolue(i)).map(i => ({ createdAt: i.createdAt, closedAt: i.closedAt!, priority: i.priority }));
+
+      const communesCrit = new Set(alCrit.map(a => norm(a.commune ?? '')).filter(Boolean));
+      const popAff = zones
+        .filter(z => norm(z.departementId ?? '') === k && z.statut === 'ACTIVE' && communesCrit.has(norm(z.commune ?? '')))
+        .reduce((s, z) => s + (z.populationCible ?? 0), 0);
+
+      const capsDept = capteurs.filter(c => norm(c.department ?? '') === k);
+      const score = scoreSante({
+        alertesCritiques: alCrit.length, slaRespectePct: slaRespectePct(resolvedDept),
+        interventionsEnRetard: intRetard, rapportsEnRetard: rapRetard,
+        capteursTotal: capsDept.length, capteursEnLigne: capsDept.filter(c => c.statut !== 'hors-ligne').length,
+      });
+      return { nom: d.nom, score, statut: statutHaut(score, 90, 75), alertesCrit: alCrit.length, rapportsRetard: rapRetard, intervRetard: intRetard, popAffectee: popAff };
+    }).sort((a, b) => a.score - b.score);
+  });
+
+  /** « Rapports à valider » (scopé) — 6 max, délai réel, statut dérivé du délai. */
+  readonly rapportsAValiderTable = computed<RapportRow[]>(() =>
+    this.rapportsAValider().slice(0, 6).map(r => {
+      const age = Math.round(this.rapportAgeH(r));
+      return {
+        titre: r.titre, urd: r.national ? 'National' : this.deptNomFromKey(r.departementId),
+        commune: r.commune ?? '—', type: r.type, delaiH: age,
+        statut: age > 48 ? 'En retard' : 'À valider', route: '/admin/rapports',
+      };
+    }),
+  );
+
+  /** « Interventions urgentes » (scopé) — en retard OU priorité haute/critique ; retard en premier. */
+  readonly interventionsUrgentesTable = computed<InterventionRow[]>(() => {
+    const priStatut = (p: InterventionPriority): Statut => (p === 'critique' ? 'critique' : p === 'haute' ? 'attention' : 'ok');
+    const cd = this.communeDept();
+    const enRetardDe = (i: Intervention) => !['terminee', 'validee'].includes(i.status) && slaElapsedInt(i.createdAt) > SLA_HEURES_INT[i.priority];
+    const poids = (i: Intervention) => (enRetardDe(i) ? 0 : i.priority === 'critique' ? 1 : i.priority === 'haute' ? 2 : 3);
+
+    return this.interventionsScope()
+      .filter(i => enRetardDe(i) || i.priority === 'critique' || i.priority === 'haute')
+      .sort((a, b) => poids(a) - poids(b) || slaElapsedInt(b.createdAt) - slaElapsedInt(a.createdAt))
+      .slice(0, 6)
+      .map(i => ({
+        code: i.code, urd: this.deptNomFromKey(i.department ? norm(i.department) : cd.get(norm(i.commune ?? ''))),
+        ouvrage: i.infrastructureName || i.commune || '—', priorite: prioriteLabel(i.priority), priStatut: priStatut(i.priority),
+        assignee: i.technicianName || 'Non assignée', delaiH: Math.round(slaElapsedInt(i.createdAt)),
+        statut: statutLabel(i.status), enRetard: enRetardDe(i),
+      }));
   });
 
   // ── Zone C : tendance + points d'attention (3 max, dérivés) ────────────────

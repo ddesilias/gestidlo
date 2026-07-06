@@ -8,6 +8,8 @@ import { GovernanceSignalTileComponent } from './governance/dashboard/governance
 import { GovernanceExecSummaryComponent } from './governance/dashboard/governance-exec-summary.component';
 import { GovernanceMapComponent } from './governance/dashboard/governance-map.component';
 import { DeptRankingComponent } from './governance/dashboard/dept-ranking.component';
+import { GovernanceUrdTableComponent } from './governance/dashboard/governance-urd-table.component';
+import { GovernanceQueuesComponent } from './governance/dashboard/governance-queues.component';
 import { ComplianceTrendComponent } from './governance/dashboard/compliance-trend.component';
 import { GovernancePilotageComponent } from './governance/dashboard/governance-pilotage.component';
 
@@ -24,6 +26,7 @@ import { GovernancePilotageComponent } from './governance/dashboard/governance-p
   imports: [
     CommonModule, RouterLink,
     GovernanceSignalTileComponent, GovernanceExecSummaryComponent, GovernanceMapComponent, DeptRankingComponent,
+    GovernanceUrdTableComponent, GovernanceQueuesComponent,
     ComplianceTrendComponent, GovernancePilotageComponent,
   ],
   templateUrl: './governance-page.component.html',

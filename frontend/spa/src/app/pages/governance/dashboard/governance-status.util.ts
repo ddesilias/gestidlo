@@ -38,3 +38,28 @@ export const STATUT_LIBELLE: Record<Statut, string> = {
   attention: 'attention',
   critique:  'critique',
 };
+
+// ── Score santé composite (CDC §18) — pur, testable, partagé scope national ↔ par-département ──
+export interface SanteInputs {
+  alertesCritiques: number;
+  /** `null` = aucune intervention résolue → repli sur le nombre en retard. */
+  slaRespectePct: number | null;
+  interventionsEnRetard: number;
+  rapportsEnRetard: number;
+  capteursTotal: number;
+  capteursEnLigne: number;
+}
+
+/** Composite opérationnel 0–100 : 35 % alertes · 30 % interventions · 20 % rapports · 15 % capteurs. */
+export function scoreSante(x: SanteInputs): number {
+  const sAlertes  = 100 - Math.min(100, x.alertesCritiques * 15);
+  const sInterv   = x.slaRespectePct !== null ? x.slaRespectePct : 100 - Math.min(100, x.interventionsEnRetard * 20);
+  const sRapports = 100 - Math.min(100, x.rapportsEnRetard * 20);
+  const sCapteurs = x.capteursTotal ? Math.round((x.capteursEnLigne / x.capteursTotal) * 100) : 100;
+  return Math.round(0.35 * sAlertes + 0.30 * sInterv + 0.20 * sRapports + 0.15 * sCapteurs);
+}
+
+/** Bandes CDC §18 : ≥90 Bon · 75–89 À surveiller · 60–74 Dégradé · <60 Critique. */
+export function bandeSante(score: number): string {
+  return score >= 90 ? 'Bon' : score >= 75 ? 'À surveiller' : score >= 60 ? 'Dégradé' : 'Critique';
+}

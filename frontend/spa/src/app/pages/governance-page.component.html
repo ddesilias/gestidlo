@@ -82,6 +82,17 @@
     </div>
   </div>
 
+  <!-- ══ URD LES PLUS EN DIFFICULTÉ : tableau décisionnel (NATIONAL) ═══ -->
+  <div class="gov-dash__sec-title"><h3>URD les plus en difficulté</h3><span class="gov-dash__sec-line"></span></div>
+  <app-governance-urd-table
+    [rows]="sig.classementEnrichi()" [selected]="sig.effectiveDept()"
+    (select)="drillDown($event)"></app-governance-urd-table>
+
+  <!-- ══ FILES OPÉRATIONNELLES : rapports à valider + interventions ════ -->
+  <div class="gov-dash__sec-title"><h3>À traiter</h3><span class="gov-dash__sec-line"></span></div>
+  <app-governance-queues
+    [rapports]="sig.rapportsAValiderTable()" [interventions]="sig.interventionsUrgentesTable()"></app-governance-queues>
+
   <!-- ══ BAS DE PAGE : santé système + activité ═══════════════════════ -->
   <div class="gov-dash__foot">
     <div class="foot-card">
