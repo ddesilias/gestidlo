@@ -201,11 +201,22 @@ export class GovernanceSignalsService {
   });
 
   // ── Alertes (RÉEL) ─────────────────────────────────────────────────────────
+  /**
+   * Département (normalisé) d'une alerte : champ direct SINON dérivé de la commune via `communeDept`.
+   * ⚠️ Les alertes backend ne portent PAS de département (seulement une commune) — sans cette
+   * résolution, toute attribution par département échoue : URD vide au drill, popAffectee = 0. '' si
+   * indéterminable (commune sans zone connue). Même logique que la réconciliation superviseur.
+   */
+  private alerteDeptKey(a: { department?: string | null; commune?: string | null }, cd: Map<string, string>): string {
+    return norm(a.department ?? '') || cd.get(norm(a.commune ?? '')) || '';
+  }
+
   private readonly alertesActivesListe = computed(() => {
-    const d = this.effectiveDept();
+    const k = this.scopeKey();
+    const cd = this.communeDept();
     return this.alertes.toutesLesAlertes()
       .filter(a => this.alertes.isActive(a.status))
-      .filter(a => !d || norm(a.department ?? '') === norm(d));
+      .filter(a => !k || this.alerteDeptKey(a, cd) === k);
   });
   readonly alertesActives = computed(() => this.alertesActivesListe().length);
 
@@ -226,11 +237,12 @@ export class GovernanceSignalsService {
 
   // ── Indice de santé par département (UNIQUE — carte + classement + synthèse) ─
   readonly deptSante = computed<DeptSante[]>(() => {
+    const cd = this.communeDept();
     const alertes = this.alertes.toutesLesAlertes().filter(a => this.alertes.isActive(a.status));
     return this.deps.list().map(d => {
       const pct = this.deps.couverturePct(d);
       const actif = this.deps.deploye(d);
-      const deptAlertes = alertes.filter(a => norm(a.department ?? '') === norm(d.nom));
+      const deptAlertes = alertes.filter(a => this.alerteDeptKey(a, cd) === norm(d.nom));
       const critAlerte = deptAlertes.some(a => a.severity === 'critique');
       const covStatut: Statut = statutHaut(pct, 15, 7);           // Nord 5,3→crit · Sud-Est 10→att · Ouest 20→ok
       const alerteStatut: Statut = critAlerte ? 'critique' : deptAlertes.length ? 'attention' : 'ok';
@@ -376,7 +388,7 @@ export class GovernanceSignalsService {
 
     return this.deps.deployes().map(d => {
       const k = norm(d.nom);
-      const alCrit = alertesActives.filter(a => norm(a.department ?? '') === k && a.severity === 'critique');
+      const alCrit = alertesActives.filter(a => this.alerteDeptKey(a, cd) === k && a.severity === 'critique');
       const rapRetard = rapports.filter(r => r.status === 'TRANSMIS' && norm(r.departementId ?? '') === k && this.rapportAgeH(r) > 48).length;
 
       const inDept = (i: Intervention) => (i.department ? norm(i.department) : cd.get(norm(i.commune ?? ''))) === k;
@@ -566,15 +578,21 @@ export class GovernanceSignalsService {
   private readonly alertesCritVieilles = computed(() =>
     this.alertesCritiquesScope().filter(a => (Date.now() - new Date(a.createdAt).getTime()) / 3_600_000 > 48).length,
   );
-  /** Communes (normalisées) touchées par ≥1 alerte critique active, dans le scope. */
-  private readonly communesAlerteCritique = computed<Set<string>>(() =>
-    new Set(this.alertesCritiquesScope().map(a => norm(a.commune ?? '')).filter(Boolean)),
-  );
+  /**
+   * Communes en alerte critique — clé COMPOSITE `dept|commune` (jamais le nom de commune seul) pour
+   * empêcher qu'en vue nationale une commune homonyme d'un autre département gonfle la pop. affectée.
+   */
+  private readonly communesAlerteCritique = computed<Set<string>>(() => {
+    const cd = this.communeDept();
+    return new Set(
+      this.alertesCritiquesScope().filter(a => a.commune).map(a => `${this.alerteDeptKey(a, cd)}|${norm(a.commune!)}`),
+    );
+  });
   /** Population potentiellement affectée = Σ populationCible des zones ACTIVE des communes en alerte critique. */
   readonly popAffectee = computed(() => {
-    const communes = this.communesAlerteCritique();
+    const cles = this.communesAlerteCritique();
     return this.zonesActivesScope()
-      .filter(z => communes.has(norm(z.commune ?? '')))
+      .filter(z => cles.has(`${norm(z.departementId ?? '')}|${norm(z.commune ?? '')}`))
       .reduce((s, z) => s + (z.populationCible ?? 0), 0);
   });
   readonly nbCommunesAffectees = computed(() => this.communesAlerteCritique().size);
