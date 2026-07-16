@@ -3,9 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../ui/toast.service';
 
-type TraceTab = 'journal' | 'interventions' | 'anomalies' | 'rapports' | 'exports';
+type TraceTab = 'journal' | 'interventions' | 'anomalies' | 'rapports' | 'validations' | 'exports';
 type DetailTab = 'resume' | 'taches' | 'mesures' | 'anomalies' | 'preuves';
 type IntervStatus = 'en_cours' | 'terminee' | 'a_verifier' | 'planifiee' | 'cloturee' | 'rejetee';
+
+/** Type d'événement journalisé — élargi au workflow réel des rapports A4 (soumission → signature → archivage). */
+type JournalType = 'create' | 'update' | 'assign' | 'validate' | 'delete'
+                 | 'submit' | 'return' | 'sign' | 'archive' | 'export';
+/** Niveau d'impact d'un événement, pour la lisibilité « directeur ». */
+type JournalImpact = 'critique' | 'important' | 'normal' | 'info';
 
 interface Task { label: string; done: boolean; }
 interface Measure { label: string; value: string; unit: string; }
@@ -36,11 +42,21 @@ interface JournalEntry {
   timestamp: string;
   user: string;
   role: string;
+  /** Territoire de l'action — le « où » qui manquait : « URD Ouest · Léogâne », « National »… */
+  zone: string;
   module: string;
   action: string;
   element: string;
-  detail: string;
-  type: 'create' | 'update' | 'assign' | 'validate' | 'delete';
+  /** Ex-« détail » → Résultat / Impact : la conséquence concrète de l'action. */
+  result: string;
+  impact: JournalImpact;
+  type: JournalType;
+  // ── Preuve complète (panneau de détail au clic) ──
+  oldValue?: string;
+  newValue?: string;
+  motif?: string;
+  linkedReport?: string;
+  linkedIntervention?: string;
 }
 
 interface AnomalyRecord {
@@ -235,16 +251,26 @@ const INTERVENTIONS: Intervention[] = [
 ];
 
 const JOURNAL_ENTRIES: JournalEntry[] = [
-  { timestamp: '29/04/2026 10:12', user: 'Admin', role: 'Administrateur', module: 'Service', action: 'Statut modifié', element: 'Zone Dessources', detail: 'Dégradé → Normal', type: 'update' },
-  { timestamp: '29/04/2026 10:05', user: 'Admin', role: 'Administrateur', module: 'Alertes', action: 'Alerte assignée', element: 'ALT-004', detail: 'Assignée à DINEPA Ouest', type: 'assign' },
-  { timestamp: '29/04/2026 09:55', user: 'Admin', role: 'Administrateur', module: 'Infrastructure', action: 'Capteur associé', element: 'Réservoir R-01', detail: 'LVL-R01 ajouté', type: 'update' },
-  { timestamp: '29/04/2026 09:40', user: 'Jean Michel', role: 'Technicien', module: 'Traçabilité', action: 'Anomalie signalée', element: 'INT-2026-001', detail: 'Capteur pression instable', type: 'create' },
-  { timestamp: '29/04/2026 09:15', user: 'Jean Michel', role: 'Technicien', module: 'Traçabilité', action: 'Intervention démarrée', element: 'INT-2026-001', detail: 'Vérification Réservoir R-01', type: 'create' },
-  { timestamp: '28/04/2026 18:10', user: 'Marc Étienne', role: 'Technicien', module: 'Traçabilité', action: 'Intervention clôturée', element: 'INT-2026-002', detail: 'Point d\'eau PE-03 — Jacmel', type: 'validate' },
-  { timestamp: '28/04/2026 16:40', user: 'Marc Étienne', role: 'Technicien', module: 'Traçabilité', action: 'Intervention démarrée', element: 'INT-2026-002', detail: 'Vérification Point d\'eau PE-03', type: 'create' },
-  { timestamp: '28/04/2026 14:00', user: 'Admin', role: 'Administrateur', module: 'Ressources', action: 'Ressource modifiée', element: 'Rivière Momance', detail: 'Disponibilité mise à jour', type: 'update' },
-  { timestamp: '27/04/2026 14:22', user: 'Louis Charles', role: 'Technicien', module: 'Traçabilité', action: 'Intervention démarrée', element: 'INT-2026-004', detail: 'Maintenance Pompe P-02', type: 'create' },
-  { timestamp: '27/04/2026 09:10', user: 'Anne Duperval', role: 'Technicien', module: 'Traçabilité', action: 'Intervention démarrée', element: 'INT-2026-005', detail: 'Contrôle Station PRESS-01', type: 'create' },
+  // ── Workflow des rapports A4 : soumission → validation URD → renvoi → signature DINEPA → archivage ──
+  { timestamp: '29/04/2026 11:20', user: 'Directeur National', role: 'DINEPA national', zone: 'National', module: 'Rapports', action: 'Rapport signé DINEPA', element: 'RPT-SVC-001', result: 'Signé et transmis à l\'archive nationale', impact: 'important', type: 'sign', linkedReport: 'RPT-SVC-001' },
+  { timestamp: '29/04/2026 10:48', user: 'Resp. URD Ouest', role: 'Responsable URD', zone: 'URD Ouest · Léogâne', module: 'Rapports', action: 'Rapport validé URD', element: 'RPT-SVC-001', result: 'Validé et signé — transmis à la DINEPA', impact: 'normal', type: 'validate', linkedReport: 'RPT-SVC-001' },
+  { timestamp: '29/04/2026 09:30', user: 'Resp. URD Ouest', role: 'Responsable URD', zone: 'URD Ouest · Carrefour', module: 'Rapports', action: 'Rapport renvoyé au technicien', element: 'RPT-INT-0008', result: 'Renvoyé avec motif', impact: 'important', type: 'return', motif: 'Photos de l\'intervention manquantes et données IoT incomplètes.', linkedReport: 'RPT-INT-0008', linkedIntervention: 'INT-2026-001' },
+  { timestamp: '29/04/2026 08:55', user: 'TEPAC Carrefour', role: 'Technicien TEPAC', zone: 'URD Ouest · Carrefour', module: 'Rapports', action: 'Rapport soumis à l\'URD', element: 'RPT-INT-0008', result: 'Soumis pour validation', impact: 'normal', type: 'submit', linkedReport: 'RPT-INT-0008', linkedIntervention: 'INT-2026-001' },
+  { timestamp: '28/04/2026 18:20', user: 'Marc Étienne', role: 'Technicien TEPAC', zone: 'URD Sud-Est · Jacmel', module: 'Rapports', action: 'Rapport soumis à l\'URD', element: 'RPT-INT-0002', result: 'Soumis pour validation', impact: 'normal', type: 'submit', linkedReport: 'RPT-INT-0002', linkedIntervention: 'INT-2026-002' },
+  { timestamp: '27/04/2026 11:05', user: 'Anne Duperval', role: 'Technicien TEPAC', zone: 'URD Ouest · Grand-Goâve', module: 'Rapports', action: 'Rapport archivé', element: 'RPT-PRESS-005', result: 'Classé — cycle terminé', impact: 'info', type: 'archive', linkedReport: 'RPT-PRESS-005', linkedIntervention: 'INT-2026-005' },
+
+  // ── Actions opérationnelles ──
+  { timestamp: '29/04/2026 10:12', user: 'Admin', role: 'Administrateur', zone: 'URD Ouest · Léogâne', module: 'Service', action: 'Statut de zone modifié', element: 'Zone Dessources', result: 'Dégradé → Normal', impact: 'normal', type: 'update', oldValue: 'Dégradé', newValue: 'Normal' },
+  { timestamp: '29/04/2026 10:05', user: 'Admin', role: 'Administrateur', zone: 'URD Ouest · Léogâne', module: 'Alertes', action: 'Alerte assignée', element: 'ALT-004', result: 'Assignée à DINEPA Ouest', impact: 'important', type: 'assign', newValue: 'DINEPA Ouest' },
+  { timestamp: '29/04/2026 09:55', user: 'Admin', role: 'Administrateur', zone: 'URD Ouest · Léogâne', module: 'Infrastructure', action: 'Capteur associé', element: 'Réservoir R-01', result: 'Capteur LVL-R01 rattaché à l\'ouvrage', impact: 'normal', type: 'update', newValue: 'LVL-R01' },
+  { timestamp: '29/04/2026 09:40', user: 'Jean Michel', role: 'Technicien TEPAC', zone: 'URD Ouest · Léogâne', module: 'Interventions', action: 'Anomalie signalée', element: 'INT-2026-001', result: 'Capteur pression instable — priorité haute', impact: 'critique', type: 'create', linkedIntervention: 'INT-2026-001' },
+  { timestamp: '29/04/2026 09:15', user: 'Jean Michel', role: 'Technicien TEPAC', zone: 'URD Ouest · Léogâne', module: 'Interventions', action: 'Intervention démarrée', element: 'INT-2026-001', result: 'Vérification Réservoir R-01', impact: 'normal', type: 'create', linkedIntervention: 'INT-2026-001' },
+  { timestamp: '28/04/2026 18:10', user: 'Marc Étienne', role: 'Technicien TEPAC', zone: 'URD Sud-Est · Jacmel', module: 'Interventions', action: 'Intervention clôturée', element: 'INT-2026-002', result: 'Point d\'eau PE-03 — conforme', impact: 'normal', type: 'validate', linkedIntervention: 'INT-2026-002' },
+  { timestamp: '28/04/2026 16:40', user: 'Marc Étienne', role: 'Technicien TEPAC', zone: 'URD Sud-Est · Jacmel', module: 'Interventions', action: 'Intervention démarrée', element: 'INT-2026-002', result: 'Vérification Point d\'eau PE-03', impact: 'normal', type: 'create', linkedIntervention: 'INT-2026-002' },
+  { timestamp: '28/04/2026 14:00', user: 'Admin', role: 'Administrateur', zone: 'National', module: 'Ressources', action: 'Ressource modifiée', element: 'Rivière Momance', result: 'Disponibilité mise à jour', impact: 'info', type: 'update' },
+  { timestamp: '28/04/2026 09:12', user: 'Admin', role: 'Administrateur', zone: 'National', module: 'Rapports', action: 'Export PDF généré', element: 'RPT-SVC-001', result: 'Feuille A4 exportée', impact: 'info', type: 'export', linkedReport: 'RPT-SVC-001' },
+  { timestamp: '27/04/2026 14:22', user: 'Louis Charles', role: 'Technicien TEPAC', zone: 'URD Ouest · Petit-Goâve', module: 'Interventions', action: 'Intervention démarrée', element: 'INT-2026-004', result: 'Maintenance Pompe P-02 — fuite joint', impact: 'critique', type: 'create', linkedIntervention: 'INT-2026-004' },
+  { timestamp: '27/04/2026 09:10', user: 'Anne Duperval', role: 'Technicien TEPAC', zone: 'URD Ouest · Grand-Goâve', module: 'Interventions', action: 'Intervention démarrée', element: 'INT-2026-005', result: 'Contrôle Station PRESS-01', impact: 'normal', type: 'create', linkedIntervention: 'INT-2026-005' },
 ];
 
 const ANOMALY_RECORDS: AnomalyRecord[] = [
@@ -279,45 +305,61 @@ const ANOMALY_RECORDS: AnomalyRecord[] = [
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
         Filtres
       </button>
-      <button class="tr-btn tr-btn--ghost" type="button">
+      <button class="tr-btn tr-btn--ghost" type="button" (click)="setTab('exports')">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exporter le journal
+        Exporter
       </button>
-      <button class="tr-btn tr-btn--ghost" type="button">
+      <button class="tr-btn tr-btn--ghost tr-btn--subtle" type="button" (click)="notifyNouveauSuivi()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Ajouter une note
+      </button>
+      <button class="tr-btn tr-btn--primary" type="button" (click)="notifyAudit()">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Rapport d'audit
-      </button>
-      <button class="tr-btn tr-btn--primary" type="button" (click)="notifyNouveauSuivi()">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nouveau suivi
+        Générer rapport d'audit
       </button>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════════════
-       TAB BAR + STATS
+       KPI STRIP — la preuve chiffrée en tête
+  ══════════════════════════════════════════════════ -->
+  <div class="tr-kpis">
+    <button class="tr-kpi" [class.tr-kpi--on]="activeTab==='journal'" (click)="setTab('journal')" type="button">
+      <span class="tr-kpi__val">{{ journalEntries.length }}</span>
+      <span class="tr-kpi__lbl">Événements journalisés</span>
+    </button>
+    <button class="tr-kpi tr-kpi--primary" [class.tr-kpi--on]="activeTab==='interventions'" (click)="setTab('interventions')" type="button">
+      <span class="tr-kpi__val">{{ countByStatus('en_cours') }}</span>
+      <span class="tr-kpi__lbl">Interventions en cours</span>
+    </button>
+    <button class="tr-kpi tr-kpi--warn" [class.tr-kpi--on]="activeTab==='anomalies'" (click)="setTab('anomalies')" type="button">
+      <span class="tr-kpi__val">{{ openAnomaliesCount() }}</span>
+      <span class="tr-kpi__lbl">Alertes ouvertes</span>
+    </button>
+    <button class="tr-kpi tr-kpi--success" [class.tr-kpi--on]="activeTab==='validations'" (click)="setTab('validations')" type="button">
+      <span class="tr-kpi__val">{{ validationsCount() }}</span>
+      <span class="tr-kpi__lbl">Validations &amp; signatures</span>
+    </button>
+    <button class="tr-kpi" [class.tr-kpi--on]="activeTab==='rapports'" (click)="setTab('rapports')" type="button">
+      <span class="tr-kpi__val">{{ reportsTracked().length }}</span>
+      <span class="tr-kpi__lbl">Rapports suivis</span>
+    </button>
+    <button class="tr-kpi" [class.tr-kpi--on]="activeTab==='exports'" (click)="setTab('exports')" type="button">
+      <span class="tr-kpi__val">{{ exportsCount() }}</span>
+      <span class="tr-kpi__lbl">Exports générés</span>
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       TAB BAR
   ══════════════════════════════════════════════════ -->
   <div class="tr-tabbar">
     <button class="tr-tab" [class.tr-tab--active]="activeTab === 'journal'" (click)="setTab('journal')" type="button">Journal général</button>
     <button class="tr-tab" [class.tr-tab--active]="activeTab === 'interventions'" (click)="setTab('interventions')" type="button">Interventions</button>
-    <button class="tr-tab" [class.tr-tab--active]="activeTab === 'anomalies'" (click)="setTab('anomalies')" type="button">Anomalies</button>
-    <button class="tr-tab" [class.tr-tab--active]="activeTab === 'rapports'" (click)="setTab('rapports')" type="button">Rapports terrain</button>
+    <button class="tr-tab" [class.tr-tab--active]="activeTab === 'anomalies'" (click)="setTab('anomalies')" type="button">Alertes</button>
+    <button class="tr-tab" [class.tr-tab--active]="activeTab === 'rapports'" (click)="setTab('rapports')" type="button">Rapports</button>
+    <button class="tr-tab" [class.tr-tab--active]="activeTab === 'validations'" (click)="setTab('validations')" type="button">Validations &amp; signatures</button>
     <button class="tr-tab" [class.tr-tab--active]="activeTab === 'exports'" (click)="setTab('exports')" type="button">Exports</button>
-
-    <div class="tr-tab-stats">
-      <span class="tr-stat-item">
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        {{ journalEntries.length * 13 }} événements
-      </span>
-      <span class="tr-stat-item tr-stat-item--primary">
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        {{ countByStatus('en_cours') }} interventions en cours
-      </span>
-      <span class="tr-stat-item tr-stat-item--warn">
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01"/></svg>
-        {{ openAnomaliesCount() }} anomalies ouvertes
-      </span>
-    </div>
   </div>
 
   <!-- ══════════════════════════════════════════════════
@@ -375,7 +417,8 @@ const ANOMALY_RECORDS: AnomalyRecord[] = [
             <label class="tr-filter-label">Module</label>
             <select class="tr-filter-select" [(ngModel)]="filterModule">
               <option value="">Tous</option>
-              <option value="Traçabilité">Traçabilité</option>
+              <option value="Rapports">Rapports</option>
+              <option value="Interventions">Interventions</option>
               <option value="Alertes">Alertes</option>
               <option value="Infrastructure">Infrastructure</option>
               <option value="Service">Service</option>
@@ -389,7 +432,12 @@ const ANOMALY_RECORDS: AnomalyRecord[] = [
               <option value="create">Création</option>
               <option value="update">Modification</option>
               <option value="assign">Assignation</option>
+              <option value="submit">Soumission rapport</option>
               <option value="validate">Validation</option>
+              <option value="return">Renvoi</option>
+              <option value="sign">Signature</option>
+              <option value="archive">Archivage</option>
+              <option value="export">Export</option>
               <option value="delete">Suppression</option>
             </select>
           </div>
@@ -453,16 +501,18 @@ const ANOMALY_RECORDS: AnomalyRecord[] = [
             <thead>
               <tr>
                 <th>DATE / HEURE</th>
-                <th>UTILISATEUR</th>
+                <th>ACTEUR</th>
+                <th>ZONE / URD</th>
                 <th>MODULE</th>
                 <th>ACTION</th>
                 <th>ÉLÉMENT</th>
-                <th>DÉTAIL</th>
+                <th>RÉSULTAT / IMPACT</th>
                 <th>TYPE</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let e of filteredJournal()">
+              <tr *ngFor="let e of filteredJournal()" class="tr-journal-row"
+                  [class.tr-journal-row--sel]="selectedJournal === e" (click)="selectJournal(e)">
                 <td class="tr-journal-ts">{{ e.timestamp }}</td>
                 <td>
                   <div class="tr-journal-user">
@@ -473,13 +523,23 @@ const ANOMALY_RECORDS: AnomalyRecord[] = [
                     </div>
                   </div>
                 </td>
+                <td><span class="tr-zone-badge">{{ e.zone }}</span></td>
                 <td class="muted">{{ e.module }}</td>
                 <td class="tr-journal-action">{{ e.action }}</td>
                 <td class="tr-journal-element">{{ e.element }}</td>
-                <td class="muted tr-journal-detail">{{ e.detail }}</td>
+                <td>
+                  <div class="tr-journal-result">
+                    <span class="tr-impact-dot tr-impact-dot--{{ e.impact }}"></span>
+                    <span class="tr-journal-result__txt">{{ e.result }}</span>
+                  </div>
+                  <span *ngIf="e.motif" class="tr-journal-motif">Motif : {{ e.motif }}</span>
+                </td>
                 <td>
                   <span class="tr-journal-type tr-journal-type--{{ e.type }}">{{ journalTypeLabel(e.type) }}</span>
                 </td>
+              </tr>
+              <tr *ngIf="filteredJournal().length === 0">
+                <td colspan="8" class="tr-journal-empty">Aucun événement ne correspond aux filtres.</td>
               </tr>
             </tbody>
           </table>
@@ -668,16 +728,68 @@ const ANOMALY_RECORDS: AnomalyRecord[] = [
         </div>
       </ng-container>
 
-      <!-- ────── RAPPORTS TERRAIN ────── -->
+      <!-- ────── RAPPORTS (suivi du cycle A4) ────── -->
       <ng-container *ngIf="activeTab === 'rapports'">
-        <div class="tr-empty tr-empty--full">
-          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <p style="font-weight:600;font-size:.9rem;color:var(--text)">Rapports terrain</p>
-          <p>Les rapports validés par les techniciens et responsables apparaîtront ici.<br>Terminez une intervention et validez le rapport pour le voir dans cette section.</p>
-          <button class="tr-btn tr-btn--ghost" type="button" style="margin-top:.5rem">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Créer un rapport
-          </button>
+        <div class="tr-list-toolbar">
+          <div class="tr-search">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="tr-search__input" type="text" [(ngModel)]="searchReport" placeholder="Rechercher un rapport (réf, zone)…">
+          </div>
+        </div>
+
+        <div class="tr-ilist-head tr-ilist-head--rpt">
+          <span>RÉFÉRENCE</span>
+          <span>ZONE / URD</span>
+          <span>DERNIÈRE ÉTAPE</span>
+          <span>STATUT</span>
+          <span>MÀJ</span>
+          <span>ÉTAPES</span>
+        </div>
+
+        <div class="tr-ilist-body">
+          <div class="tr-rpt-row" *ngFor="let r of filteredReports()"
+               [class.tr-rpt-row--sel]="selectedReport === r.ref" (click)="selectReport(r.ref)">
+            <div class="tr-rpt-row__ref">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              {{ r.ref }}
+            </div>
+            <div><span class="tr-zone-badge">{{ r.zone }}</span></div>
+            <div class="tr-rpt-row__step">{{ r.last.action }}</div>
+            <div><span class="tr-rpt-status tr-rpt-status--{{ r.last.type }}">{{ reportStatusLabel(r.last.type) }}</span></div>
+            <div class="tr-rpt-row__date muted">{{ r.last.timestamp }}</div>
+            <div class="tr-rpt-row__steps">{{ r.steps.length }} étape{{ r.steps.length > 1 ? 's' : '' }}</div>
+          </div>
+          <div class="tr-empty" *ngIf="filteredReports().length === 0">
+            <p>Aucun rapport suivi pour ce filtre.</p>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ────── VALIDATIONS & SIGNATURES (timeline du circuit) ────── -->
+      <ng-container *ngIf="activeTab === 'validations'">
+        <div class="tr-val-intro">
+          Circuit officiel de chaque rapport : soumission technicien → validation URD → signature DINEPA → archivage.
+          Un renvoi affiche son motif — la preuve reste tracée de bout en bout.
+        </div>
+        <div class="tr-val-list">
+          <div class="tr-val-card" *ngFor="let r of reportsTracked()">
+            <div class="tr-val-card__head">
+              <span class="tr-val-card__ref">{{ r.ref }}</span>
+              <span class="tr-zone-badge">{{ r.zone }}</span>
+              <span class="tr-rpt-status tr-rpt-status--{{ r.last.type }}" style="margin-left:auto">{{ reportStatusLabel(r.last.type) }}</span>
+            </div>
+            <div class="tr-timeline">
+              <div class="tr-tl-step" *ngFor="let s of r.steps">
+                <div class="tr-tl-marker tr-tl-marker--{{ s.type }}"></div>
+                <div class="tr-tl-body">
+                  <div class="tr-tl-action">{{ s.action }}</div>
+                  <div class="tr-tl-meta">{{ s.timestamp }} · {{ s.user }} <span class="muted">({{ s.role }})</span></div>
+                  <div class="tr-tl-motif" *ngIf="s.motif">⚠ Motif : {{ s.motif }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tr-empty" *ngIf="reportsTracked().length === 0"><p>Aucune validation enregistrée.</p></div>
         </div>
       </ng-container>
 
@@ -976,10 +1088,153 @@ const ANOMALY_RECORDS: AnomalyRecord[] = [
       </ng-container>
     </div>
 
+    <!-- ── RIGHT: Journal proof panel (clic sur une ligne) ── -->
+    <div class="tr-detail-col" *ngIf="(activeTab === 'journal' || activeTab === 'rapports' || activeTab === 'validations') && selectedJournal as e">
+      <div class="tr-detail">
+        <div class="tr-detail__head">
+          <div class="tr-detail__head-top">
+            <div class="tr-detail__head-icon tr-detail__head-icon--reservoir">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.66 0 3.22.45 4.56 1.24"/></svg>
+            </div>
+            <div class="tr-detail__head-text">
+              <div class="tr-detail__head-id">{{ e.action }}</div>
+              <div class="tr-detail__head-infra">Preuve de l'événement · {{ e.element }}</div>
+            </div>
+            <button class="tr-detail__close" (click)="selectedJournal = null" type="button">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="tr-detail__head-badges">
+            <span class="tr-journal-type tr-journal-type--{{ e.type }}">{{ journalTypeLabel(e.type) }}</span>
+            <span class="tr-impact-badge tr-impact-badge--{{ e.impact }}">Impact {{ impactLabel(e.impact) }}</span>
+          </div>
+        </div>
+        <div class="tr-detail__body">
+          <div class="tr-detail__section">
+            <div class="tr-detail__section-title">Qui · Où · Quand</div>
+            <div class="tr-drow"><span class="tr-drow__k">Acteur</span><span class="tr-drow__v">{{ e.user }}</span></div>
+            <div class="tr-drow"><span class="tr-drow__k">Rôle</span><span class="tr-drow__v">{{ e.role }}</span></div>
+            <div class="tr-drow"><span class="tr-drow__k">Zone / URD</span><span class="tr-drow__v">{{ e.zone }}</span></div>
+            <div class="tr-drow"><span class="tr-drow__k">Module</span><span class="tr-drow__v">{{ e.module }}</span></div>
+            <div class="tr-drow"><span class="tr-drow__k">Horodatage</span><span class="tr-drow__v">{{ e.timestamp }}</span></div>
+          </div>
+          <div class="tr-detail__section">
+            <div class="tr-detail__section-title">Objet &amp; résultat</div>
+            <div class="tr-drow"><span class="tr-drow__k">Élément concerné</span><span class="tr-drow__v">{{ e.element }}</span></div>
+            <div class="tr-drow"><span class="tr-drow__k">Résultat</span><span class="tr-drow__v">{{ e.result }}</span></div>
+            <div class="tr-drow" *ngIf="e.oldValue"><span class="tr-drow__k">Ancienne valeur</span><span class="tr-drow__v">{{ e.oldValue }}</span></div>
+            <div class="tr-drow" *ngIf="e.newValue"><span class="tr-drow__k">Nouvelle valeur</span><span class="tr-drow__v">{{ e.newValue }}</span></div>
+          </div>
+          <div class="tr-detail__section" *ngIf="e.motif">
+            <div class="tr-detail__section-title">Motif</div>
+            <div class="tr-detail-motif">{{ e.motif }}</div>
+          </div>
+          <div class="tr-detail__section" *ngIf="e.linkedReport || e.linkedIntervention">
+            <div class="tr-detail__section-title">Preuves &amp; liens</div>
+            <button *ngIf="e.linkedReport" class="tr-link-chip" type="button" (click)="toast.push('info', 'Ouverture du rapport ' + e.linkedReport + ' — aperçu A4')">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Rapport {{ e.linkedReport }}
+            </button>
+            <button *ngIf="e.linkedIntervention" class="tr-link-chip" type="button" (click)="goToIntervention(e.linkedIntervention!)">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              {{ e.linkedIntervention }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
   `,
-  styles: []
+  styles: [`
+    /* KPI strip */
+    .tr-kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:.6rem; padding:.9rem 1.5rem; border-bottom:1px solid var(--border-color); flex-shrink:0; }
+    .tr-kpi { text-align:left; background:var(--surface); border:1px solid var(--border-color); border-radius:11px; padding:.7rem .8rem; cursor:pointer; display:flex; flex-direction:column; gap:.15rem; transition:border-color .15s, box-shadow .15s; }
+    .tr-kpi:hover { border-color:color-mix(in srgb, var(--primary) 40%, var(--border)); }
+    .tr-kpi--on { border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent); }
+    .tr-kpi__val { font-size:1.5rem; font-weight:800; color:var(--text); line-height:1; }
+    .tr-kpi__lbl { font-size:.71rem; color:var(--muted); font-weight:500; line-height:1.25; }
+    .tr-kpi--primary .tr-kpi__val { color:var(--primary); }
+    .tr-kpi--warn .tr-kpi__val { color:var(--warning); }
+    .tr-kpi--success .tr-kpi__val { color:var(--success); }
+
+    /* Header button nuance */
+    .tr-btn--subtle { color:var(--muted); }
+
+    /* Zone / URD badge */
+    .tr-zone-badge { display:inline-flex; align-items:center; font-size:.71rem; font-weight:600; color:var(--text); background:color-mix(in srgb, var(--primary) 9%, transparent); border:1px solid color-mix(in srgb, var(--primary) 22%, transparent); border-radius:6px; padding:.12rem .45rem; white-space:nowrap; }
+
+    /* Journal rows — clickable + contrast + résultat/impact */
+    .tr-journal-row { cursor:pointer; }
+    .tr-journal-row:hover td { background:color-mix(in srgb, var(--primary) 5%, transparent); }
+    .tr-journal-row--sel td { background:color-mix(in srgb, var(--primary) 9%, transparent); }
+    .tr-journal-result { display:flex; align-items:center; gap:.4rem; }
+    .tr-journal-result__txt { color:var(--text); font-size:.78rem; }
+    .tr-journal-motif { display:block; font-size:.71rem; color:var(--warning); margin-top:.15rem; font-style:italic; }
+    .tr-journal-empty { text-align:center; color:var(--muted); font-size:.8rem; padding:1.5rem; }
+    .tr-impact-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .tr-impact-dot--critique { background:#dc2626; }
+    .tr-impact-dot--important { background:#ea580c; }
+    .tr-impact-dot--normal { background:#64748b; }
+    .tr-impact-dot--info { background:#2563eb; }
+    .tr-impact-badge { font-size:.69rem; font-weight:700; padding:.14rem .45rem; border-radius:20px; }
+    .tr-impact-badge--critique { background:#fef2f2; color:#dc2626; }
+    .tr-impact-badge--important { background:#fff7ed; color:#ea580c; }
+    .tr-impact-badge--normal { background:#f1f5f9; color:#475569; }
+    .tr-impact-badge--info { background:#eff6ff; color:#2563eb; }
+
+    /* Sober workflow type badges (extend the global set) */
+    .tr-journal-type--submit  { background:#eff6ff; color:#2563eb; }
+    .tr-journal-type--return  { background:#fff7ed; color:#ea580c; }
+    .tr-journal-type--sign    { background:#ecfdf5; color:#059669; }
+    .tr-journal-type--archive { background:#f1f5f9; color:#475569; }
+    .tr-journal-type--export  { background:#f5f3ff; color:#7c3aed; }
+
+    /* Rapports tab table */
+    .tr-ilist-head--rpt { grid-template-columns:1.4fr 1.3fr 1.4fr 130px 130px 90px; }
+    .tr-rpt-row { display:grid; grid-template-columns:1.4fr 1.3fr 1.4fr 130px 130px 90px; align-items:center; gap:.5rem; padding:.6rem .9rem; border-bottom:1px solid var(--border-color); cursor:pointer; font-size:.79rem; }
+    .tr-rpt-row:hover { background:color-mix(in srgb, var(--primary) 5%, transparent); }
+    .tr-rpt-row--sel { background:color-mix(in srgb, var(--primary) 9%, transparent); }
+    .tr-rpt-row__ref { display:flex; align-items:center; gap:.4rem; font-weight:700; color:var(--text); }
+    .tr-rpt-row__ref svg { color:var(--primary); flex-shrink:0; }
+    .tr-rpt-row__step { color:var(--text); }
+    .tr-rpt-row__date { font-size:.73rem; }
+    .tr-rpt-row__steps { color:var(--muted); font-size:.74rem; }
+    .tr-rpt-status { display:inline-flex; font-size:.69rem; font-weight:700; padding:.14rem .5rem; border-radius:20px; white-space:nowrap; }
+    .tr-rpt-status--submit  { background:#eff6ff; color:#2563eb; }
+    .tr-rpt-status--validate{ background:#f0fdf4; color:#16a34a; }
+    .tr-rpt-status--return  { background:#fff7ed; color:#ea580c; }
+    .tr-rpt-status--sign    { background:#ecfdf5; color:#059669; }
+    .tr-rpt-status--archive { background:#f1f5f9; color:#475569; }
+    .tr-rpt-status--export  { background:#f5f3ff; color:#7c3aed; }
+
+    /* Validations timeline */
+    .tr-val-intro { padding:.85rem 1.1rem; font-size:.78rem; color:var(--muted); line-height:1.55; border-bottom:1px solid var(--border-color); }
+    .tr-val-list { flex:1; overflow-y:auto; padding:1rem 1.1rem; display:flex; flex-direction:column; gap:.9rem; }
+    .tr-val-card { border:1px solid var(--border-color); border-radius:12px; background:var(--surface); overflow:hidden; }
+    .tr-val-card__head { display:flex; align-items:center; gap:.55rem; padding:.7rem .9rem; border-bottom:1px solid var(--border-color); background:var(--bg); }
+    .tr-val-card__ref { font-size:.85rem; font-weight:800; color:var(--text); }
+    .tr-timeline { padding:.8rem .9rem .8rem 1rem; display:flex; flex-direction:column; }
+    .tr-tl-step { display:flex; gap:.75rem; position:relative; padding-bottom:.85rem; }
+    .tr-tl-step:not(:last-child)::before { content:''; position:absolute; left:6px; top:14px; bottom:0; width:2px; background:var(--border-color); }
+    .tr-tl-step:last-child { padding-bottom:0; }
+    .tr-tl-marker { width:14px; height:14px; border-radius:50%; flex-shrink:0; margin-top:2px; border:3px solid var(--surface); box-shadow:0 0 0 1px var(--border-color); z-index:1; }
+    .tr-tl-marker--submit  { background:#2563eb; }
+    .tr-tl-marker--validate{ background:#16a34a; }
+    .tr-tl-marker--return  { background:#ea580c; }
+    .tr-tl-marker--sign    { background:#059669; }
+    .tr-tl-marker--archive { background:#64748b; }
+    .tr-tl-marker--export  { background:#7c3aed; }
+    .tr-tl-action { font-size:.8rem; font-weight:600; color:var(--text); }
+    .tr-tl-meta { font-size:.72rem; color:var(--muted); margin-top:.1rem; }
+    .tr-tl-motif { font-size:.73rem; color:var(--warning); margin-top:.25rem; background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:.3rem .5rem; }
+
+    /* Journal proof panel extras */
+    .tr-detail-motif { font-size:.78rem; color:var(--text); line-height:1.55; background:color-mix(in srgb, var(--warning) 10%, transparent); border:1px solid color-mix(in srgb, var(--warning) 30%, transparent); border-radius:8px; padding:.55rem .7rem; }
+    .tr-link-chip { display:inline-flex; align-items:center; gap:.4rem; font-size:.76rem; font-weight:600; color:var(--primary); background:color-mix(in srgb, var(--primary) 8%, transparent); border:1px solid color-mix(in srgb, var(--primary) 22%, transparent); border-radius:8px; padding:.4rem .6rem; cursor:pointer; margin:.2rem .35rem 0 0; }
+    .tr-link-chip:hover { background:color-mix(in srgb, var(--primary) 15%, transparent); }
+  `]
 })
 export class TraceabilityPageComponent {
   activeTab: TraceTab = 'interventions';
@@ -1000,10 +1255,18 @@ export class TraceabilityPageComponent {
   searchInterv = '';
   searchJournal = '';
   searchAnomaly = '';
+  searchReport = '';
+
+  /** Ligne de journal sélectionnée → panneau de preuve à droite. */
+  selectedJournal: JournalEntry | null = null;
+  selectedReport?: string;
 
   readonly interventions = INTERVENTIONS;
   readonly journalEntries = JOURNAL_ENTRIES;
   readonly anomalyRecords = ANOMALY_RECORDS;
+
+  /** Étapes du circuit rapport retenues pour la timeline (l'export reste un événement à part). */
+  private readonly REPORT_STEPS: JournalType[] = ['submit', 'return', 'validate', 'sign', 'archive'];
 
   constructor(readonly toast: ToastService) {}
 
@@ -1047,12 +1310,69 @@ export class TraceabilityPageComponent {
     return this.journalEntries.filter(e => {
       if (this.filterModule && e.module !== this.filterModule) return false;
       if (this.filterActionType && e.type !== this.filterActionType) return false;
+      if (this.filterDepartment && !e.zone.toLowerCase().includes(this.filterDepartment.toLowerCase())) return false;
+      if (this.filterCommune && !e.zone.toLowerCase().includes(this.filterCommune.toLowerCase())) return false;
       if (this.searchJournal.trim()) {
         const q = this.searchJournal.toLowerCase();
-        if (!e.user.toLowerCase().includes(q) && !e.module.toLowerCase().includes(q) && !e.action.toLowerCase().includes(q) && !e.element.toLowerCase().includes(q) && !e.detail.toLowerCase().includes(q)) return false;
+        if (![e.user, e.module, e.action, e.element, e.result, e.zone].some(v => v.toLowerCase().includes(q))) return false;
       }
       return true;
     });
+  }
+
+  // ── Suivi du cycle des rapports A4 ─────────────────────────────────────────
+  /** Regroupe les événements de rapport par référence, étapes triées chronologiquement. */
+  reportsTracked(): { ref: string; zone: string; steps: JournalEntry[]; last: JournalEntry }[] {
+    const groups = new Map<string, JournalEntry[]>();
+    for (const e of this.journalEntries) {
+      if (!e.linkedReport || !this.REPORT_STEPS.includes(e.type)) continue;
+      const arr = groups.get(e.linkedReport) ?? [];
+      arr.push(e);
+      groups.set(e.linkedReport, arr);
+    }
+    return [...groups.entries()].map(([ref, steps]) => {
+      const sorted = [...steps].sort((a, b) => this.tsKey(a.timestamp) - this.tsKey(b.timestamp));
+      return { ref, zone: sorted[0].zone, steps: sorted, last: sorted[sorted.length - 1] };
+    }).sort((a, b) => this.tsKey(b.last.timestamp) - this.tsKey(a.last.timestamp));
+  }
+
+  filteredReports() {
+    const q = this.searchReport.trim().toLowerCase();
+    return this.reportsTracked().filter(r => !q || r.ref.toLowerCase().includes(q) || r.zone.toLowerCase().includes(q));
+  }
+
+  validationsCount(): number {
+    return this.journalEntries.filter(e => e.type === 'validate' || e.type === 'sign').length;
+  }
+  exportsCount(): number {
+    return this.journalEntries.filter(e => e.type === 'export').length;
+  }
+
+  selectJournal(e: JournalEntry): void { this.selectedJournal = e; }
+  selectReport(ref: string): void {
+    this.selectedReport = ref;
+    const grp = this.reportsTracked().find(r => r.ref === ref);
+    this.selectedJournal = grp ? grp.last : null;
+  }
+
+  /** "29/04/2026 11:20" → clé numérique triable. */
+  private tsKey(ts: string): number {
+    const m = ts.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})/);
+    if (!m) return 0;
+    const [, d, mo, y, h, mi] = m;
+    return +`${y}${mo}${d}${h}${mi}`;
+  }
+
+  reportStatusLabel(type: JournalType): string {
+    const map: Partial<Record<JournalType, string>> = {
+      submit: 'Soumis', validate: 'Validé URD', return: 'Renvoyé',
+      sign: 'Signé DINEPA', archive: 'Archivé', export: 'Exporté',
+    };
+    return map[type] ?? this.journalTypeLabel(type);
+  }
+
+  impactLabel(impact: JournalImpact): string {
+    return { critique: 'critique', important: 'important', normal: 'normal', info: 'info' }[impact];
   }
 
   filteredAnomalies(): AnomalyRecord[] {
@@ -1114,6 +1434,11 @@ export class TraceabilityPageComponent {
       assign: 'Assignation',
       validate: 'Validation',
       delete: 'Suppression',
+      submit: 'Soumission',
+      return: 'Renvoi',
+      sign: 'Signature',
+      archive: 'Archivage',
+      export: 'Export',
     };
     return map[type] ?? type;
   }
@@ -1136,6 +1461,7 @@ export class TraceabilityPageComponent {
     this.searchInterv = '';
     this.searchJournal = '';
     this.searchAnomaly = '';
+    this.searchReport = '';
   }
 
   clotureIntervention(id: string): void {
@@ -1143,7 +1469,11 @@ export class TraceabilityPageComponent {
   }
 
   notifyNouveauSuivi(): void {
-    this.toast.push('info', "Création d'un nouveau suivi — Fonctionnalité disponible prochainement");
+    this.toast.push('info', "Ajout d'une note de suivi — Fonctionnalité disponible prochainement");
+  }
+
+  notifyAudit(): void {
+    this.toast.push('info', "Génération du rapport d'audit — Fonctionnalité disponible prochainement");
   }
 
   notifySignalement(): void {

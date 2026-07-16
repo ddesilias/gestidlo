@@ -1,11 +1,13 @@
 package com.example.api_metier.web;
 
+import com.example.api_metier.domain.MeasurementTypeMetaEntity;
 import com.example.api_metier.domain.PointRefEntity;
 import com.example.api_metier.domain.ReferenceCodeItemEntity;
 import com.example.api_metier.domain.ReferenceCodeItemId;
 import com.example.api_metier.domain.ThresholdConfigEntity;
 import com.example.api_metier.repo.AlertRepository;
 import com.example.api_metier.repo.MeasurementRepository;
+import com.example.api_metier.repo.MeasurementTypeMetaRepository;
 import com.example.api_metier.repo.PointRefRepository;
 import com.example.api_metier.repo.ReferenceCodeItemRepository;
 import com.example.api_metier.repo.ThresholdConfigRepository;
@@ -31,6 +33,7 @@ public class ReferenceController {
 	private final MeasurementRepository measurements;
 	private final AlertRepository alerts;
 	private final TicketRepository tickets;
+	private final MeasurementTypeMetaRepository measurementMeta;
 
 	public ReferenceController(
 			PointRefRepository points,
@@ -38,13 +41,15 @@ public class ReferenceController {
 			ReferenceCodeItemRepository codeItems,
 			MeasurementRepository measurements,
 			AlertRepository alerts,
-			TicketRepository tickets) {
+			TicketRepository tickets,
+			MeasurementTypeMetaRepository measurementMeta) {
 		this.points = points;
 		this.thresholds = thresholds;
 		this.codeItems = codeItems;
 		this.measurements = measurements;
 		this.alerts = alerts;
 		this.tickets = tickets;
+		this.measurementMeta = measurementMeta;
 	}
 
 	@GetMapping("/points")
@@ -149,6 +154,34 @@ public class ReferenceController {
 		return ThresholdDto.from(thresholds.save(entity));
 	}
 
+	// ── Métadonnées des types de mesure (complète la codelist MEASUREMENT_TYPE, ne la remplace pas) ──
+	@GetMapping("/measurement-meta")
+	public List<MeasurementMetaDto> measurementMeta() {
+		return measurementMeta.findAll().stream().map(MeasurementMetaDto::from).toList();
+	}
+
+	@PutMapping("/measurement-meta/{code}")
+	public MeasurementMetaDto upsertMeasurementMeta(
+			@PathVariable("code") String code,
+			@RequestBody MeasurementMetaUpsertRequest body) {
+		String key = code == null ? "" : code.trim().toUpperCase();
+		if (key.isBlank()) {
+			throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "code is required");
+		}
+		MeasurementTypeMetaEntity entity = measurementMeta.findById(key)
+				.orElseGet(() -> new MeasurementTypeMetaEntity(key, null, null, null, null, null, null, null, true, true));
+		entity.setUnit(body.unit());
+		entity.setCategory(body.category());
+		entity.setDescription(body.description());
+		entity.setValueType(body.valueType());
+		entity.setDecimals(body.decimals());
+		entity.setMinValue(body.minValue());
+		entity.setMaxValue(body.maxValue());
+		entity.setUsableInAlerts(body.usableInAlerts() == null || body.usableInAlerts());
+		entity.setUsableInReports(body.usableInReports() == null || body.usableInReports());
+		return MeasurementMetaDto.from(measurementMeta.save(entity));
+	}
+
 	@GetMapping("/codelists")
 	public List<CodeListDto> codeLists() {
 		return codeItems.findDistinctListNames().stream().map(CodeListDto::new).toList();
@@ -197,6 +230,8 @@ public class ReferenceController {
 						HttpStatus.CONFLICT,
 						"Cannot delete measurement type in use: " + code);
 			}
+			// Nettoyage : la ligne de métadonnées suit le code supprimé (pas d'orpheline).
+			measurementMeta.findById(code).ifPresent(measurementMeta::delete);
 		}
 
 		if ("POINT_TYPE".equals(listName)) {
@@ -244,6 +279,44 @@ public class ReferenceController {
 	}
 
 	public record ThresholdUpsertRequest(Double minWarn, Double minCrit) {
+	}
+
+	public record MeasurementMetaUpsertRequest(
+			String unit,
+			String category,
+			String description,
+			String valueType,
+			Integer decimals,
+			Double minValue,
+			Double maxValue,
+			Boolean usableInAlerts,
+			Boolean usableInReports) {
+	}
+
+	public record MeasurementMetaDto(
+			String code,
+			String unit,
+			String category,
+			String description,
+			String valueType,
+			Integer decimals,
+			Double minValue,
+			Double maxValue,
+			boolean usableInAlerts,
+			boolean usableInReports) {
+		public static MeasurementMetaDto from(MeasurementTypeMetaEntity e) {
+			return new MeasurementMetaDto(
+					e.getCode(),
+					e.getUnit(),
+					e.getCategory(),
+					e.getDescription(),
+					e.getValueType(),
+					e.getDecimals(),
+					e.getMinValue(),
+					e.getMaxValue(),
+					e.isUsableInAlerts(),
+					e.isUsableInReports());
+		}
 	}
 
 	public record ThresholdDto(String type, Double minWarn, Double minCrit) {

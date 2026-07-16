@@ -318,12 +318,15 @@
 <!-- Filters Drawer -->
 <app-rapports-filters-drawer *ngIf="state.filtresDrawerOuvert()"></app-rapports-filters-drawer>
 
-<!-- Preview Modal -->
-<app-rapport-preview
+<!-- Preview Modal — aperçu A4 officiel unifié -->
+<app-report-a4-preview
   *ngIf="effPreviewOuvert() && state.selection() as r"
-  [rapport]="r"
+  [report]="toPreview(r)"
+  viewerRole="ADMIN"
+  [actions]="['imprimer','exporter','fermer']"
+  (exporterPdf)="notifyDownloadPDF()"
   (fermer)="fermerPreviewEff()">
-</app-rapport-preview>
+</app-report-a4-preview>
 
 <!-- Create Drawer overlay -->
 <div class="rpt-overlay" *ngIf="effCreateOuvert() || state.templatesOuvert()"

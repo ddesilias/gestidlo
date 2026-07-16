@@ -337,6 +337,20 @@ public class BffController {
 				.body(JsonNode.class);
 	}
 
+	@GetMapping("/reference/measurement-meta")
+	public JsonNode referenceMeasurementMeta() {
+		return metier.get().uri("/api/reference/measurement-meta").retrieve().body(JsonNode.class);
+	}
+
+	@PutMapping("/reference/measurement-meta/{code}")
+	public JsonNode upsertMeasurementMeta(@PathVariable("code") String code, @RequestBody Map<String, Object> body) {
+		return metier.put()
+				.uri("/api/reference/measurement-meta/{code}", code)
+				.body(body)
+				.retrieve()
+				.body(JsonNode.class);
+	}
+
 	@GetMapping("/reference/codelists")
 	public JsonNode referenceCodeLists() {
 		return metier.get().uri("/api/reference/codelists").retrieve().body(JsonNode.class);

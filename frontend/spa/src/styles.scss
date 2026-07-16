@@ -1951,8 +1951,12 @@ html[data-theme='dark'] .geo-map__feature {
 .admin-shell.sb-compact .admin-dash { padding-left: 54px; }
 .admin-shell.sb-closed  .admin-dash { padding-left: 0; }
 
-@media (max-width: 1080px) {
-  .admin-shell.sb-open .admin-dash { padding-left: 240px; }
+/* Sous le seuil mobile, le sidebar devient un overlay off-canvas :
+   le contenu passe en pleine largeur quel que soit l'état desktop. */
+@media (max-width: 1024px) {
+  .admin-dash,
+  .admin-shell.sb-compact .admin-dash,
+  .admin-shell.sb-closed .admin-dash { padding-left: 0; }
 }
 
 .admin-dash__sidebar {
@@ -6833,3 +6837,18 @@ textarea.gov-form-input { resize:vertical; min-height:64px; }
 @media (max-width:1400px) { .int-body { grid-template-columns:200px 1fr; } .int-body--with-detail { grid-template-columns:200px 1fr 340px; } }
 @media (max-width:1100px) { .int-body--with-detail { grid-template-columns:200px 1fr; } .int-detail-panel { display:none; } }
 @media (max-width:900px)  { .int-body { grid-template-columns:1fr; } .int-sidebar { display:none; } .int-create-drawer { width:100vw; } }
+
+/* ── Impression de l'aperçu A4 : n'imprimer QUE la feuille .rp-a4 ──
+   Le composant bascule body.rp-printing avant window.print(). On masque tout
+   (barre d'outils, overlay, reste de l'app) via visibility, puis on repositionne
+   la feuille en haut-gauche. Pattern robuste multi-navigateur. */
+@media print {
+  body.rp-printing * { visibility: hidden !important; }
+  body.rp-printing .rp-a4, body.rp-printing .rp-a4 * { visibility: visible !important; }
+  body.rp-printing .rp-a4 {
+    position: absolute !important; left: 0; top: 0;
+    width: 100% !important; min-height: auto !important;
+    box-shadow: none !important; padding: 12mm 14mm !important;
+  }
+  body.rp-printing .rp-overlay { position: static !important; background: #fff !important; backdrop-filter: none !important; }
+}

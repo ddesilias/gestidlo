@@ -48,26 +48,31 @@ import { STATUT_COULEUR, STATUT_LIBELLE } from './governance-status.util';
     </div>
   `,
   styles: [`
-    .urd { background:var(--surface-1); border:0.5px solid var(--border-color); border-radius:12px; padding:14px; }
-    .urd__head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:10px; }
-    .urd__title { font-size:13px; font-weight:600; color:var(--text-primary); }
+    .urd { background:var(--surface-1); border:0.5px solid var(--border-strong); border-radius:12px; padding:16px;
+      box-shadow:0 1px 2px rgba(0,0,0,.12); }
+    .urd__head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; }
+    .urd__title { font-size:13px; font-weight:600; color:var(--text-primary); letter-spacing:.1px; }
     .urd__hint { font-size:10.5px; color:var(--text-muted); }
     .urd__scroll { overflow-x:auto; }
     table { width:100%; border-collapse:collapse; font-size:12px; }
-    th { text-align:left; color:var(--text-muted); font-weight:600; font-size:10px; text-transform:uppercase;
-      letter-spacing:.4px; padding:6px 8px; border-bottom:0.5px solid var(--border-color); white-space:nowrap; }
-    td { padding:8px; border-bottom:0.5px solid var(--border-color); white-space:nowrap; }
+    th { text-align:left; color:var(--text-secondary); font-weight:600; font-size:10px; text-transform:uppercase;
+      letter-spacing:.5px; padding:8px; border-bottom:1px solid var(--border-strong); white-space:nowrap; }
+    td { padding:11px 8px; border-bottom:0.5px solid var(--border-color); white-space:nowrap; }
+    tbody tr:last-child td { border-bottom:0; }
     tbody tr { cursor:pointer; }
     tbody tr:hover { background:rgba(96,165,250,.06); }
     tbody tr.sel { background:rgba(96,165,250,.12); box-shadow:inset 3px 0 0 var(--text-accent); }
-    .c { width:22px; text-align:center; }
+    .c { width:24px; text-align:center; }
+    .nom { width:88px; font-weight:600; color:var(--text-primary); }
     .n { text-align:right; font-variant-numeric:tabular-nums; }
+    th.n { width:88px; }
     .muted { color:var(--text-muted); }
-    .nom { font-weight:600; color:var(--text-primary); }
     td.n { color:var(--text-secondary); }
     td.n.bad { color:var(--text-warning); font-weight:600; }
-    .st { font-size:9.5px; font-weight:600; border-radius:5px; padding:2px 8px; white-space:nowrap; text-transform:capitalize; }
-    .lien { color:var(--text-accent); font-size:11px; }
+    /* Badge de statut unifié (§4) — aligné avec les autres tables. */
+    .st { display:inline-flex; align-items:center; height:19px; font-size:10px; font-weight:600; line-height:1;
+      border-radius:6px; padding:0 8px; white-space:nowrap; text-transform:capitalize; }
+    .lien { color:var(--text-accent); font-size:11px; font-weight:600; }
     tbody tr:hover .lien { text-decoration:underline; }
     .empty { text-align:center; color:var(--text-muted); padding:16px; }
   `],

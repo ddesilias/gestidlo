@@ -105,7 +105,8 @@ const adminGuard = () => {
 };
 
 const adminConfigChildren: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'measurement-types' },
+  // Hub « Paramètres système » à la racine ; les référentiels réels restent des enfants éditables.
+  { path: '', pathMatch: 'full', loadComponent: () => import('./pages/parametres-page.component').then(m => m.ParametresPageComponent) },
   { path: 'measurement-types', component: MeasurementTypesPageComponent },
   { path: 'point-types',       component: PointTypesPageComponent },
   { path: 'points',            component: PointsConfigPageComponent },
@@ -222,19 +223,16 @@ export const routes: Routes = [
       },
       {
         path: 'config',
-        component: ConfigPageComponent,
         canActivate: [adminGuard],
         children: adminConfigChildren
       },
       {
         path: 'configuration',
-        component: ConfigPageComponent,
         canActivate: [adminGuard],
         children: adminConfigChildren
       },
       {
         path: 'administration',
-        component: ConfigPageComponent,
         canActivate: [adminGuard],
         children: adminConfigChildren
       },

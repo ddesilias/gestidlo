@@ -203,6 +203,97 @@ import { ParametresRapidesDrawerComponent } from '../shared/parametres-rapides-d
     .sb-compact .admin-sb-status { display:none; }
 
     /* ═══════════════════════════════════════════════════════════
+       SOUS-MENUS (Rapports) — accordéon ouvert + flyout compact
+    ═══════════════════════════════════════════════════════════ */
+    .admin-sb-has-flyout { position:relative; }
+
+    /* Parent = <button> stylé comme un lien : reset des défauts navigateur. */
+    .admin-sb-parent {
+      width:100%; background:transparent; text-align:left; cursor:pointer;
+      font-family:inherit; font-size:.835rem;
+    }
+    .admin-sb-chevron {
+      margin-left:auto; flex-shrink:0; color:rgba(255,255,255,.3);
+      transition:transform .18s ease;
+    }
+    .admin-sb-parent--open .admin-sb-chevron { transform:rotate(90deg); color:rgba(255,255,255,.6); }
+
+    /* Sous-menu accordéon : rail vertical fin + indentation. */
+    .admin-sb-sub {
+      display:flex; flex-direction:column; gap:1px;
+      margin:2px 0 5px 21px; padding-left:11px;
+      border-left:1px solid rgba(255,255,255,.1);
+    }
+    .admin-sb-sublink {
+      position:relative; padding:6px 10px; border-radius:7px;
+      color:rgba(255,255,255,.48); text-decoration:none; font-size:.8rem; font-weight:500;
+      white-space:nowrap; transition:background .15s, color .15s;
+    }
+    .admin-sb-sublink::before {
+      content:''; position:absolute; left:-12px; top:50%; width:7px; height:1px;
+      background:rgba(255,255,255,.14); transform:translateY(-50%);
+    }
+    .admin-sb-sublink:hover { background:rgba(255,255,255,.05); color:rgba(255,255,255,.82); }
+    .admin-sb-sublink.active { color:#FBBF24; }
+    .admin-sb-sublink.active::before { background:#FBBF24; box-shadow:0 0 6px rgba(251,191,36,.6); }
+
+    /* En compact : pas d'accordéon ni de chevron (le flyout prend le relais). */
+    .sb-compact .admin-sb-sub,
+    .sb-compact .admin-sb-chevron { display:none; }
+
+    /* ── Flyout flottant (compact) + tooltips : doivent ÉCHAPPER au clipping ── */
+    .sb-compact .admin-sidebar,
+    .sb-compact .admin-sb-nav { overflow:visible; }
+    .sb-compact .admin-sb-link { overflow:visible; }
+
+    .admin-sb-flyout {
+      display:none; position:absolute; left:100%; top:-4px; margin-left:8px;
+      min-width:186px; z-index:850;
+      background:#111827; border:0.5px solid rgba(255,255,255,.1); border-radius:10px;
+      box-shadow:0 16px 48px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.2);
+      padding:8px; animation:tbPanelIn .14s ease;
+    }
+    .sb-compact .admin-sb-has-flyout:hover .admin-sb-flyout,
+    .sb-compact .admin-sb-has-flyout:focus-within .admin-sb-flyout { display:block; }
+    .admin-sb-flyout__head {
+      display:block; font-size:.62rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(255,255,255,.4); padding:2px 8px 6px;
+    }
+    .admin-sb-flyout__item {
+      display:block; padding:7px 9px; border-radius:7px; text-decoration:none;
+      color:rgba(255,255,255,.62); font-size:.8rem; font-weight:500; white-space:nowrap;
+      transition:background .15s, color .15s;
+    }
+    .admin-sb-flyout__item:hover { background:rgba(255,255,255,.06); color:#fff; }
+    .admin-sb-flyout__item.active {
+      background:linear-gradient(90deg,rgba(251,191,36,.18),rgba(255,255,255,.04)); color:#FBBF24;
+    }
+
+    /* Tooltip sombre au survol des liens simples en mode compact. */
+    .sb-compact .admin-sb-link[data-tip]:not(.admin-sb-parent):hover::after {
+      content:attr(data-tip); position:absolute; left:100%; top:50%; transform:translateY(-50%);
+      margin-left:8px; z-index:850; pointer-events:none;
+      background:#111827; color:#fff; font-size:.72rem; font-weight:500; white-space:nowrap;
+      padding:5px 9px; border-radius:6px; box-shadow:0 8px 24px rgba(0,0,0,.5);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MOBILE — sidebar off-canvas + scrim (piloté par le hamburger)
+    ═══════════════════════════════════════════════════════════ */
+    .admin-sb-scrim { display:none; }
+    @media (max-width:1024px) {
+      .admin-sidebar {
+        width:240px; transform:translateX(-100%); z-index:1000; overflow-y:auto;
+        transition:transform .28s cubic-bezier(.4,0,.2,1);
+      }
+      .admin-sidebar.mobile-open { transform:translateX(0); box-shadow:8px 0 32px rgba(0,0,0,.55); }
+      .admin-sb-scrim {
+        display:block; position:fixed; inset:64px 0 0 0;
+        background:rgba(4,7,13,.55); z-index:999; animation:tbPanelIn .18s ease;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
        TOPBAR PREMIUM
     ═══════════════════════════════════════════════════════════ */
     /* Toggle */
@@ -386,7 +477,7 @@ import { ParametresRapidesDrawerComponent } from '../shared/parametres-rapides-d
     <!-- GAUCHE : toggle + breadcrumb -->
     <div class="tb-left">
       <button class="tb-sb-toggle" type="button"
-        (click)="sbState = sbState === 'open' ? 'compact' : sbState === 'compact' ? 'closed' : 'open'"
+        (click)="onHamburger()"
         title="Sidebar">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -496,10 +587,14 @@ import { ParametresRapidesDrawerComponent } from '../shared/parametres-rapides-d
 
   <section class="admin-dash">
 
+    <!-- Scrim mobile : ferme le tiroir off-canvas au clic -->
+    <div class="admin-sb-scrim" *ngIf="isMobile && mobileNavOpen" (click)="mobileNavOpen = false"></div>
+
     <!-- ═══════════════════════════════════════════════════════════
          SIDEBAR PREMIUM
     ═══════════════════════════════════════════════════════════ -->
-    <aside class="admin-sidebar" aria-label="Navigation principale">
+    <aside class="admin-sidebar" aria-label="Navigation principale"
+      [class.mobile-open]="isMobile && mobileNavOpen">
 
       <!-- BRAND -->
       <div class="admin-sb-brand-header">
@@ -534,73 +629,81 @@ import { ParametresRapidesDrawerComponent } from '../shared/parametres-rapides-d
 
       <nav class="admin-sb-nav">
 
-        <!-- ── PRINCIPAL ─────────────────────────────────────── -->
-        <span class="admin-sb-group-label">Principal</span>
-        <a class="admin-sb-link" routerLink="/admin/dashboard" routerLinkActive="active" [title]="'nav.dashboard' | t">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg></span>
-          <span class="admin-sb-label">Tableau de bord</span>
+        <!-- ── TABLEAU DE BORD ────────────────────────────────── -->
+        <span class="admin-sb-group-label">Tableau de bord</span>
+        <a class="admin-sb-link" routerLink="/admin/dashboard" routerLinkActive="active" data-tip="Accueil">
+          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10"/></svg></span>
+          <span class="admin-sb-label">Accueil</span>
         </a>
-        <a class="admin-sb-link" routerLink="/admin/resources" routerLinkActive="active">
+        <a class="admin-sb-link" routerLink="/admin/governance" routerLinkActive="active" data-tip="Gouvernance">
+          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+          <span class="admin-sb-label">Gouvernance</span>
+        </a>
+
+        <!-- ── RÉSEAU AEP ─────────────────────────────────────── -->
+        <span class="admin-sb-group-label">Réseau AEP</span>
+        <a class="admin-sb-link" routerLink="/admin/resources" routerLinkActive="active" data-tip="Ressources">
           <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
           <span class="admin-sb-label">Ressources</span>
         </a>
-        <a class="admin-sb-link" routerLink="/admin/infrastructures" routerLinkActive="active">
+        <a class="admin-sb-link" routerLink="/admin/infrastructures" routerLinkActive="active" data-tip="Infrastructures">
           <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg></span>
           <span class="admin-sb-label">Infrastructures</span>
         </a>
-        <a class="admin-sb-link" routerLink="/admin/alertes" routerLinkActive="active">
+        <a class="admin-sb-link" routerLink="/admin/capteurs" routerLinkActive="active" data-tip="Capteurs IoT">
+          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="10" r="3"/></svg></span>
+          <span class="admin-sb-label">Capteurs IoT</span>
+          <span class="admin-sb-badge admin-sb-badge--cyan">{{ capteurStore.all().length }}</span>
+        </a>
+
+        <!-- ── OPÉRATIONS ─────────────────────────────────────── -->
+        <span class="admin-sb-group-label">Opérations</span>
+        <a class="admin-sb-link" routerLink="/admin/alertes" routerLinkActive="active" data-tip="Alertes">
           <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
           <span class="admin-sb-label">Alertes</span>
           <span class="admin-sb-badge admin-sb-badge--danger" *ngIf="criticalAlertsCount">
             <span class="admin-sb-badge-dot"></span>{{ criticalAlertsCount }}
           </span>
         </a>
-<a class="admin-sb-link" routerLink="/admin/interventions" routerLinkActive="active">
+        <a class="admin-sb-link" routerLink="/admin/interventions" routerLinkActive="active" data-tip="Interventions">
           <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
           <span class="admin-sb-label">Interventions</span>
         </a>
 
-        <!-- ── DONNÉES & IoT ──────────────────────────────────── -->
-        <span class="admin-sb-group-label">Données &amp; IoT</span>
-        <a class="admin-sb-link" routerLink="/admin/capteurs" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="10" r="3"/></svg></span>
-          <span class="admin-sb-label">Capteurs IoT</span>
-          <span class="admin-sb-badge admin-sb-badge--cyan">{{ capteurStore.all().length }}</span>
-        </a>
-        <a class="admin-sb-link" routerLink="/admin/points" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg></span>
-          <span class="admin-sb-label">Points de mesure</span>
-        </a>
-        <a class="admin-sb-link" routerLink="/admin/supervision" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
-          <span class="admin-sb-label">Données temps réel</span>
-        </a>
-        <a class="admin-sb-link" routerLink="/admin/quality" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
-          <span class="admin-sb-label">Qualité de l'eau</span>
-        </a>
+        <!-- ── RAPPORTS (parent à sous-menus) ─────────────────── -->
+        <span class="admin-sb-group-label">Rapports</span>
+        <div class="admin-sb-has-flyout">
+          <!-- Parent : accordéon en mode ouvert, ancre du flyout en mode compact -->
+          <button type="button" class="admin-sb-link admin-sb-parent"
+            [class.active]="isRapportsRoute()" [class.admin-sb-parent--open]="rapportsOpen"
+            (click)="toggleRapports()" data-tip="Rapports"
+            [attr.aria-expanded]="rapportsOpen">
+            <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg></span>
+            <span class="admin-sb-label">Rapports</span>
+            <svg class="admin-sb-chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
 
-        <!-- ── GOUVERNANCE ────────────────────────────────────── -->
-        <span class="admin-sb-group-label">Gouvernance</span>
-        <a class="admin-sb-link" routerLink="/admin/governance" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
-          <span class="admin-sb-label">Gouvernance</span>
-        </a>
-        <a class="admin-sb-link" routerLink="/admin/rapports" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg></span>
-          <span class="admin-sb-label">Rapports</span>
-        </a>
-        <a class="admin-sb-link" routerLink="/admin/rapports-recus" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>
-          <span class="admin-sb-label">Rapports reçus</span>
-        </a>
-        <a class="admin-sb-link" routerLink="/admin/traceability" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/></svg></span>
-          <span class="admin-sb-label">Traçabilité</span>
-        </a>
-        <a class="admin-sb-link" routerLink="/admin/administration" routerLinkActive="active">
-          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-          <span class="admin-sb-label">Utilisateurs</span>
+          <!-- Sous-menu : rail vertical fin en mode ouvert (accordéon) -->
+          <div class="admin-sb-sub" *ngIf="rapportsOpen">
+            <a class="admin-sb-sublink" routerLink="/admin/rapports-recus" routerLinkActive="active">Rapports reçus</a>
+            <a class="admin-sb-sublink" routerLink="/admin/rapports" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Rapports à valider</a>
+            <a class="admin-sb-sublink" routerLink="/admin/traceability" routerLinkActive="active">Traçabilité</a>
+          </div>
+
+          <!-- Flyout flottant : uniquement visible en mode compact (survol/focus) -->
+          <div class="admin-sb-flyout" role="menu" aria-label="Rapports">
+            <span class="admin-sb-flyout__head">Rapports</span>
+            <a class="admin-sb-flyout__item" routerLink="/admin/rapports-recus" routerLinkActive="active">Rapports reçus</a>
+            <a class="admin-sb-flyout__item" routerLink="/admin/rapports" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Rapports à valider</a>
+            <a class="admin-sb-flyout__item" routerLink="/admin/traceability" routerLinkActive="active">Traçabilité</a>
+          </div>
+        </div>
+
+        <!-- ── ADMINISTRATION ─────────────────────────────────── -->
+        <span class="admin-sb-group-label">Administration</span>
+        <a class="admin-sb-link" routerLink="/admin/config" routerLinkActive="active" data-tip="Paramètres">
+          <span class="admin-sb-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span class="admin-sb-label">Paramètres</span>
         </a>
 
       </nav>
@@ -654,6 +757,16 @@ export class AdminLayoutComponent implements OnDestroy {
   user: AuthUser | null = null;
   sbState: 'open' | 'compact' | 'closed' = 'open';
   currentUrl = '';
+
+  /** Accordéon du groupe Rapports (état ouvert) — s'ouvre auto sur une route Rapports. */
+  rapportsOpen = false;
+  /** Tiroir off-canvas mobile (piloté par le hamburger sous le seuil `isMobile`). */
+  mobileNavOpen = false;
+  /** Vrai sous 1024px : le hamburger ouvre l'overlay au lieu de cycler l'état desktop. */
+  isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
+
+  /** Chemins du groupe Rapports (parent actif + ouverture auto de l'accordéon). */
+  private readonly RAPPORTS_ROUTES = ['/admin/rapports', '/admin/rapports-recus', '/admin/traceability'];
 
   private userSub?: Subscription;
   private refreshSub?: Subscription;
@@ -716,11 +829,48 @@ export class AdminLayoutComponent implements OnDestroy {
     this.refreshSub = this.refresh.refresh$.subscribe(() => this.loadCriticalAlerts());
 
     this.currentUrl = this.router.url;
+    this.rapportsOpen = this.isRapportsRoute();
     this.routerSub = this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
-      .subscribe((e) => { this.currentUrl = (e as NavigationEnd).urlAfterRedirects; });
+      .subscribe((e) => {
+        this.currentUrl = (e as NavigationEnd).urlAfterRedirects;
+        // Le tiroir mobile est un lanceur : il se referme dès qu'on a navigué.
+        this.mobileNavOpen = false;
+        // Garder l'accordéon ouvert tant qu'on est dans le groupe Rapports.
+        if (this.isRapportsRoute()) this.rapportsOpen = true;
+      });
 
     this.loadCriticalAlerts();
+  }
+
+  // ── Sidebar : accordéon Rapports + hamburger (desktop cycle / mobile overlay) ──
+  isRapportsRoute(): boolean {
+    return this.RAPPORTS_ROUTES.some(r => this.currentUrl === r || this.currentUrl.startsWith(r + '/'));
+  }
+
+  toggleRapports(): void { this.rapportsOpen = !this.rapportsOpen; }
+
+  /** Hamburger : ouvre l'overlay sur mobile, sinon cycle open → compact → closed. */
+  onHamburger(): void {
+    if (this.isMobile) {
+      this.mobileNavOpen = !this.mobileNavOpen;
+      return;
+    }
+    this.sbState = this.sbState === 'open' ? 'compact' : this.sbState === 'compact' ? 'closed' : 'open';
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    const mobile = window.innerWidth <= 1024;
+    if (mobile !== this.isMobile) {
+      this.isMobile = mobile;
+      if (mobile) {
+        // Overlay mobile toujours en pleine largeur : on neutralise un éventuel état compact/closed hérité.
+        this.sbState = 'open';
+      } else {
+        this.mobileNavOpen = false; // repasse en desktop : plus d'overlay
+      }
+    }
   }
 
   // ── Topbar helpers ──────────────────────────────────────────

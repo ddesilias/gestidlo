@@ -83,6 +83,21 @@ export interface RapportDto {
   createdAt: string;
 }
 
+/** Métadonnées persistées d'un type de mesure (table measurement_type_meta). */
+export interface MeasurementMetaDto {
+  code: string;
+  unit: string | null;
+  category: string | null;
+  description: string | null;
+  valueType: string | null;
+  decimals: number | null;
+  minValue: number | null;
+  maxValue: number | null;
+  usableInAlerts: boolean;
+  usableInReports: boolean;
+}
+export type MeasurementMetaUpsert = Omit<MeasurementMetaDto, 'code'>;
+
 /** Couche d'examen du superviseur, gelée dans le snapshot signé à la validation (cf. backend ValiderRequest). */
 export interface ValiderExamenDto {
   attCompletude: boolean; attCoherence: boolean; attTerritorialite: boolean;
@@ -527,6 +542,15 @@ export class BffApiService {
 
   upsertThreshold(type: string, payload: { minWarn?: number | null; minCrit?: number | null }) {
     return this.http.put<any>(`${this.baseUrl}/reference/thresholds/${type}`, payload);
+  }
+
+  /** Métadonnées des types de mesure (table dédiée, complète la codelist). */
+  referenceMeasurementMeta() {
+    return this.http.get<MeasurementMetaDto[]>(`${this.baseUrl}/reference/measurement-meta`);
+  }
+
+  upsertMeasurementMeta(code: string, payload: MeasurementMetaUpsert) {
+    return this.http.put<MeasurementMetaDto>(`${this.baseUrl}/reference/measurement-meta/${code}`, payload);
   }
 
   upsertCodeItem(

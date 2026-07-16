@@ -56,16 +56,20 @@ import { STATUT_COULEUR } from './governance-status.util';
     </div>
   `,
   styles: [`
-    .q { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .q { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     @media (max-width:1199px){ .q { grid-template-columns:1fr; } }
-    .q__card { background:var(--surface-1); border:0.5px solid var(--border-color); border-radius:12px; padding:14px; }
-    .q__title { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:10px; display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
-    .q__hint { font-size:10px; color:var(--text-muted); font-weight:400; }
+    /* Blocs prioritaires (§1) : bordure nette + ombre très légère pour les faire ressortir du fond. */
+    .q__card { background:var(--surface-1); border:0.5px solid var(--border-strong); border-radius:12px; padding:16px;
+      box-shadow:0 1px 2px rgba(0,0,0,.12); }
+    .q__title { font-size:13px; font-weight:600; color:var(--text-primary); letter-spacing:.1px; margin-bottom:12px;
+      display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+    .q__hint { font-size:10.5px; color:var(--text-muted); font-weight:400; }
     .q__scroll { overflow-x:auto; }
-    table { width:100%; border-collapse:collapse; font-size:11.5px; }
-    th { text-align:left; color:var(--text-muted); font-weight:600; font-size:9.5px; text-transform:uppercase;
-      letter-spacing:.3px; padding:5px 7px; border-bottom:0.5px solid var(--border-color); white-space:nowrap; }
-    td { padding:7px; border-bottom:0.5px solid var(--border-color); white-space:nowrap; color:var(--text-secondary); }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th { text-align:left; color:var(--text-secondary); font-weight:600; font-size:10px; text-transform:uppercase;
+      letter-spacing:.5px; padding:7px 8px; border-bottom:1px solid var(--border-strong); white-space:nowrap; }
+    td { padding:10px 8px; border-bottom:0.5px solid var(--border-color); white-space:nowrap; color:var(--text-secondary); }
+    tbody tr:last-child td { border-bottom:0; }
     tbody tr[routerLink] { cursor:pointer; }
     tbody tr:hover { background:rgba(96,165,250,.06); }
     .strong { color:var(--text-primary); font-weight:600; }
@@ -73,11 +77,15 @@ import { STATUT_COULEUR } from './governance-status.util';
     .n { text-align:right; font-variant-numeric:tabular-nums; }
     td.n.bad { color:var(--text-warning); font-weight:600; }
     .pri { font-weight:600; }
-    .st { font-size:9.5px; border-radius:5px; padding:2px 7px; background:rgba(148,163,184,.14); color:var(--text-secondary); text-transform:capitalize; }
-    .st--warn { color:var(--text-warning); background:color-mix(in srgb, var(--text-warning) 16%, transparent); }
-    .lien a { color:var(--text-accent); }
-    .lien a:hover { text-decoration:underline; }
-    .empty { text-align:center; color:var(--text-muted); padding:14px; }
+    /* Badge de statut unifié (§4) — même hauteur/padding/radius partout. */
+    .st { display:inline-flex; align-items:center; height:19px; font-size:10px; font-weight:600; line-height:1;
+      border-radius:6px; padding:0 8px; background:rgba(148,163,184,.16); color:var(--text-secondary); text-transform:capitalize; }
+    .st--warn { color:var(--text-warning); background:color-mix(in srgb, var(--text-warning) 18%, transparent); }
+    /* Action « Valider » en bouton ghost discret (§3). */
+    .lien a { display:inline-flex; align-items:center; height:22px; padding:0 10px; border-radius:6px;
+      font-size:11px; font-weight:600; color:var(--text-accent); border:0.5px solid color-mix(in srgb, var(--text-accent) 45%, transparent); }
+    .lien a:hover { background:var(--bg-accent); border-color:var(--text-accent); }
+    .empty { text-align:center; color:var(--text-muted); padding:16px; }
   `],
 })
 export class GovernanceQueuesComponent {

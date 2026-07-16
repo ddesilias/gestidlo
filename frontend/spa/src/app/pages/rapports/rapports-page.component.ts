@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../ui/toast.service';
 import { RapportStateService, filtrerRapports } from './rapport-state.service';
-import { RapportPreviewComponent } from './rapport-preview/rapport-preview.component';
+import { ReportA4PreviewComponent } from './report-a4/report-a4-preview.component';
+import { fromReportEntry, ReportPreviewData } from './report-a4/report-preview.model';
 import { RapportsFiltersDrawerComponent } from './rapports-filters-drawer/rapports-filters-drawer.component';
 import { ReportEntry, ReportType, ReportStatus, FiltresRapport, FILTRES_VIDES_RAPPORT, TYPE_LABELS, STATUS_LABELS, TYPES_URD } from './rapport.types';
 
@@ -13,7 +14,7 @@ import { ReportEntry, ReportType, ReportStatus, FiltresRapport, FILTRES_VIDES_RA
   imports: [
     CommonModule,
     FormsModule,
-    RapportPreviewComponent,
+    ReportA4PreviewComponent,
     RapportsFiltersDrawerComponent,
   ],
   templateUrl: './rapports-page.component.html',
@@ -84,6 +85,9 @@ export class RapportsPageComponent implements OnInit {
   fermerCreateEff():  void { this.scope ? this._sCreateOuvert.set(false) : this.state.fermerCreate(); }
   ouvrirPreviewEff(): void { this.scope ? this._sPreviewOuvert.set(true)  : this.state.ouvrirPreview(); }
   fermerPreviewEff(): void { this.scope ? this._sPreviewOuvert.set(false) : this.state.fermerPreview(); }
+
+  /** Projette une entrée du catalogue vers le modèle A4 normalisé. */
+  toPreview(r: ReportEntry): ReportPreviewData { return fromReportEntry(r); }
   ouvrirFiltresEff(): void { if (!this.scope) this.state.ouvrirFiltres(); }
   modifierRechercheEff(q: string): void {
     this.scope

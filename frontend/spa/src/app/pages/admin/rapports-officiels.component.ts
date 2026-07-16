@@ -3,6 +3,8 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { RapportsStore, RapportDto } from '../../rapports.store';
+import { ReportA4PreviewComponent } from '../rapports/report-a4/report-a4-preview.component';
+import { fromRapportDto, ReportPreviewData } from '../rapports/report-a4/report-preview.model';
 
 type Periode = 'tous' | 'journaliers' | 'hebdomadaires' | 'mensuels' | 'incidents';
 
@@ -20,7 +22,7 @@ type Periode = 'tous' | 'journaliers' | 'hebdomadaires' | 'mensuels' | 'incident
 @Component({
   selector: 'app-rapports-officiels',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReportA4PreviewComponent],
   template: `
 <div class="ro">
 
@@ -80,48 +82,16 @@ type Periode = 'tous' | 'journaliers' | 'hebdomadaires' | 'mensuels' | 'incident
 
 </div>
 
-<!-- DÉTAIL LECTURE SEULE — la signature URD visible, AUCUN panneau de décision (contraste superviseur). -->
-<div *ngIf="ouvert() as r" class="ro-modal" (click)="ouvert.set(null)">
-  <div class="ro-card" (click)="$event.stopPropagation()">
-    <div class="ro-card__head">
-      <div>
-        <div class="ro-card__t">{{ r.titre }}</div>
-        <div class="ro-card__s">Soumis par {{ r.auteur || '—' }} · {{ r.commune || '—' }} · {{ fmtDate(r.transmisLe || r.createdAt) }}</div>
-      </div>
-      <i class="ti ti-x ro-card__x" (click)="ouvert.set(null)"></i>
-    </div>
-
-    <div class="ro-card__body">
-      <span class="ro-badge ro-badge--ro" [ngClass]="badgeClass(r.status)">{{ badgeLabel(r.status) }} · lecture seule</span>
-
-      <div class="ro-preview">
-        <div class="ro-preview__h"><i class="ti ti-file-text"></i> CONTENU DU RAPPORT</div>
-        <p class="ro-preview__p">{{ r.resumeAuto || 'Aucun contenu généré.' }}</p>
-      </div>
-
-      <div *ngIf="meta(r) as m" class="ro-evid">
-        <span *ngIf="m.ouvrage"><i class="ti ti-building-factory"></i> {{ m.ouvrage }}</span>
-        <span *ngIf="m.gps"><i class="ti ti-map-pin"></i> {{ m.gps }}</span>
-        <span><i class="ti ti-photo"></i> photos (stub démo)</span>
-      </div>
-
-      <!-- Bloc signature URD — la preuve que le rapport a traversé le circuit. Pas d'action ici. -->
-      <div class="ro-sign" *ngIf="r.signataire">
-        <i class="ti ti-signature"></i>
-        <div class="ro-sign__txt">
-          <div class="ro-sign__n">{{ r.signataire }}</div>
-          <div class="ro-sign__r">Responsable URD {{ r.departementId }} · signé le {{ fmtDate(r.signeLe) }}</div>
-        </div>
-        <span class="ro-sign__ok"><i class="ti ti-circle-check"></i> signature URD</span>
-      </div>
-    </div>
-
-    <div class="ro-card__foot">
-      <span class="ro-card__note"><i class="ti ti-eye"></i> Réception nationale · l'admin supervise, ne re-valide pas</span>
-      <button class="ro-btn ro-btn--ghost" (click)="ouvert.set(null)">Fermer</button>
-    </div>
-  </div>
-</div>
+<!-- DÉTAIL LECTURE SEULE — même aperçu A4 officiel que partout ; l'admin REÇOIT (imprime / exporte / archive), il ne re-valide pas. -->
+<app-report-a4-preview
+  *ngIf="apercu() as p"
+  [report]="p"
+  viewerRole="ADMIN"
+  [actions]="['imprimer','exporter','archiver','fermer']"
+  (exporterPdf)="bientot('Export PDF')"
+  (archiver)="bientot('Archivage')"
+  (fermer)="ouvert.set(null)">
+</app-report-a4-preview>
   `,
   styles: [`
     .ro { color:#e6edf3; max-width:1080px; }
@@ -211,6 +181,12 @@ export class RapportsOfficielsComponent implements OnInit {
   readonly typeFiltre = signal<string>('');
   readonly deptFiltre = signal<string>('');
   readonly ouvert = signal<RapportDto | null>(null);
+
+  /** Le rapport ouvert, projeté vers le modèle A4 normalisé. */
+  readonly apercu = computed<ReportPreviewData | null>(() => {
+    const r = this.ouvert();
+    return r ? fromRapportDto(r) : null;
+  });
 
   /** Univers « officiel » : ce qui a traversé tout le circuit (reçu admin) ou déjà classé. */
   private readonly officiels = computed(() =>

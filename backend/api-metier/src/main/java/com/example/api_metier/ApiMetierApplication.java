@@ -13,6 +13,7 @@ import com.example.api_metier.domain.RessourceDepartementEntity;
 import com.example.api_metier.domain.RessourceEntity;
 import com.example.api_metier.domain.RessourceEtat;
 import com.example.api_metier.domain.RessourceStatut;
+import com.example.api_metier.domain.MeasurementTypeMetaEntity;
 import com.example.api_metier.domain.RessourceType;
 import com.example.api_metier.domain.ThresholdConfigEntity;
 import com.example.api_metier.domain.UserAccountEntity;
@@ -23,6 +24,7 @@ import com.example.api_metier.repo.AlertRepository;
 import com.example.api_metier.repo.ActeurRepository;
 import com.example.api_metier.repo.PointRefRepository;
 import com.example.api_metier.repo.RapportRepository;
+import com.example.api_metier.repo.MeasurementTypeMetaRepository;
 import com.example.api_metier.repo.ReferenceCodeItemRepository;
 import com.example.api_metier.repo.RessourceDepartementRepository;
 import com.example.api_metier.repo.RessourceRepository;
@@ -51,6 +53,7 @@ public class ApiMetierApplication {
 			PointRefRepository points,
 			ThresholdConfigRepository thresholds,
 			ReferenceCodeItemRepository codeItems,
+			MeasurementTypeMetaRepository measurementMeta,
 			UserAccountRepository users,
 			UserProfileRepository profiles,
 			AlertRepository alerts,
@@ -159,6 +162,9 @@ public class ApiMetierApplication {
 					new ReferenceCodeItemEntity("MEASUREMENT_TYPE", "LEVEL", "Niveau", "Nivo", "Level", "#2563eb", 20, true),
 					new ReferenceCodeItemEntity("MEASUREMENT_TYPE", "FLOW", "Débit", "Debi", "Flow", "#2563eb", 30, true)));
 
+			// Métadonnées des types de mesure (table séparée) — seed si vide, valeurs standard AEP.
+			seedMeasurementMeta(measurementMeta);
+
 			if (measurements.count() == 0) {
 				seedDemoMeasurements(measurementService);
 			}
@@ -176,6 +182,30 @@ public class ApiMetierApplication {
 			return;
 		}
 		repo.saveAll(items);
+	}
+
+	/**
+	 * Amorçage des métadonnées de mesure (unité/catégorie/…) si la table est vide.
+	 * Complète la codelist MEASUREMENT_TYPE sans y toucher — clé = code. Idempotent.
+	 */
+	private void seedMeasurementMeta(MeasurementTypeMetaRepository repo) {
+		if (repo.count() > 0) {
+			return;
+		}
+		final String HYDRO = "Hydraulique", QUAL = "Qualité de l'eau", CONSO = "Consommation", CAPT = "État capteur";
+		final String NUM = "Numérique";
+		repo.saveAll(List.of(
+				new MeasurementTypeMetaEntity("PRESSURE", "bar", HYDRO, "Pression dans le réseau ou les conduites.", NUM, 2, 0.0, 10.0, true, true),
+				new MeasurementTypeMetaEntity("LEVEL", "%", HYDRO, "Niveau de remplissage d'un réservoir.", NUM, 0, 0.0, 100.0, true, true),
+				new MeasurementTypeMetaEntity("FLOW", "m³/h", HYDRO, "Débit transporté dans une conduite.", NUM, 1, 0.0, null, true, true),
+				new MeasurementTypeMetaEntity("VOLUME", "m³", CONSO, "Volume d'eau consommé ou produit.", NUM, 0, 0.0, null, true, true),
+				new MeasurementTypeMetaEntity("TURBIDITY", "NTU", QUAL, "Turbidité de l'eau.", NUM, 1, 0.0, null, true, true),
+				new MeasurementTypeMetaEntity("PH", "pH", QUAL, "Potentiel hydrogène de l'eau.", NUM, 2, 0.0, 14.0, true, true),
+				new MeasurementTypeMetaEntity("CHLORINE", "mg/L", QUAL, "Chlore résiduel dans l'eau traitée.", NUM, 2, 0.0, null, true, true),
+				new MeasurementTypeMetaEntity("TEMPERATURE", "°C", QUAL, "Température de l'eau.", NUM, 1, null, null, true, true),
+				new MeasurementTypeMetaEntity("CONDUCTIVITY", "µS/cm", QUAL, "Conductivité électrique de l'eau.", NUM, 0, 0.0, null, true, true),
+				new MeasurementTypeMetaEntity("BATTERY_LEVEL", "%", CAPT, "Niveau de batterie du capteur.", NUM, 0, 0.0, 100.0, false, true),
+				new MeasurementTypeMetaEntity("SIGNAL_STRENGTH", "dBm", CAPT, "Qualité du signal radio du capteur.", NUM, 0, null, 0.0, false, true)));
 	}
 
 	/**

@@ -7,15 +7,15 @@
   --surface-0: #0f1419;
   --surface-1: #161e28;
   --surface-2: #1f2a33;
-  --text-primary:   #e2e8ee;
-  --text-secondary: #94a3b8;
-  --text-muted:     #64748b;
+  --text-primary:   #e8eef4;
+  --text-secondary: #b2bece;   /* Lot D v2 — labels/sous-titres encore +1 cran de lisibilité */
+  --text-muted:     #93a0b4;   /* Lot D v2 — métadonnées/timestamps moins fantômes (hiérarchie douce gardée) */
   --text-accent:    #3b82f6;
   --text-success:   #16a34a;
   --text-warning:   #f59e0b;
   --text-danger:    #e24b4a;
-  --border-color:   rgba(226, 232, 240, 0.14);
-  --border-strong:  rgba(226, 232, 240, 0.24);
+  --border-color:   rgba(226, 232, 240, 0.17);   /* Lot D — bordures un peu plus nettes */
+  --border-strong:  rgba(226, 232, 240, 0.28);
   --bg-accent:  rgba(59, 130, 246, 0.14);
   --bg-success: rgba(16, 185, 129, 0.14);
   --bg-warning: rgba(234, 179, 8, 0.12);
@@ -68,66 +68,74 @@
   }
 
   &__synth {
-    font-size:11px; color:var(--text-secondary); margin:8px 0 14px;
+    font-size:11px; color:var(--text-secondary); margin:8px 0 22px;
     .ok { color:var(--text-success); }
     .warn { color:var(--text-danger); }
   }
 
-  &__signals { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:10px 0 14px; }
+  /* Rythme vertical (Lot D v2) : ~22px entre grands blocs pour qu'aucune carte ne semble posée
+   * sur la précédente. Les marges verticales adjacentes se recouvrent (collapse) → 22px net. */
+  &__signals { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:0 0 22px; }
 
-  &__hero { display:grid; grid-template-columns:1.35fr 1fr; gap:12px; align-items:stretch; margin-bottom:12px; }
+  &__hero { display:grid; grid-template-columns:1.35fr 1fr; gap:16px; align-items:stretch; margin-bottom:22px; }
 
-  &__analytics { display:grid; grid-template-columns:1.35fr 1fr; gap:12px; align-items:stretch; margin-bottom:14px; }
+  &__analytics { display:grid; grid-template-columns:1.35fr 1fr; gap:16px; align-items:stretch; margin:22px 0; }
 
-  &__foot { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  &__foot { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:22px; }
 }
+
+/* En-tête de card homogène (§8) — titre gauche, secondaire à droite, même poids/taille partout. */
+%card-title { font-size:13px; font-weight:600; color:var(--text-primary); letter-spacing:.1px; }
 
 /* Points d'attention (Zone C droite) */
 .attn {
-  background:var(--surface-1); border-radius:12px; padding:12px; height:100%; display:flex; flex-direction:column;
-  &__title { font-size:13px; font-weight:500; color:var(--text-primary); margin-bottom:8px; }
-  &__item { display:flex; gap:8px; padding:5px 0; align-items:flex-start; }
+  background:var(--surface-1); border:0.5px solid var(--border-color); border-radius:12px; padding:15px; height:100%; display:flex; flex-direction:column;
+  &__title { @extend %card-title; margin-bottom:11px; }
+  &__item { display:flex; gap:9px; padding:7px 0; align-items:flex-start; }
   &__item i { font-size:15px; margin-top:1px; flex:none; }
-  &__txt { font-size:12px; color:var(--text-primary); }
+  &__txt { font-size:12.5px; color:var(--text-primary); }
   &__sub { color:var(--text-muted); }
   &__empty { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-success); margin:4px 0; i { font-size:14px; } }
-  &__more { margin-top:auto; align-self:flex-start; font-size:11px; color:var(--text-accent); background:none; border:0; cursor:pointer; padding:8px 0 0; }
+  &__more { margin-top:auto; align-self:flex-start; font-size:11px; color:var(--text-accent); background:none; border:0; cursor:pointer; padding:10px 0 0; }
 }
 
-/* Bas de page : santé + activité */
+/* Bas de page : santé + activité (blocs secondaires — plats, sans ombre, cf. hiérarchie §1) */
 .foot-card {
-  background:var(--surface-1); border-radius:12px; padding:12px;
-  &__head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-  &__title { font-size:12px; color:var(--text-primary); margin-bottom:8px; display:block; }
-  &__pct { font-size:10px; color:var(--text-warning); }
+  background:var(--surface-1); border:0.5px solid var(--border-color); border-radius:12px; padding:15px;
+  &__head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:11px; }
+  &__title { @extend %card-title; }
+  &__pct { font-size:17px; font-weight:700; color:var(--text-success); font-variant-numeric:tabular-nums; }
 }
 .foot-svc {
-  display:flex; align-items:center; gap:8px; font-size:11px;
-  padding:4px 0; border-top:0.5px solid var(--border-color);
+  display:flex; align-items:center; gap:10px; font-size:11.5px;
+  padding:7px 2px 7px 0; border-top:0.5px solid var(--border-color);
+  &:first-of-type { border-top:0; }
   &__dot { width:7px; height:7px; border-radius:50%; flex:none; }
   &__name { color:var(--text-secondary); flex:1; }
-  &__up { color:var(--text-primary); }
+  &__up { color:var(--text-primary); text-align:right; font-variant-numeric:tabular-nums; }
 }
 .foot-act {
-  display:flex; gap:8px; padding:5px 0; border-top:0.5px solid var(--border-color);
-  i { font-size:14px; color:var(--text-secondary); margin-top:2px; flex:none; }
+  display:flex; gap:10px; padding:9px 0; border-top:0.5px solid var(--border-color); align-items:flex-start;
+  &:first-of-type { border-top:0; }
+  i { font-size:15px; color:var(--text-secondary); margin-top:1px; flex:none; }
   &__body { min-width:0; flex:1; }
-  &__text { font-size:12px; color:var(--text-primary); }
-  &__detail { font-size:10px; color:var(--text-muted); }
-  &__time { font-size:10px; color:var(--text-muted); flex:none; white-space:nowrap; }
+  &__text { font-size:12.5px; color:var(--text-primary); font-weight:500; }
+  &__detail { font-size:11px; color:var(--text-muted); margin-top:1px; }
+  &__time { font-size:10.5px; color:var(--text-muted); flex:none; white-space:nowrap; text-align:right; padding-top:1px; }
   &__empty { font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; margin:8px 0 0;
     i { font-size:14px; } }
 }
 
-.gov-dash__sec-title { display:flex; align-items:center; gap:10px; margin:2px 0 -4px;
-  h3 { margin:0; font-size:13px; font-weight:600; color:var(--text-primary); letter-spacing:.2px; }
+.gov-dash__sec-title { display:flex; align-items:center; gap:12px; margin:22px 0 10px;
+  h3 { margin:0; font-size:12px; font-weight:600; color:var(--text-secondary); letter-spacing:.6px; text-transform:uppercase; }
 }
 .gov-dash__sec-line { flex:1; height:1px; background:var(--border-color); }
 
 app-governance-module-strip { display:block; }
 app-governance-map, app-dept-ranking { display:block; height:100%; }
-app-governance-exec-summary { display:block; margin-bottom:14px; }
-app-governance-urd-table, app-governance-queues { display:block; margin-bottom:14px; }
+app-governance-exec-summary { display:block; margin-bottom:22px; }
+app-governance-pilotage { display:block; margin-bottom:22px; }
+app-governance-urd-table, app-governance-queues { display:block; margin-bottom:22px; }
 
 /* Responsive (§4) */
 @media (max-width:1199px) {

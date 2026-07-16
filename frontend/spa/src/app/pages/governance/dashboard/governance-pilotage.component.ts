@@ -132,8 +132,7 @@ import { PilotageVue } from './governance-signals.service';
     </section>
   `,
   styles: [`
-    .pil { background:var(--surface-1); border-radius:12px; padding:14px 16px; margin-top:12px;
-      border-top:0.5px dashed var(--border-strong, var(--border-color)); }
+    .pil { background:var(--surface-1); border:0.5px solid var(--border-color); border-radius:12px; padding:16px; }
     .pil__head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
     .pil__badge { font-size:9px; font-weight:600; color:var(--text-accent); background:var(--bg-accent);
       border-radius:4px; padding:1px 5px; letter-spacing:.4px; }
